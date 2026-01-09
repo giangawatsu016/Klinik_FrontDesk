@@ -1,0 +1,125 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../models/models.dart';
+
+class ApiService {
+  final String baseUrl = "http://127.0.0.1:8000";
+  String? _authToken;
+
+  void setToken(String token) {
+    _authToken = token;
+  }
+
+  Map<String, String> get _headers {
+    final headers = {"Content-Type": "application/json"};
+    if (_authToken != null) {
+      headers["Authorization"] = "Bearer $_authToken";
+    }
+    return headers;
+  }
+
+  Future<User?> login(String username, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/token'),
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: {"username": username, "password": password},
+      );
+
+      // print("Login Response: ${response.statusCode} - ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _authToken = data['access_token'];
+        return User(
+          username: username,
+          fullName: "Staff / Admin",
+          role: "staff",
+          token: _authToken!,
+        );
+      }
+      return null;
+    } catch (e) {
+      // print("API Error: $e");
+      rethrow;
+    }
+  }
+
+  Future<List<QueueItem>> getQueue() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/queues/'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => QueueItem.fromJson(json)).toList();
+    }
+    return [];
+  }
+
+  Future<List<Patient>> searchPatients(String query) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/patients/search?query=$query'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Patient.fromJson(json)).toList();
+    }
+    return [];
+  }
+
+  Future<Patient?> registerPatient(Patient patient) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/patients/'),
+      headers: _headers,
+      body: jsonEncode(patient.toJson()),
+    );
+    if (response.statusCode == 200) {
+      return Patient.fromJson(jsonDecode(response.body));
+    }
+    return null;
+  }
+
+  Future<bool> addToQueue({
+    required int patientId,
+    int? doctorId,
+    required bool isPriority,
+    required String queueType,
+    String? polyclinic,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/queues/'),
+      headers: _headers,
+      body: jsonEncode({
+        "userId": patientId,
+        "medicalFacilityPolyDoctorId": doctorId,
+        "isPriority": isPriority,
+        "queueType": queueType,
+        "polyclinic": polyclinic,
+      }),
+    );
+    return response.statusCode == 200;
+  }
+
+  Future<List<Doctor>> getDoctors() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/master/doctors'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Doctor.fromJson(json)).toList();
+    }
+    return [];
+  }
+
+  Future<bool> updateQueueStatus(int id, String status) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/queues/$id/status'),
+      headers: _headers,
+      body: jsonEncode({"status": status}),
+    );
+    return response.statusCode == 200;
+  }
+}
