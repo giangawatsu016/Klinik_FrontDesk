@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import List
 from sqlalchemy.orm import Session
 from .. import models, schemas, database, dependencies
+from ..services.frappe_service import frappe_client
 
 router = APIRouter(
     prefix="/patients",
@@ -9,7 +10,7 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=schemas.Patient)
-def create_patient(patient: schemas.PatientCreate, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
+def create_patient(patient: schemas.PatientCreate, background_tasks: BackgroundTasks, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
     # Check if existing
     if db.query(models.Patient).filter(models.Patient.identityCard == patient.identityCard).first():
         raise HTTPException(status_code=400, detail="Patient with this ID Card already exists")
@@ -18,6 +19,10 @@ def create_patient(patient: schemas.PatientCreate, db: Session = Depends(databas
     db.add(new_patient)
     db.commit()
     db.refresh(new_patient)
+    
+    # Sync to Frappe in background
+    background_tasks.add_task(frappe_client.create_patient, patient.dict())
+    
     return new_patient
 
 @router.get("/", response_model=List[schemas.Patient])

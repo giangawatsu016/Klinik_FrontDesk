@@ -27,7 +27,7 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
 
   void _initTts() async {
     await flutterTts.setLanguage("id-ID");
-    await flutterTts.setSpeechRate(0.5);
+    await flutterTts.setSpeechRate(0.9);
   }
 
   @override

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import List
 from sqlalchemy.orm import Session
 from datetime import datetime
 from .. import models, schemas, database, dependencies
+from ..services.frappe_service import frappe_client
 
 router = APIRouter(
     prefix="/queues",
@@ -10,21 +11,24 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=schemas.PatientQueue)
-def add_to_queue(queue_data: schemas.QueueCreate, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
-    # Determine Prefix based on Priority (P for Priority, D for Regular/Doctor)
-    # Note: User requested D-XXXX (Normal) and P-XXXX (Priority)
-    prefix = "P" if queue_data.isPriority else "D"
-    
-    # Calculate next number safely
-    # We count how many items exist with this prefix to determine the next sequence
-    # This is a simple implementation; for high concurrency, use a sequence or atomic counter.
+def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTasks, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
     today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Determine Prefix
+    if queue_data.queueType == "Polyclinic":
+        prefix = "PP" if queue_data.isPriority else "P"
+    else:
+        # Default to Doctor
+        prefix = "DP" if queue_data.isPriority else "D"
+
+    # Count for today with this specific prefix
     count = db.query(models.PatientQueue).filter(
         models.PatientQueue.numberQueue.like(f"{prefix}-%"),
         models.PatientQueue.appointmentTime >= today_start
     ).count()
     
-    next_number = f"{prefix}-{count + 1:04d}"
+    # Format: PREFIX-XXX (3 digits)
+    next_number = f"{prefix}-{count + 1:03d}"
 
     new_queue = models.PatientQueue(
         numberQueue=next_number, 
@@ -39,6 +43,15 @@ def add_to_queue(queue_data: schemas.QueueCreate, db: Session = Depends(database
     db.add(new_queue)
     db.commit()
     db.refresh(new_queue)
+
+    # Fetch Patient Name for Frappe
+    patient = db.query(models.Patient).filter(models.Patient.id == queue_data.userId).first()
+    if patient:
+        bg_data = {
+           "appointmentTime": new_queue.appointmentTime
+        }
+        background_tasks.add_task(frappe_client.create_appointment, bg_data, f"{patient.firstName} {patient.lastName}")
+
     return new_queue
 
 @router.get("/", response_model=List[schemas.PatientQueue])

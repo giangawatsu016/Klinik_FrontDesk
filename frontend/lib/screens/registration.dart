@@ -376,10 +376,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             Expanded(
               child: TextField(
                 controller: _searchController,
+                maxLength: 16,
                 decoration: InputDecoration(
                   labelText: "Search by ID (NIK) or Phone",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.search),
+                  counterText: "",
                 ),
               ),
             ),
