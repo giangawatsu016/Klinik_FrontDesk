@@ -78,7 +78,9 @@ class ApiService {
     if (response.statusCode == 200) {
       return Patient.fromJson(jsonDecode(response.body));
     }
-    return null;
+    throw Exception(
+      "Registration Failed: ${response.statusCode}\n${response.body}",
+    );
   }
 
   Future<bool> addToQueue({

@@ -11,11 +11,23 @@ router = APIRouter(
 
 @router.post("/", response_model=schemas.PatientQueue)
 def add_to_queue(queue_data: schemas.QueueCreate, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
-    # Initial Placeholder Number (will be dynamic in get_queue)
-    # We just need to persist it.
-    prefix = "D" if queue_data.queueType == "Doctor" else "P"
+    # Determine Prefix based on Priority (P for Priority, D for Regular/Doctor)
+    # Note: User requested D-XXXX (Normal) and P-XXXX (Priority)
+    prefix = "P" if queue_data.isPriority else "D"
+    
+    # Calculate next number safely
+    # We count how many items exist with this prefix to determine the next sequence
+    # This is a simple implementation; for high concurrency, use a sequence or atomic counter.
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    count = db.query(models.PatientQueue).filter(
+        models.PatientQueue.numberQueue.like(f"{prefix}-%"),
+        models.PatientQueue.appointmentTime >= today_start
+    ).count()
+    
+    next_number = f"{prefix}-{count + 1:04d}"
+
     new_queue = models.PatientQueue(
-        numberQueue=f"{prefix}-PENDING", 
+        numberQueue=next_number, 
         userId=queue_data.userId,
         appointmentTime=datetime.utcnow(),
         status="Waiting",
@@ -37,26 +49,11 @@ def get_queue(status: str = None, db: Session = Depends(database.get_db)):
     
     all_items = query.all()
     
-    # SeparationLogic
-    accepted_status = ["In Consultation", "Completed"]
+    # Sort by Priority then Time
+    # Priority (True) comes first, then earlier appointmentTime
+    all_items.sort(key=lambda x: (not x.isPriority, x.appointmentTime))
     
-    # 1. Processing Doctor Queues ("Waiting")
-    doc_waiting = [i for i in all_items if i.status == "Waiting" and i.queueType == "Doctor"]
-    doc_waiting.sort(key=lambda x: (not x.isPriority, x.appointmentTime))
-    for idx, item in enumerate(doc_waiting):
-        item.numberQueue = f"D-{idx + 1:04d}"
-        
-    # 2. Processing Polyclinic Queues ("Waiting")
-    poly_waiting = [i for i in all_items if i.status == "Waiting" and i.queueType != "Doctor"]
-    poly_waiting.sort(key=lambda x: (not x.isPriority, x.appointmentTime))
-    for idx, item in enumerate(poly_waiting):
-        item.numberQueue = f"P-{idx + 1:04d}"
-        
-    # 3. Non-Waiting items (Keep original number or simple Logic?)
-    # For now returning them as is, or you could apply similar sorting if needed.
-    others = [i for i in all_items if i.status != "Waiting"]
-    
-    return doc_waiting + poly_waiting + others
+    return all_items
 
 @router.put("/{queue_id}/status", response_model=schemas.PatientQueue)
 def update_queue_status(queue_id: int, status_update: schemas.QueueUpdateStatus, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):

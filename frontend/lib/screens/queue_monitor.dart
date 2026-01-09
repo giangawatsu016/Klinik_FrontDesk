@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import 'dart:async';
@@ -14,12 +15,19 @@ class QueueMonitorScreen extends StatefulWidget {
 class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
   List<QueueItem> _queue = [];
   Timer? _timer;
+  final FlutterTts flutterTts = FlutterTts();
 
   @override
   void initState() {
     super.initState();
+    _initTts();
     _fetchQueue();
     _timer = Timer.periodic(Duration(seconds: 10), (timer) => _fetchQueue());
+  }
+
+  void _initTts() async {
+    await flutterTts.setLanguage("id-ID");
+    await flutterTts.setSpeechRate(0.5);
   }
 
   @override
@@ -137,6 +145,7 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 Text(
                   currentConsult.numberQueue,
                   style: TextStyle(
@@ -145,8 +154,20 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                     color: Colors.green[900],
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    "Status: ${currentConsult.status}",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.green[700],
+                    ),
+                  ),
+                ),
                 Text(
                   "${currentConsult.patient?.firstName} ${currentConsult.patient?.lastName}",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -240,6 +261,16 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
         nextPatient.id,
         "In Consultation",
       );
+
+      // Speak Announcement
+      String name =
+          "${nextPatient.patient?.firstName ?? ''} ${nextPatient.patient?.lastName ?? ''}"
+              .trim();
+      if (name.isEmpty) name = "Pasien";
+      await flutterTts.speak(
+        "Antrian Saudara $name Silahkan Menuju ke resepsionis",
+      );
+
       _fetchQueue();
     }
   }

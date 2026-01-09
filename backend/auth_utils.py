@@ -3,8 +3,13 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 
-# Secret key settings - should be env vars in production
-SECRET_KEY = "YOUR_SUPER_SECRET_KEY_HERE"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Secret key settings - loaded from env
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback_secret_only_for_dev_warning")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 480 # 8 hours work shift
 

@@ -1,58 +1,60 @@
+from sqlalchemy.orm import Session
 from .database import SessionLocal, engine, Base
-from . import models
-from . import auth_utils
+from .models import MaritalStatus, Issuer, DoctorEntity, User
+from .auth_utils import get_password_hash
 
-# Create tables if not exist (redundant but safe)
-Base.metadata.create_all(bind=engine)
+def seed():
+    print("Creating tables if not exist...")
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
 
-db = SessionLocal()
+    # 1. Marital Status
+    if not db.query(MaritalStatus).first():
+        print("Seeding Marital Statuses...")
+        statuses = ["Single", "Married", "Divorced", "Widowed"]
+        for s in statuses:
+            db.add(MaritalStatus(display=s))
+        db.commit()
 
-def seed_data():
-    # 1. Create Default User
-    if not db.query(models.User).filter(models.User.username == "admin").first():
-        print("Creating default user: admin/admin")
-        admin_user = models.User(
+    # 2. Issuers
+    if not db.query(Issuer).first():
+        print("Seeding Issuers...")
+        issuers = [
+            {"issuer": "Umum (General)", "nama": []},
+            {"issuer": "BPJS", "nama": ["BPJS Kesehatan", "BPJS Ketenagakerjaan"]},
+            {"issuer": "Insurance", "nama": ["Allianz", "Prudential", "Manulife"]}
+        ]
+        for i in issuers:
+            db.add(Issuer(issuer=i["issuer"], nama=i["nama"]))
+        db.commit()
+
+    # 3. Doctors
+    if not db.query(DoctorEntity).first():
+        print("Seeding Doctors...")
+        doctors = [
+            {"gelarDepan": "Dr.", "namaDokter": "Budi Santoso", "polyName": "General", "is_available": True},
+            {"gelarDepan": "Drg.", "namaDokter": "Siti Aminah", "polyName": "Dental", "is_available": True},
+            {"gelarDepan": "Sp.A", "namaDokter": "Andi Wijaya", "polyName": "Pediatric", "is_available": True},
+            {"gelarDepan": "Sp.PD", "namaDokter": "Citra Lestari", "polyName": "Internal Medicine", "is_available": True}
+        ]
+        for d in doctors:
+            db.add(DoctorEntity(**d))
+        db.commit()
+
+    # 4. Admin User
+    if not db.query(User).filter(User.username == "admin").first():
+        print("Creating Admin User...")
+        admin_user = User(
             username="admin",
-            password_hash=auth_utils.get_password_hash("admin"),
+            password_hash=get_password_hash("admin123"),
             full_name="Administrator",
             role="admin"
         )
         db.add(admin_user)
-    
-    # 2. Create Master Data - Doctors
-    if db.query(models.DoctorEntity).count() == 0:
-        print("Seeding Doctors...")
-        doctors = [
-            models.DoctorEntity(gelarDepan="Dr.", namaDokter="Budi Santoso", polyName="General"),
-            models.DoctorEntity(gelarDepan="Dr.", namaDokter="Siti Aminah", polyName="Dental"),
-            models.DoctorEntity(gelarDepan="Sp.A", namaDokter="Andi Wijaya", polyName="Pediatric"),
-        ]
-        db.add_all(doctors)
+        db.commit()
 
-    # 3. Create Master Data - Issuers
-    if db.query(models.Issuer).count() == 0:
-        print("Seeding Issuers...")
-        issuers = [
-            models.Issuer(issuer="Tunjangan Pribadi", nama=["Umum"]),
-            models.Issuer(issuer="BPJS", nama=["BPJS Kesehatan", "BPJS Ketenagakerjaan"]),
-            models.Issuer(issuer="Asuransi Swasta", nama=["Prudential", "Allianz", "Manulife"]),
-        ]
-        db.add_all(issuers)
-        
-    # 4. Create Master Data - Marital Status
-    if db.query(models.MaritalStatus).count() == 0:
-        print("Seeding Marital Status...")
-        statuses = [
-            models.MaritalStatus(display="Single"),
-            models.MaritalStatus(display="Married"),
-            models.MaritalStatus(display="Divorced"),
-            models.MaritalStatus(display="Widowed"),
-        ]
-        db.add_all(statuses)
-
-    db.commit()
-    print("Seeding complete!")
+    print("Seeding Complete!")
+    db.close()
 
 if __name__ == "__main__":
-    seed_data()
-    db.close()
+    seed()

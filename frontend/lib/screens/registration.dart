@@ -171,64 +171,113 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         maritalStatusId: maritalStatusId,
       );
 
-      final createdPatient = await widget.apiService.registerPatient(
-        newPatient,
-      );
+      try {
+        final createdPatient = await widget.apiService.registerPatient(
+          newPatient,
+        );
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      if (createdPatient != null) {
         setState(() {
           _verifiedPatient = createdPatient;
           _currentStep = RegistrationStep.selectDoctor;
         });
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Registration Failed')));
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll("Exception: ", "")),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
 
   void _submitToQueue() async {
-    bool valid = false;
+    try {
+      bool valid = false;
+      String errorMessage = "Please select a doctor or polyclinic";
 
-    if (_isPolyclinic) {
-      if (_selectedPolyclinic != null && _verifiedPatient != null) valid = true;
-    } else {
-      if (selectedDoctor != null && _verifiedPatient != null) valid = true;
-    }
+      if (_verifiedPatient == null || _verifiedPatient!.id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error: Patient data is invalid. Please search again.',
+            ),
+          ),
+        );
+        return;
+      }
 
-    if (valid) {
-      await widget.apiService.addToQueue(
-        patientId: _verifiedPatient!.id!,
-        doctorId: !_isPolyclinic
-            ? selectedDoctor!.medicalFacilityPolyDoctorId
-            : null,
-        isPriority: isPriority,
-        queueType: _isPolyclinic ? "Polyclinic" : "Doctor",
-        polyclinic: _isPolyclinic ? _selectedPolyclinic : null,
-      );
+      if (_isPolyclinic) {
+        if (_selectedPolyclinic != null) {
+          valid = true;
+        } else {
+          errorMessage = "Please select a Polyclinic";
+        }
+      } else {
+        if (selectedDoctor != null) {
+          valid = true;
+        } else {
+          errorMessage = "Please select a Doctor";
+        }
+      }
 
-      if (!mounted) return;
+      if (valid) {
+        final success = await widget.apiService.addToQueue(
+          patientId: _verifiedPatient!.id!,
+          doctorId: !_isPolyclinic
+              ? selectedDoctor!.medicalFacilityPolyDoctorId
+              : null,
+          isPriority: isPriority,
+          queueType: _isPolyclinic ? "Polyclinic" : "Doctor",
+          polyclinic: _isPolyclinic ? _selectedPolyclinic : null,
+        );
+
+        if (!mounted) return;
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Patient Registered & Queued Successfully',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Reset
+          setState(() {
+            _currentStep = RegistrationStep.selectType;
+            _verifiedPatient = null;
+            _patientType = null;
+            _searchController.clear();
+            _searchResults = [];
+            selectedDoctor = null;
+            _selectedPolyclinic = null;
+            isPriority = false;
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to add to queue. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Patient Registered & Queued Successfully')),
-      );
-
-      // Reset
-      setState(() {
-        _currentStep = RegistrationStep.selectType;
-        _verifiedPatient = null;
-        _patientType = null;
-        _searchController.clear();
-        _searchResults = [];
-        selectedDoctor = null;
-        _selectedPolyclinic = null;
-        isPriority = false;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a doctor or polyclinic')),
+        SnackBar(
+          content: Text('An unexpected error occurred: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -375,265 +424,270 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget _buildNewPatientForm() {
     return Form(
       key: _formKey,
-      child: ListView(
-        children: [
-          _buildSectionTitle("Personal Information"),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  decoration: InputDecoration(labelText: 'First Name'),
-                  onSaved: (v) => firstName = v!,
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildSectionTitle("Personal Information"),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    decoration: InputDecoration(labelText: 'First Name'),
+                    onSaved: (v) => firstName = v!,
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                  ),
                 ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: TextFormField(
-                  decoration: InputDecoration(labelText: 'Last Name'),
-                  onSaved: (v) => lastName = v!,
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    decoration: InputDecoration(labelText: 'Last Name'),
+                    onSaved: (v) => lastName = v!,
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          TextFormField(
-            decoration: InputDecoration(labelText: 'ID Card (NIK)'),
-            keyboardType: TextInputType.number,
-            maxLength: 16,
-            onSaved: (v) => identityCard = v!,
-            validator: (v) {
-              if (v == null || v.isEmpty) return 'Required';
-              if (v.length != 16) return 'NIK must be exactly 16 digits';
-              if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Numeric only';
-              return null;
-            },
-          ),
-          TextFormField(
-            decoration: InputDecoration(labelText: 'Phone'),
-            onSaved: (v) => phone = v!,
-            validator: (v) => v!.isEmpty ? 'Required' : null,
-          ),
-          _buildDatePicker(),
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  // ignore: deprecated_member_use
-                  value: gender,
-                  decoration: InputDecoration(labelText: 'Gender'),
-                  items: ['Male', 'Female']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (v) => setState(() => gender = v!),
-                ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  // ignore: deprecated_member_use
-                  value: religion,
-                  decoration: InputDecoration(labelText: 'Religion'),
-                  items: religions
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (v) => setState(() => religion = v!),
-                ),
-              ),
-            ],
-          ),
-          DropdownButtonFormField<int>(
-            // ignore: deprecated_member_use
-            value: maritalStatusId,
-            decoration: InputDecoration(labelText: 'Marital Status'),
-            items: maritalStatuses.entries
-                .map(
-                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                )
-                .toList(),
-            onChanged: (v) => setState(() => maritalStatusId = v!),
-          ),
-
-          _buildSectionTitle("Background"),
-          TextFormField(
-            decoration: InputDecoration(labelText: 'Profession'),
-            onSaved: (v) => profession = v!,
-          ),
-          DropdownButtonFormField<String>(
-            // ignore: deprecated_member_use
-            value: education,
-            decoration: InputDecoration(labelText: 'Education'),
-            items: educations
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                .toList(),
-            onChanged: (v) => setState(() => education = v!),
-          ),
-
-          _buildSectionTitle("Address"),
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  // ignore: deprecated_member_use
-                  value: province.isNotEmpty ? province : null,
-                  decoration: InputDecoration(labelText: 'Province'),
-                  items: addressData.keys
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (v) {
-                    setState(() {
-                      province = v!;
-                      city = '';
-                      district = '';
-                      subdistrict = '';
-                    });
-                  },
-                ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  // ignore: deprecated_member_use
-                  value:
-                      city.isNotEmpty &&
-                          (addressData[province]?.containsKey(city) ?? false)
-                      ? city
-                      : null,
-                  decoration: InputDecoration(labelText: 'City'),
-                  items: province.isNotEmpty
-                      ? addressData[province]!.keys
-                            .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)),
-                            )
-                            .toList()
-                      : [],
-                  onChanged: (v) {
-                    setState(() {
-                      city = v!;
-                      district = '';
-                      subdistrict = '';
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  // ignore: deprecated_member_use
-                  value:
-                      district.isNotEmpty &&
-                          (addressData[province]?[city]?.containsKey(
-                                district,
-                              ) ??
-                              false)
-                      ? district
-                      : null,
-                  decoration: InputDecoration(labelText: 'District'),
-                  items: city.isNotEmpty
-                      ? addressData[province]![city]!.keys
-                            .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)),
-                            )
-                            .toList()
-                      : [],
-                  onChanged: (v) {
-                    setState(() {
-                      district = v!;
-                      subdistrict = '';
-                    });
-                  },
-                ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  // ignore: deprecated_member_use
-                  value:
-                      subdistrict.isNotEmpty &&
-                          (addressData[province]?[city]?[district]?.contains(
-                                subdistrict,
-                              ) ??
-                              false)
-                      ? subdistrict
-                      : null,
-                  decoration: InputDecoration(labelText: 'Subdistrict'),
-                  items: district.isNotEmpty
-                      ? addressData[province]![city]![district]!
-                            .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)),
-                            )
-                            .toList()
-                      : [],
-                  onChanged: (v) => setState(() => subdistrict = v!),
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  decoration: InputDecoration(labelText: 'RT'),
-                  onSaved: (v) => rt = v!,
-                ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: TextFormField(
-                  decoration: InputDecoration(labelText: 'RW'),
-                  onSaved: (v) => rw = v!,
-                ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: TextFormField(
-                  decoration: InputDecoration(labelText: 'Postal Code'),
-                  onSaved: (v) => postalCode = v!,
-                ),
-              ),
-            ],
-          ),
-          TextFormField(
-            decoration: InputDecoration(labelText: 'Full Address'),
-            onSaved: (v) => addressDetails = v!,
-          ),
-
-          _buildSectionTitle("Insurance"),
-          DropdownButtonFormField<int>(
-            // ignore: deprecated_member_use
-            value: issuerId,
-            decoration: InputDecoration(labelText: 'Issuer'),
-            items: issuers.entries
-                .map(
-                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                )
-                .toList(),
-            onChanged: (v) => setState(() => issuerId = v!),
-          ),
-          if (issuerId != 1)
+              ],
+            ),
             TextFormField(
-              decoration: InputDecoration(labelText: 'Insurance Number'),
-              onSaved: (v) => noAssuransi = v!,
-              validator: (v) => v!.isEmpty ? 'Required for Insurance' : null,
+              decoration: InputDecoration(labelText: 'ID Card (NIK)'),
+              keyboardType: TextInputType.number,
+              maxLength: 16,
+              onSaved: (v) => identityCard = v!,
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Required';
+                if (v.length != 16) return 'NIK must be exactly 16 digits';
+                if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Numeric only';
+                return null;
+              },
+            ),
+            TextFormField(
+              decoration: InputDecoration(labelText: 'Phone'),
+              onSaved: (v) => phone = v!,
+              validator: (v) => v!.isEmpty ? 'Required' : null,
+            ),
+            _buildDatePicker(),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    // ignore: deprecated_member_use
+                    value: gender,
+                    decoration: InputDecoration(labelText: 'Gender'),
+                    items: ['Male', 'Female']
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (v) => setState(() => gender = v!),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    // ignore: deprecated_member_use
+                    value: religion,
+                    decoration: InputDecoration(labelText: 'Religion'),
+                    items: religions
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (v) => setState(() => religion = v!),
+                  ),
+                ),
+              ],
+            ),
+            DropdownButtonFormField<int>(
+              // ignore: deprecated_member_use
+              value: maritalStatusId,
+              decoration: InputDecoration(labelText: 'Marital Status'),
+              items: maritalStatuses.entries
+                  .map(
+                    (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                  )
+                  .toList(),
+              onChanged: (v) => setState(() => maritalStatusId = v!),
             ),
 
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _submitNewPatient,
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 20),
+            _buildSectionTitle("Background"),
+            TextFormField(
+              decoration: InputDecoration(labelText: 'Profession'),
+              onSaved: (v) => profession = v!,
             ),
-            child: Text("Register & Proceed"),
-          ),
-          TextButton(
-            onPressed: () =>
-                setState(() => _currentStep = RegistrationStep.selectType),
-            child: Text("Back"),
-          ),
-        ],
+            DropdownButtonFormField<String>(
+              // ignore: deprecated_member_use
+              value: education,
+              decoration: InputDecoration(labelText: 'Education'),
+              items: educations
+                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  .toList(),
+              onChanged: (v) => setState(() => education = v!),
+            ),
+
+            _buildSectionTitle("Address"),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    // ignore: deprecated_member_use
+                    value: province.isNotEmpty ? province : null,
+                    decoration: InputDecoration(labelText: 'Province'),
+                    items: addressData.keys
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (v) {
+                      setState(() {
+                        province = v!;
+                        city = '';
+                        district = '';
+                        subdistrict = '';
+                      });
+                    },
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    // ignore: deprecated_member_use
+                    value:
+                        city.isNotEmpty &&
+                            (addressData[province]?.containsKey(city) ?? false)
+                        ? city
+                        : null,
+                    decoration: InputDecoration(labelText: 'City'),
+                    items: province.isNotEmpty
+                        ? addressData[province]!.keys
+                              .map(
+                                (e) =>
+                                    DropdownMenuItem(value: e, child: Text(e)),
+                              )
+                              .toList()
+                        : [],
+                    onChanged: (v) {
+                      setState(() {
+                        city = v!;
+                        district = '';
+                        subdistrict = '';
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    // ignore: deprecated_member_use
+                    value:
+                        district.isNotEmpty &&
+                            (addressData[province]?[city]?.containsKey(
+                                  district,
+                                ) ??
+                                false)
+                        ? district
+                        : null,
+                    decoration: InputDecoration(labelText: 'District'),
+                    items: city.isNotEmpty
+                        ? addressData[province]![city]!.keys
+                              .map(
+                                (e) =>
+                                    DropdownMenuItem(value: e, child: Text(e)),
+                              )
+                              .toList()
+                        : [],
+                    onChanged: (v) {
+                      setState(() {
+                        district = v!;
+                        subdistrict = '';
+                      });
+                    },
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    // ignore: deprecated_member_use
+                    value:
+                        subdistrict.isNotEmpty &&
+                            (addressData[province]?[city]?[district]?.contains(
+                                  subdistrict,
+                                ) ??
+                                false)
+                        ? subdistrict
+                        : null,
+                    decoration: InputDecoration(labelText: 'Subdistrict'),
+                    items: district.isNotEmpty
+                        ? addressData[province]![city]![district]!
+                              .map(
+                                (e) =>
+                                    DropdownMenuItem(value: e, child: Text(e)),
+                              )
+                              .toList()
+                        : [],
+                    onChanged: (v) => setState(() => subdistrict = v!),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    decoration: InputDecoration(labelText: 'RT'),
+                    onSaved: (v) => rt = v!,
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    decoration: InputDecoration(labelText: 'RW'),
+                    onSaved: (v) => rw = v!,
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    decoration: InputDecoration(labelText: 'Postal Code'),
+                    onSaved: (v) => postalCode = v!,
+                  ),
+                ),
+              ],
+            ),
+            TextFormField(
+              decoration: InputDecoration(labelText: 'Full Address'),
+              onSaved: (v) => addressDetails = v!,
+            ),
+
+            _buildSectionTitle("Insurance"),
+            DropdownButtonFormField<int>(
+              // ignore: deprecated_member_use
+              value: issuerId,
+              decoration: InputDecoration(labelText: 'Issuer'),
+              items: issuers.entries
+                  .map(
+                    (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                  )
+                  .toList(),
+              onChanged: (v) => setState(() => issuerId = v!),
+            ),
+            if (issuerId != 1)
+              TextFormField(
+                decoration: InputDecoration(labelText: 'Insurance Number'),
+                onSaved: (v) => noAssuransi = v!,
+                validator: (v) => v!.isEmpty ? 'Required for Insurance' : null,
+              ),
+
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _submitNewPatient,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 20),
+              ),
+              child: Text("Register & Proceed"),
+            ),
+            TextButton(
+              onPressed: () =>
+                  setState(() => _currentStep = RegistrationStep.selectType),
+              child: Text("Back"),
+            ),
+          ],
+        ),
       ),
     );
   }
