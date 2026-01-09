@@ -74,7 +74,9 @@ class PatientBase(BaseModel):
     rw: str
     postalCode: str
     address_details: Optional[str] = None
+    address_details: Optional[str] = None
     issuerId: int
+    insuranceName: Optional[str] = None
     noAssuransi: Optional[str] = None
     maritalStatusId: int
 

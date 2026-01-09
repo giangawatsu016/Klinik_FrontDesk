@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
+import '../widgets/glass_container.dart';
 import 'dart:async';
 
 class QueueMonitorScreen extends StatefulWidget {
@@ -84,7 +85,10 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: type == 'Doctor' ? Colors.blue : Colors.teal,
+            color: type == 'Doctor'
+                ? Colors.blue.shade900
+                : Colors.teal.shade900,
+            shadows: [Shadow(color: Colors.white, blurRadius: 2)],
           ),
           textAlign: TextAlign.center,
         ),
@@ -101,9 +105,13 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                 icon: Icon(Icons.campaign),
                 label: Text("Call Patient"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: Colors.green.withValues(alpha: 0.8),
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 16),
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
@@ -116,9 +124,13 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                 icon: Icon(Icons.check_circle),
                 label: Text("Completed"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueGrey,
+                  backgroundColor: Colors.blueGrey.withValues(alpha: 0.8),
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 16),
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
@@ -128,30 +140,26 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
 
         // Status Monitor
         if (canComplete)
-          Container(
-            padding: EdgeInsets.all(16),
+          GlassContainer(
+            color: Colors.green.withValues(alpha: 0.2),
             margin: EdgeInsets.only(bottom: 20),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              border: Border.all(color: Colors.green),
-              borderRadius: BorderRadius.circular(8),
-            ),
             child: Column(
               children: [
                 Text(
                   "Current Patient",
                   style: TextStyle(
-                    color: Colors.green[800],
+                    color: Colors.green[900],
                     fontWeight: FontWeight.bold,
+                    fontSize: 20,
                   ),
                 ),
-
                 Text(
                   currentConsult.numberQueue,
                   style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 64, // Bigger for modern look
+                    fontWeight: FontWeight.w900,
                     color: Colors.green[900],
+                    shadows: [Shadow(color: Colors.white, blurRadius: 10)],
                   ),
                 ),
                 Padding(
@@ -161,13 +169,17 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
-                      color: Colors.green[700],
+                      color: Colors.green[800],
                     ),
                   ),
                 ),
                 Text(
                   "${currentConsult.patient?.firstName} ${currentConsult.patient?.lastName}",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[900],
+                  ),
                 ),
               ],
             ),
@@ -226,21 +238,30 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                     ),
                   );
                 },
-                child: Card(
+                child: GlassContainer(
                   color: item.status == 'Waiting'
-                      ? (type == 'Doctor' ? Colors.blue[50] : Colors.teal[50])
-                      : Colors.grey[200],
+                      ? (type == 'Doctor'
+                            ? Colors.blue.withValues(alpha: 0.1)
+                            : Colors.teal.withValues(alpha: 0.1))
+                      : Colors.grey.withValues(alpha: 0.1),
+                  margin: EdgeInsets.symmetric(vertical: 8),
+                  padding: EdgeInsets.zero,
                   child: ListTile(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     leading: Text(
                       item.numberQueue,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade900,
                       ),
                     ),
                     title: Text(item.status),
                     trailing: item.isPriority
-                        ? Icon(Icons.star, color: Colors.amber)
+                        ? Icon(Icons.star, color: Colors.amber, size: 32)
                         : null,
                   ),
                 ),

@@ -51,6 +51,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   String addressDetails = '';
 
   int issuerId = 1; // 1=General, 2=BPJS, 3=Insurance
+  String? insuranceName;
   String noAssuransi = '';
   int maritalStatusId = 1; // 1=Single, 2=Married, 3=Divorced, 4=Widowed
 
@@ -167,6 +168,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         postalCode: postalCode,
         addressDetails: addressDetails,
         issuerId: issuerId,
+        insuranceName: insuranceName,
         noAssuransi: noAssuransi,
         maritalStatusId: maritalStatusId,
       );
@@ -666,8 +668,40 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                   )
                   .toList(),
-              onChanged: (v) => setState(() => issuerId = v!),
+              onChanged: (v) {
+                setState(() {
+                  issuerId = v!;
+                  insuranceName = null; // Reset sub-selection
+                });
+              },
             ),
+            if (issuerId == 2) // BPJS
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: DropdownButtonFormField<String>(
+                  initialValue: insuranceName,
+                  decoration: InputDecoration(labelText: 'BPJS Type'),
+                  items: ['BPJS Kesehatan', 'BPJS Ketenagakerjaan']
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: (v) => setState(() => insuranceName = v),
+                  validator: (v) =>
+                      v == null ? 'Please select BPJS Type' : null,
+                ),
+              ),
+            if (issuerId == 3) // Insurance
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: DropdownButtonFormField<String>(
+                  initialValue: insuranceName,
+                  decoration: InputDecoration(labelText: 'Insurance Provider'),
+                  items: ['Allianz', 'Prudential', 'Manulife']
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: (v) => setState(() => insuranceName = v),
+                  validator: (v) => v == null ? 'Please select Provider' : null,
+                ),
+              ),
             if (issuerId != 1)
               TextFormField(
                 decoration: InputDecoration(labelText: 'Insurance Number'),

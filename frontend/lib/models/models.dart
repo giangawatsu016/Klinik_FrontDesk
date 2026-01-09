@@ -41,6 +41,7 @@ class Patient {
   final String postalCode;
   final String? addressDetails;
   final int issuerId;
+  final String? insuranceName;
   final String? noAssuransi;
   final int maritalStatusId;
 
@@ -64,6 +65,7 @@ class Patient {
     required this.postalCode,
     this.addressDetails,
     required this.issuerId,
+    this.insuranceName,
     this.noAssuransi,
     required this.maritalStatusId,
   });
@@ -88,6 +90,7 @@ class Patient {
       'postalCode': postalCode,
       'address_details': addressDetails,
       'issuerId': issuerId,
+      'insuranceName': insuranceName,
       'noAssuransi': noAssuransi,
       'maritalStatusId': maritalStatusId,
     };
@@ -116,6 +119,7 @@ class Patient {
       postalCode: json['postalCode'] ?? '',
       addressDetails: json['address_details'],
       issuerId: json['issuerId'] ?? 1,
+      insuranceName: json['insuranceName'],
       maritalStatusId: json['maritalStatusId'] ?? 1,
       noAssuransi: json['noAssuransi'],
     );

@@ -61,6 +61,7 @@ class Patient(Base):
     
     # Insurance Info
     issuerId = Column(Integer, ForeignKey("issuer.issuerId"))
+    insuranceName = Column(String(100), nullable=True) # BPJS Kesehatan, Allianz, etc.
     noAssuransi = Column(String(50), nullable=True)
     
     # Marital Status
