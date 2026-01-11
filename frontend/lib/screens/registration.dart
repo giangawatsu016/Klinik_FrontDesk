@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
-import '../data/address_data.dart';
 
 class RegistrationScreen extends StatefulWidget {
   final ApiService apiService;
@@ -60,6 +59,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Doctor? selectedDoctor;
   bool isPriority = false;
 
+  // Dynamic Address Data
+  List<Map<String, dynamic>> _provinces = [];
+  List<Map<String, dynamic>> _cities = [];
+  List<Map<String, dynamic>> _districts = [];
+  List<Map<String, dynamic>> _subdistricts = [];
+
+  String? _selectedProvinceId;
+  String? _selectedCityId;
+  String? _selectedDistrictId;
+  String? _selectedSubdistrictId;
+
   final List<String> religions = [
     'Islam',
     'Kristen',
@@ -96,6 +106,75 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   void initState() {
     super.initState();
     _loadDoctors();
+    _loadProvinces();
+  }
+
+  void _loadProvinces() async {
+    final res = await widget.apiService.getProvinces();
+    if (mounted) setState(() => _provinces = res);
+  }
+
+  void _onProvinceChanged(String? val) async {
+    if (val == null) return;
+    setState(() {
+      _selectedProvinceId = val;
+      _selectedCityId = null;
+      _selectedDistrictId = null;
+      _selectedSubdistrictId = null;
+      _cities = [];
+      _districts = [];
+      _subdistricts = [];
+
+      // Update Name for Submission
+      province = _provinces.firstWhere((e) => e['id'] == val)['name'];
+      city = '';
+      district = '';
+      subdistrict = '';
+    });
+
+    final res = await widget.apiService.getCities(val);
+    if (mounted) setState(() => _cities = res);
+  }
+
+  void _onCityChanged(String? val) async {
+    if (val == null) return;
+    setState(() {
+      _selectedCityId = val;
+      _selectedDistrictId = null;
+      _selectedSubdistrictId = null;
+      _districts = [];
+      _subdistricts = [];
+
+      city = _cities.firstWhere((e) => e['id'] == val)['name'];
+      district = '';
+      subdistrict = '';
+    });
+
+    final res = await widget.apiService.getDistricts(val);
+    if (mounted) setState(() => _districts = res);
+  }
+
+  void _onDistrictChanged(String? val) async {
+    if (val == null) return;
+    setState(() {
+      _selectedDistrictId = val;
+      _selectedSubdistrictId = null;
+      _subdistricts = [];
+
+      district = _districts.firstWhere((e) => e['id'] == val)['name'];
+      subdistrict = '';
+    });
+
+    final res = await widget.apiService.getSubdistricts(val);
+    if (mounted) setState(() => _subdistricts = res);
+  }
+
+  void _onSubdistrictChanged(String? val) {
+    if (val == null) return;
+    setState(() {
+      _selectedSubdistrictId = val;
+      subdistrict = _subdistricts.firstWhere((e) => e['id'] == val)['name'];
+    });
   }
 
   void _loadDoctors() async {
@@ -528,47 +607,37 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    // ignore: deprecated_member_use
-                    value: province.isNotEmpty ? province : null,
+                    key: ValueKey("prov_$_selectedProvinceId"),
+                    initialValue: _selectedProvinceId,
                     decoration: InputDecoration(labelText: 'Province'),
-                    items: addressData.keys
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    items: _provinces
+                        .map(
+                          (e) => DropdownMenuItem(
+                            value: e['id'] as String,
+                            child: Text(e['name']),
+                          ),
+                        )
                         .toList(),
-                    onChanged: (v) {
-                      setState(() {
-                        province = v!;
-                        city = '';
-                        district = '';
-                        subdistrict = '';
-                      });
-                    },
+                    onChanged: _onProvinceChanged,
+                    validator: (v) => v == null ? 'Required' : null,
                   ),
                 ),
                 SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    // ignore: deprecated_member_use
-                    value:
-                        city.isNotEmpty &&
-                            (addressData[province]?.containsKey(city) ?? false)
-                        ? city
-                        : null,
+                    key: ValueKey("city_$_selectedCityId"),
+                    initialValue: _selectedCityId,
                     decoration: InputDecoration(labelText: 'City'),
-                    items: province.isNotEmpty
-                        ? addressData[province]!.keys
-                              .map(
-                                (e) =>
-                                    DropdownMenuItem(value: e, child: Text(e)),
-                              )
-                              .toList()
-                        : [],
-                    onChanged: (v) {
-                      setState(() {
-                        city = v!;
-                        district = '';
-                        subdistrict = '';
-                      });
-                    },
+                    items: _cities
+                        .map(
+                          (e) => DropdownMenuItem(
+                            value: e['id'] as String,
+                            child: Text(e['name']),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: _onCityChanged,
+                    validator: (v) => v == null ? 'Required' : null,
                   ),
                 ),
               ],
@@ -577,54 +646,37 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    // ignore: deprecated_member_use
-                    value:
-                        district.isNotEmpty &&
-                            (addressData[province]?[city]?.containsKey(
-                                  district,
-                                ) ??
-                                false)
-                        ? district
-                        : null,
+                    key: ValueKey("dist_$_selectedDistrictId"),
+                    initialValue: _selectedDistrictId,
                     decoration: InputDecoration(labelText: 'District'),
-                    items: city.isNotEmpty
-                        ? addressData[province]![city]!.keys
-                              .map(
-                                (e) =>
-                                    DropdownMenuItem(value: e, child: Text(e)),
-                              )
-                              .toList()
-                        : [],
-                    onChanged: (v) {
-                      setState(() {
-                        district = v!;
-                        subdistrict = '';
-                      });
-                    },
+                    items: _districts
+                        .map(
+                          (e) => DropdownMenuItem(
+                            value: e['id'] as String,
+                            child: Text(e['name']),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: _onDistrictChanged,
+                    validator: (v) => v == null ? 'Required' : null,
                   ),
                 ),
                 SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    // ignore: deprecated_member_use
-                    value:
-                        subdistrict.isNotEmpty &&
-                            (addressData[province]?[city]?[district]?.contains(
-                                  subdistrict,
-                                ) ??
-                                false)
-                        ? subdistrict
-                        : null,
+                    key: ValueKey("sub_$_selectedSubdistrictId"),
+                    initialValue: _selectedSubdistrictId,
                     decoration: InputDecoration(labelText: 'Subdistrict'),
-                    items: district.isNotEmpty
-                        ? addressData[province]![city]![district]!
-                              .map(
-                                (e) =>
-                                    DropdownMenuItem(value: e, child: Text(e)),
-                              )
-                              .toList()
-                        : [],
-                    onChanged: (v) => setState(() => subdistrict = v!),
+                    items: _subdistricts
+                        .map(
+                          (e) => DropdownMenuItem(
+                            value: e['id'] as String,
+                            child: Text(e['name']),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: _onSubdistrictChanged,
+                    validator: (v) => v == null ? 'Required' : null,
                   ),
                 ),
               ],

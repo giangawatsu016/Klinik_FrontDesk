@@ -124,4 +124,53 @@ class ApiService {
     );
     return response.statusCode == 200;
   }
+
+  // Address Methods
+  Future<List<Map<String, dynamic>>> getProvinces() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/master/address/provinces'),
+      );
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  Future<List<Map<String, dynamic>>> getCities(String provinceId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/master/address/cities/$provinceId'),
+      );
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  Future<List<Map<String, dynamic>>> getDistricts(String cityId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/master/address/districts/$cityId'),
+      );
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  Future<List<Map<String, dynamic>>> getSubdistricts(String districtId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/master/address/subdistricts/$districtId'),
+      );
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+      }
+    } catch (_) {}
+    return [];
+  }
 }

@@ -44,15 +44,52 @@ def create_doctor(doctor: schemas.DoctorBase, db: Session = Depends(database.get
     db.refresh(new_doctor)
     return new_doctor
 
-@router.get("/address/provinces")
-def get_provinces():
-    # Placeholder for Indonesian provinces
-    return [
-        {"id": "1", "name": "DKI Jakarta"},
-        {"id": "2", "name": "Jawa Barat"},
-        {"id": "3", "name": "Jawa Tengah"},
-        {"id": "4", "name": "Jawa Timur"},
-        # Add more or fetch from external source
-    ]
+import requests
 
-# Add similar endpoints for cities/districts based on province ID
+BASE_URL_WILAYAH = "https://www.emsifa.com/api-wilayah-indonesia/api"
+
+from functools import lru_cache
+
+@router.get("/address/provinces")
+@lru_cache(maxsize=1)
+def get_provinces():
+    try:
+        resp = requests.get(f"{BASE_URL_WILAYAH}/provinces.json")
+        if resp.status_code == 200:
+            return resp.json()
+    except:
+        pass
+    return []
+
+@router.get("/address/cities/{province_id}")
+@lru_cache(maxsize=100)
+def get_cities(province_id: str):
+    try:
+        resp = requests.get(f"{BASE_URL_WILAYAH}/regencies/{province_id}.json")
+        if resp.status_code == 200:
+            return resp.json()
+    except:
+        pass
+    return []
+
+@router.get("/address/districts/{city_id}")
+@lru_cache(maxsize=500)
+def get_districts(city_id: str):
+    try:
+        resp = requests.get(f"{BASE_URL_WILAYAH}/districts/{city_id}.json")
+        if resp.status_code == 200:
+            return resp.json()
+    except:
+        pass
+    return []
+
+@router.get("/address/subdistricts/{district_id}")
+@lru_cache(maxsize=1000)
+def get_subdistricts(district_id: str):
+    try:
+        resp = requests.get(f"{BASE_URL_WILAYAH}/villages/{district_id}.json")
+        if resp.status_code == 200:
+            return resp.json()
+    except:
+        pass
+    return []

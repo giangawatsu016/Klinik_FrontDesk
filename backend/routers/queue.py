@@ -21,6 +21,15 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
         # Default to Doctor
         prefix = "DP" if queue_data.isPriority else "D"
 
+    # Check for existing active queue for this patient
+    existing_queue = db.query(models.PatientQueue).filter(
+        models.PatientQueue.userId == queue_data.userId,
+        models.PatientQueue.status.in_(["Waiting", "In Consultation"])
+    ).first()
+
+    if existing_queue:
+        raise HTTPException(status_code=400, detail="Patient already has an active queue (Waiting or In Consultation)")
+
     # Count for today with this specific prefix
     count = db.query(models.PatientQueue).filter(
         models.PatientQueue.numberQueue.like(f"{prefix}-%"),

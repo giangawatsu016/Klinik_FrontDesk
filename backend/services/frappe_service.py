@@ -34,36 +34,32 @@ class FrappeClient:
             return None
 
     def create_patient(self, clinic_patient: dict):
-        # Maps local Patient data to Frappe Customer (or Patient if Healthcare exists)
-        # Using "Customer" for broader compatibility if Healthcare module missing
-        # If user installs Healthcare, we should switch to "Patient" doctype.
-        
-        # Checking if "Patient" doctype exists might be too slow for every req.
-        # Let's assume standard Customer for now as per plan, or try Patient first?
-        # User said they use Healthcare module in future (or now).
-        # Let's try to create a 'Patient' first, if 404/failure, fallback? 
-        # No, simpler to just map to 'Customer' as 'Customer Name' is mandatory.
-        # But for a Clinic, 'Patient' is best.
-        
-        # Let's try 'Patient' Doctype since user installs Healthcare app.
+        # Fallback: Sync to 'Customer' since 'Patient' (Healthcare) is not installed.
+        fullname = f"{clinic_patient.get('firstName')} {clinic_patient.get('lastName')}"
         data = {
-            "first_name": clinic_patient.get("firstName"),
-            "sex": clinic_patient.get("gender"),
-            "mobile": clinic_patient.get("phone"),
-            "dob": clinic_patient.get("birthday"),
-            # Custom fields might be needed for ID Card
+            "customer_name": fullname,
+            "customer_type": "Individual",
+            "customer_group": "All Customer Groups",
+            "territory": "All Territories",
+            "mobile_no": clinic_patient.get("phone"),
+            "email_id": "", # Optional
         }
-        return self._post("Patient", data)
+        return self._post("Customer", data)
 
     def create_appointment(self, queue_item: dict, patient_name: str):
-        # Syncs Queue to Appointment
+        # Fallback: Sync to 'Event' (Calendar) since 'Patient Appointment' is missing.
+        # Duration 30 mins default
+        start_time = queue_item.get("appointmentTime")
+        # Ensure start_time is datetime object or ISO string
+        
         data = {
-            "patient": patient_name, # Needs ID or Name? Usually ID/Name link
-            "appointment_date": str(queue_item.get("appointmentTime", "")),
+            "subject": f"Consultation: {patient_name}",
+            "starts_on": str(start_time),
             "status": "Open",
-            "appointment_type": "Consultation"
+            "event_type": "Public",
+            "description": "Queued from Klinik Admin"
         }
-        return self._post("Patient Appointment", data)
+        return self._post("Event", data)
 
 # Singleton
 frappe_client = FrappeClient()
