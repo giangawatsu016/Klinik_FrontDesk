@@ -2,13 +2,29 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Database URL - Replace user/password/db with actual values
-# For local dev, assuming default XAMPP/MAMP or similar: root with no password or root/root
-# DATABASE_URL = "mysql+pymysql://root:@localhost/klinik_db"
-SQLALCHEMY_DATABASE_URL = "sqlite:///./klinik.db"
+import os
+from dotenv import load_dotenv
+
+from pathlib import Path
+
+env_path = Path(__file__).parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
+from urllib.parse import quote_plus
+
+# Database URL
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_NAME = os.getenv("DB_NAME", "klinik_db")
+
+encoded_user = quote_plus(DB_USER)
+encoded_password = quote_plus(DB_PASSWORD)
+
+SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{encoded_user}:{encoded_password}@{DB_HOST}/{DB_NAME}"
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

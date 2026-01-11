@@ -658,11 +658,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               onSaved: (v) => addressDetails = v!,
             ),
 
-            _buildSectionTitle("Insurance"),
+            _buildSectionTitle("Pembayaran"),
             DropdownButtonFormField<int>(
               // ignore: deprecated_member_use
               value: issuerId,
-              decoration: InputDecoration(labelText: 'Issuer'),
+              decoration: InputDecoration(labelText: 'Metode Pembayaran'),
               items: issuers.entries
                   .map(
                     (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),

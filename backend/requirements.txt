@@ -6,3 +6,4 @@ pydantic
 python-multipart
 passlib
 python-jose[cryptography]
+python-dotenv
