@@ -19,4 +19,5 @@ Integration           : Frappe / ERPNext (REST API Sinkronisasi Pasien & Antrian
 
 **Frappe Directory**
 **Table | Frappe**
+
 - Patient | Customer
