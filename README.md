@@ -1,6 +1,5 @@
 # Klinik_FrontDesk
-Klinik Bagian Admin / Front Desk
-
+**Klinik Bagian Admin / Front Desk**
 Programming Language  : Python (Backend), Dart (Frontend)
 Script                : Python
 Framework             : FastAPI (Backend), Flutter (Frontend Web)
@@ -17,3 +16,7 @@ File Processing       : python-dotenv (Environment Variables)
 Testing (E2E)         : Postman (Manual Collection provided)
 Testing Framework     : unittest (Python Standard), flutter test
 Integration           : Frappe / ERPNext (REST API Sinkronisasi Pasien & Antrian)
+
+**Frappe Directory**
+**Table | Frappe**
+- Patient | Customer
