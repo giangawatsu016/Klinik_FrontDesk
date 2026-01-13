@@ -1,0 +1,68 @@
+# Task Checklist
+
+- [/] Project Setup <!-- id: 0 -->
+    - [/] Initialize Project Structure <!-- id: 1 -->
+    - [/] Setup Backend (Python/FastAPI) <!-- id: 2 -->
+    - [ ] Setup Frontend (Flutter) <!-- id: 3 -->
+- [/] Database Implementation <!-- id: 4 -->
+    - [x] Setting Up Database (Migrated to MySQL) <!-- id: 5 -->
+    - [x] Setup Database Connection (Migrated to MySQL) <!-- id: 6 -->
+- [/] Backend Development <!-- id: 7 -->
+    - [/] Auth Module <!-- id: 8 -->
+    - [/] Master Data (Address, Marital Status, Issuer) <!-- id: 9 -->
+    - [ ] Doctor Module <!-- id: 10 -->
+    - [/] Patient Module <!-- id: 11 -->
+        - [ ] Add Sub-issuer Dropdown Logic (Frontend)
+        - [ ] Add Insurance Name to Models (Frontend/Backend)
+    - [/] Appointment & Queue Module <!-- id: 12 -->
+- [/] Frontend Development <!-- id: 13 -->
+    - [x] Remove Mobile Platforms (Android/iOS)
+    - [/] Auth Screen <!-- id: 14 -->
+    - [/] Dashboard (Home) <!-- id: 15 -->
+    - [/] Patient Registration <!-- id: 16 -->
+        - [ ] Split New vs Existing Flow <!-- id: 21 -->
+        - [x] Implement Patient Verification <!-- id: 22 -->
+    - [/] Doctor Selection <!-- id: 17 -->
+    - [x] Fix "Assign to Queue" button logic
+    - [x] Add validation and error messages
+    - [x] Handle API response and show success/failure SnackBar
+    - [/] Queue Management <!-- id: 18 -->
+    - [x] Doctor Module
+        - [x] Implement Doctor List UI <!-- id: 23 -->
+        - [x] Implement Doctor Detail View <!-- id: 24 -->
+    - [x] Patient Module
+        - [x] Implement Patient List UI <!-- id: 25 -->
+        - [x] Implement Patient Detail View <!-- id: 26 -->
+- [x] Implement Text-to-Speech (TTS)
+    - [x] Add `flutter_tts` to pubspec.yaml
+    - [x] Integrate TTS into Queue Monitor "Call Patient"
+- [ ] Frappe / ERPNext Integration
+    - [x] Create Frappe Service in Backend (`frappe_client.py`)
+    - [x] Sync Patient Registration -> Frappe Patient (Fallback to Customer)
+    - [x] Sync Queue -> Frappe Appointment (Fallback to Event)
+- [x] Refine Queue Logic
+    - [x] Implement Daily Reset (Reset counter at 00:00)
+    - [x] Auto-Delete Previous Day's Queues (Cleanup)
+    - [x] Update Numbering Format (D-XXX, DP-XXX, P-XXX, PP-XXX)
+
+- [x] UI Modernization
+    - [x] Implement Glassmorphism (GlassContainer)
+    - [x] Update Login, Dashboard, QueueMonitor
+    - [x] Add Sub-issuer Dropdown Logic (Frontend)
+    - [x] Add Insurance Name to Models (Frontend/Backend)
+    - [x] Implement Full Indonesian Address Support (Proxy & Caching)
+    - [x] Performance Optimization (Address Cache)
+    - [ ] UX Refinement
+        - [x] Limit Phone Input to 14 Digits
+        - [ ] Auto-fill Postal Code from Subdistrict Selection
+    - [x] Implement Logout Button (Bottom Left)
+    - [x] Make Last Name Optional
+    - [x] Enforce Unique Phone Number
+- [x] Load Testing (Postman & JMeter)
+    - [x] Create JMeter Test Plan configuration (.jmx)
+    - [x] Provide Load Test Instructions
+- [x] Frappe Native App Porting (Migration Kit)
+    - [x] Generate Python Controllers (Patient, Queue)
+    - [x] Generate API Whitelist (api.py)
+    - [x] Organize into Frappe App Structure
+    - [x] Create Migration Guide (README)

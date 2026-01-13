@@ -4,6 +4,9 @@ import '../models/models.dart';
 import '../services/api_service.dart';
 import 'registration.dart';
 import 'queue_monitor.dart';
+import 'login.dart';
+import 'doctor_list.dart';
+import 'patient_list.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -27,7 +30,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final List<Widget> pages = [
       QueueMonitorScreen(apiService: widget.apiService),
       RegistrationScreen(apiService: widget.apiService),
-      Center(child: Text("Doctor Schedule (Coming Soon)")),
+      DoctorListScreen(apiService: widget.apiService),
+      PatientListScreen(apiService: widget.apiService),
     ];
 
     return Scaffold(
@@ -87,11 +91,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   label: Text('Registration'),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.calendar_today_outlined),
-                  selectedIcon: Icon(Icons.calendar_today),
+                  icon: Icon(Icons.medical_services_outlined),
+                  selectedIcon: Icon(Icons.medical_services),
                   label: Text('Doctors'),
                 ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.people_outline),
+                  selectedIcon: Icon(Icons.people),
+                  label: Text('Patients'),
+                ),
               ],
+              trailing: Expanded(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: IconButton(
+                      icon: Icon(Icons.logout, color: Colors.red.shade700),
+                      // Better UI:
+                      onPressed: _logout,
+                      tooltip: 'Logout',
+                    ),
+                  ),
+                ),
+              ),
             ),
             VerticalDivider(
               thickness: 1,
@@ -103,5 +126,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
+  }
+
+  void _logout() {
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (context) => LoginScreen()));
   }
 }

@@ -44,7 +44,8 @@ class Patient(Base):
     phone = Column(String(20), unique=True) # Added unique constraint
     gender = Column(String(10)) # Male/Female
     birthday = Column(Date)
-    frappe_id = Column(String(100), nullable=True) # Link to ERPNext
+    frappe_id = Column(String(100), nullable=True)
+    ihs_number = Column(String(100), nullable=True) # Satu Sehat ID # Link to ERPNext
     identityCard = Column(String(20), unique=True, index=True) # NIK/KTP
     religion = Column(String(20))
     profession = Column(String(50))

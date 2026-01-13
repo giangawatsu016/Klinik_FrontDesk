@@ -116,6 +116,18 @@ class ApiService {
     return [];
   }
 
+  Future<List<Patient>> getPatients() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/patients/'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Patient.fromJson(json)).toList();
+    }
+    return [];
+  }
+
   Future<bool> updateQueueStatus(int id, String status) async {
     final response = await http.put(
       Uri.parse('$baseUrl/queues/$id/status'),

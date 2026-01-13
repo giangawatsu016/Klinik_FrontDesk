@@ -140,6 +140,25 @@ This document chronicles the entire development and implementation journey of th
 
 ---
 
+## Phase 7: Administration Lists & Detail Views (In Progress)
+**Goal:** Provide comprehensive views for Doctors and Patients with drill-down details.
+
+### 7.1 Doctor List & Details
+*   **Action:** Replace "Coming Soon" with fully functional list.
+*   **Plan:**
+    -   Implement `DoctorListScreen` fetching from `/master/doctors`.
+    -   Add `Icon` and `ListTile` UI with "Available" status.
+    -   Implement `showDialog` for detailed info (NIK, Poly, Schedule).
+
+### 7.2 Patient List & Details
+*   **Action:** Enable admins to browse and search the patient database.
+*   **Plan:**
+    -   Add `PatientListScreen` to Dashboard (new navigation item).
+    -   Fetch from `/patients/` with pagination support.
+    -   Implement Detail Popup showing full profile + Address + Insurance.
+
+---
+
 ## Summary of Artifacts Created
 1.  **PRD (Product Requirements Document) v2.0**
 2.  **FSD (Functional Specification Document) v2.0**
