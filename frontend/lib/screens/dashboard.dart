@@ -79,7 +79,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 NavigationRailDestination(
                   icon: Icon(Icons.dashboard_outlined),
                   selectedIcon: Icon(Icons.dashboard),
-                  label: Text('Queue'),
+                  label: Text('Dashboard'),
                 ),
                 NavigationRailDestination(
                   icon: Icon(Icons.person_add_outlined),

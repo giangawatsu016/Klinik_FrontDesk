@@ -58,7 +58,7 @@ class Doctor(DoctorBase):
 # Patient Schemas
 class PatientBase(BaseModel):
     firstName: str
-    lastName: str
+    lastName: Optional[str] = None
     phone: str
     gender: str
     birthday: date

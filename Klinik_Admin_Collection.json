@@ -1,8 +1,8 @@
 {
     "info": {
         "_postman_id": "klinik-admin-collection-id",
-        "name": "Klinik Admin API",
-        "description": "API Collection for Klinik Admin System (FastAPI + MySQL)",
+        "name": "Klinik Admin API v2.0",
+        "description": "API Collection for Klinik Admin System (FastAPI + MySQL). Includes Registration (Optional Last Name), Queue, and Master Data.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
@@ -144,13 +144,40 @@
             "name": "Patients",
             "item": [
                 {
-                    "name": "Create Patient",
+                    "name": "Create Patient (Complete)",
                     "request": {
                         "method": "POST",
                         "header": [],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"identityCard\": \"3201010101010001\",\n    \"firstName\": \"Andi\",\n    \"lastName\": \"Saputra\",\n    \"phone\": \"081234567890\",\n    \"birthday\": \"1990-01-01\",\n    \"gender\": \"Male\",\n    \"addressLine\": \"Jl. Merdeka No. 1\",\n    \"city\": \"Jakarta\",\n    \"state\": \"DKI Jakarta\",\n    \"zipCode\": \"10110\",\n    \"rt\": \"01\",\n    \"rw\": \"02\",\n    \"maritalStatusId\": 1,\n    \"issuerId\": 1,\n    \"insuranceName\": null,\n    \"noAssuransi\": null\n}",
+                            "raw": "{\n    \"identityCard\": \"3201010101010001\",\n    \"firstName\": \"Andi\",\n    \"lastName\": \"Saputra\",\n    \"phone\": \"081234567890\",\n    \"birthday\": \"1990-01-01\",\n    \"gender\": \"Male\",\n    \"addressLine\": \"Jl. Merdeka No. 1\",\n    \"province\": \"DKI Jakarta\",\n    \"city\": \"Jakarta Pusat\",\n    \"district\": \"Gambir\",\n    \"subdistrict\": \"Gambir\",\n    \"postalCode\": \"10110\",\n    \"rt\": \"01\",\n    \"rw\": \"02\",\n    \"maritalStatusId\": 1,\n    \"issuerId\": 1,\n    \"insuranceName\": null,\n    \"noAssuransi\": null\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/patients/",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "patients",
+                                ""
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Patient (No Last Name)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"identityCard\": \"3201010101010002\",\n    \"firstName\": \"Budi\",\n    \"lastName\": null,\n    \"phone\": \"081234567899\",\n    \"birthday\": \"1992-05-05\",\n    \"gender\": \"Male\",\n    \"addressLine\": \"Jl. Sudirman\",\n    \"province\": \"DKI Jakarta\",\n    \"city\": \"Jakarta Selatan\",\n    \"district\": \"Setiabudi\",\n    \"subdistrict\": \"Kuningan\",\n    \"postalCode\": \"10220\",\n    \"rt\": \"05\",\n    \"rw\": \"06\",\n    \"maritalStatusId\": 1,\n    \"issuerId\": 1\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"

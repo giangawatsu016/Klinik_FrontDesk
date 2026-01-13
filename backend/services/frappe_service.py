@@ -61,5 +61,39 @@ class FrappeClient:
         }
         return self._post("Event", data)
 
+    def get_list(self, doctype: str, filters: dict = {}):
+        url = f"{self.base_url}/api/resource/{doctype}"
+        params = {
+            "fields": '["name"]',
+            "filters": json.dumps(filters),
+            "limit_page_length": 500
+        }
+        try:
+            response = requests.get(url, headers=self.headers, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                return data.get("data", [])
+            else:
+                print(f"Frappe Get List Failed ({response.status_code}): {response.text}")
+                return []
+        except Exception as e:
+            print(f"Frappe Connection Error: {e}")
+            return []
+
+    def delete_document(self, doctype: str, name: str):
+        url = f"{self.base_url}/api/resource/{doctype}/{name}"
+        try:
+            print(f"Deleting {doctype} {name}...")
+            response = requests.delete(url, headers=self.headers, timeout=5)
+            if response.status_code == 202 or response.status_code == 200:
+                print(f"Deletion Success.")
+                return True
+            else:
+                print(f"Deletion Failed ({response.status_code}): {response.text}")
+                return False
+        except Exception as e:
+            print(f"Frappe Connection Error: {e}")
+            return False
+
 # Singleton
 frappe_client = FrappeClient()

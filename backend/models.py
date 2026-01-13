@@ -40,10 +40,11 @@ class Patient(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     firstName = Column(String(100))
-    lastName = Column(String(100))
-    phone = Column(String(20))
+    lastName = Column(String(100), nullable=True)
+    phone = Column(String(20), unique=True) # Added unique constraint
     gender = Column(String(10)) # Male/Female
     birthday = Column(Date)
+    frappe_id = Column(String(100), nullable=True) # Link to ERPNext
     identityCard = Column(String(20), unique=True, index=True) # NIK/KTP
     religion = Column(String(20))
     profession = Column(String(50))

@@ -1,22 +1,23 @@
 # FUNCTIONAL SPECIFICATION DOCUMENT (FSD)
 **Project Name:** Klinik Admin System
-**Date:** 2024-01-11
-**Version:** 1.0
+**Date:** 2026-01-12
+**Version:** 2.0
 
 ---
 
 ## 1. Introduction
 
 ### 1.1 Purpose
-The purpose of the Klinik Admin System is to streamline the operational workflow of a medical clinic, specifically focusing on patient registration, queue management, and data synchronization with external ERP systems (Frappe/ERPNext).
+The purpose of the Klinik Admin System is to streamline the operational workflow of a medical clinic, focusing on patient registration, queue management, and data synchronization with external ERP systems (Frappe/ERPNext).
 
 ### 1.2 Scope
 The system covers:
-*   User Authentication & Role Management.
+*   User Authentication (Login/Logout) & Role Management.
 *   Master Data Management (Doctors, Polyclinics, Issuers, Marital Statuses).
+*   **Comprehensive Indonesian Address Management** (Proxy to external API).
 *   Patient Registration with duplicate prevention.
 *   Queue Management (Ticketing, Calling, Status Updates).
-*   Integration with Frappe/ERPNext for centralized data.
+*   **Two-Way Integration with Frappe/ERPNext** for centralized data.
 
 ---
 
@@ -25,7 +26,7 @@ The system covers:
 | Actor | Description |
 | :--- | :--- |
 | **Admin** | Full access to system configuration, user management, and master data. |
-| **Staff/Front Desk** | Responsible for registering patients and managing the daily queue. |
+| **Staff/Front Desk** | Responsible for registering patients, verifying address details, and managing the daily queue. |
 | **Doctor** | (Future Scope) could view their specific queue and update medical records. |
 
 ---
@@ -36,15 +37,19 @@ The system covers:
 *   **REQ-AUTH-01**: Users must be able to log in using a username and password.
 *   **REQ-AUTH-02**: Passwords must be hashed using `bcrypt`.
 *   **REQ-AUTH-03**: The system must verify JWT tokens for protected endpoints.
-*   **REQ-AUTH-04**: Session timeout is set to 8 hours (work shift).
+*   **REQ-AUTH-04**: **Logout Feature**: Users can invalidate their local session via a dedicated Logout button in the sidebar.
 
 ### 3.2 Patient Management Module
-*   **REQ-PAT-01**: Staff can register new patients with mandatory fields: NIK, Name, DOB, Phone, Address.
-*   **REQ-PAT-02**: System must validate NIK (Identity Card) uniqueness.
-*   **REQ-PAT-03**: **Issuer Logic**:
-    *   If Issuer = "BPJS", user must select "BPJS Kesehatan" or "BPJS Ketenagakerjaan".
-    *   If Issuer = "Asuransi", user must select Provider (Allianz, Prudential, Manulife).
-*   **REQ-PAT-04**: Patient data is automatically synced to Frappe/ERPNext as a "Patient" or "Customer".
+*   **REQ-PAT-01**: Staff can register new patients with mandatory fields: NIK, Name, DOB (Birthday), Phone, Address.
+*   **REQ-PAT-02**: **Address Logic**:
+    *   System dynamically fetches Provinces, Cities, Districts, and Subdistricts from `emsifa` API via Backend Proxy.
+    *   Dropdowns are dependent (Choosing Province loads Cities, etc.).
+*   **REQ-PAT-03**: **Validation**:
+    *   **Phone Number**: Constrained to max 14 digits, numeric only.
+    *   **NIK**: Unique 16-digit identifier.
+*   **REQ-PAT-04**: **Integration**:
+    *   Patient data is synced to **Frappe (DocType: Customer)** automatically upon creation.
+    *   Returned `frappe_id` (e.g., CUST-2024-001) is stored locally for future linking.
 
 ### 3.3 Queue Management Module
 *   **REQ-QUEUE-01**: Staff can add a registered patient to a queue (General Doctor, Dental, etc.).
@@ -54,13 +59,19 @@ The system covers:
     *   **DP-XXX**: Doctor (Priority)
     *   **P-XXX**: Polyclinic (General)
     *   **PP-XXX**: Polyclinic (Priority)
-*   **REQ-QUEUE-04**: Queue numbering resets daily.
-*   **REQ-QUEUE-05**: Staff can update status to "In Consultation" or "Completed".
+*   **REQ-QUEUE-04**: Queue numbering resets daily at 00:00 UTC.
+*   **REQ-QUEUE-05**: **Daily Cleanup**: Lazy cleanup mechanism deletes queue records from previous days to keep the list fresh.
+*   **REQ-QUEUE-06**: **Integration**: Queue entries are synced to **Frappe (DocType: Event)** for calendar visibility.
+*   **REQ-QUEUE-07**: **Text-to-Speech**: System can audibly announce queue numbers (e.g., "Antrian Nomor D-001, silakan masuk").
 
 ### 3.4 Integration Module
 *   **REQ-INT-01**: System synchronizes new Patient records to Frappe instance via API.
 *   **REQ-INT-02**: System synchronizes new Appointments to Frappe instance via API.
-*   **REQ-INT-03**: Integration failures should be logged but not block critical local operations (Background Task).
+*   **REQ-INT-03**: Integration failures logged but do not block local operations (resilient design).
+
+### 3.5 Performance & Optimization
+*   **REQ-PERF-01**: **Caching**: Address API responses (Provinces, Cities, etc.) are cached in memory (LRU Cache) to strictly minimize latency.
+*   **REQ-PERF-02**: **DB Pooling**: Database connection pool size is optimized (Size: 20, Overflow: 30) to handle high concurrency.
 
 ---
 
@@ -73,8 +84,8 @@ The system covers:
 
 ### 4.2 Key Screens
 1.  **Login Screen**: Centered glass card with gradient background.
-2.  **Dashboard**: Navigation Rail (Left), Stats Overview.
-3.  **Registration**: Multi-step form or long form with dynamic dropdowns.
+2.  **Dashboard (Renamed from Queue)**: Navigation Rail (Left) with Logout button, Stats Overview.
+3.  **Registration**: Vertical form with real-time address fetching and numeric keyboards.
 4.  **Queue Monitor**: Large typography for "Current Patient", list of waiting patients.
 
 ---
@@ -82,16 +93,15 @@ The system covers:
 ## 5. Technical Architecture
 
 ### 5.1 Technology Stack
-*   **Frontend**: Flutter (Web).
+*   **Frontend**: Flutter (Web/Desktop).
 *   **Backend**: Python (FastAPI).
-*   **Database**: MySQL (migrated from SQLite).
+*   **Database**: MySQL.
 *   **Authentication**: JWT (JSON Web Tokens).
 
 ### 5.2 Database Schema
 *   **Users**: `id`, `username`, `password_hash`, `role`.
-*   **Patient**: `id`, `firstName`, `lastName`, `identityCard` (Unique), `phone`, `issuerId`, `insuranceName`.
-*   **PatientQueue**: `id`, `userId`, `numberQueue`, `status`, `appointmentTime`.
-*   **Issuer**: `issuerId`, `issuer` (Name), `nama` (JSON Sub-options).
+*   **Patient**: `id`, `firstName`, `lastName`, `identityCard` (Unique), `phone`, `frappe_id` (Integration Key).
+*   **PatientQueue**: `id`, `userId`, `numberQueue`, `status`, `appointmentTime`, `queueType`, `isPriority`.
 
 ---
 
@@ -104,6 +114,7 @@ The system covers:
 
 ## 7. Delivery Artifacts
 *   Source Code (GitHub).
-*   Postman Collection.
+*   **Postman Collection** (API Testing).
+*   **JMeter Test Plan** (`.jmx` for Load Testing).
 *   User Walkthrough/Guide.
-*   Migration SQL Scripts.
+*   Product Requirements Document (PRD).

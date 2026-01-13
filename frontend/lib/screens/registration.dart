@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 
@@ -524,8 +525,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 Expanded(
                   child: TextFormField(
                     decoration: InputDecoration(labelText: 'Last Name'),
-                    onSaved: (v) => lastName = v!,
-                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                    onSaved: (v) => lastName = v ?? '',
+                    validator: null,
                   ),
                 ),
               ],
@@ -543,7 +544,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               },
             ),
             TextFormField(
-              decoration: InputDecoration(labelText: 'Phone'),
+              decoration: InputDecoration(
+                labelText: 'Phone',
+                counterText:
+                    "", // Hide default counter if desired, or keep it. I'll hide it for cleaner UI but enforce limit
+              ),
+              maxLength: 14,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               onSaved: (v) => phone = v!,
               validator: (v) => v!.isEmpty ? 'Required' : null,
             ),

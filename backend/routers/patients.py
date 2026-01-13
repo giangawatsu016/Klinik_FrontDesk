@@ -11,17 +11,32 @@ router = APIRouter(
 
 @router.post("/", response_model=schemas.Patient)
 def create_patient(patient: schemas.PatientCreate, background_tasks: BackgroundTasks, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
-    # Check if existing
+    # Check if existing by ID Card
     if db.query(models.Patient).filter(models.Patient.identityCard == patient.identityCard).first():
         raise HTTPException(status_code=400, detail="Patient with this ID Card already exists")
     
-    new_patient = models.Patient(**patient.dict())
+    # Check if existing by Phone
+    if db.query(models.Patient).filter(models.Patient.phone == patient.phone).first():
+        raise HTTPException(status_code=400, detail="Patient with this Phone Number already exists")
+    
+    # 1. Sync to Frappe First (Synchronous) to get ID
+    frappe_id = None
+    try:
+        frappe_response = frappe_client.create_patient(patient.dict())
+        if frappe_response and "data" in frappe_response:
+             frappe_id = frappe_response["data"].get("name")
+    except Exception as e:
+        print(f"Frappe Sync Error: {e}")
+        # Continue creation even if sync fails, we can retry later
+
+    # 2. Create Local Patient
+    patient_data = patient.dict()
+    patient_data["frappe_id"] = frappe_id # Now it's a String or None
+    
+    new_patient = models.Patient(**patient_data)
     db.add(new_patient)
     db.commit()
     db.refresh(new_patient)
-    
-    # Sync to Frappe in background
-    background_tasks.add_task(frappe_client.create_patient, patient.dict())
     
     return new_patient
 

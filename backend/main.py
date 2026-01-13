@@ -24,7 +24,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # In production, you might want to switch back to strict allow_origins from env
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=".*",
+    # Allow any localhost/127.0.0.1 port
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
