@@ -40,3 +40,14 @@ app.include_router(queue.router)
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Klinik Admin API. Documentation at /docs"}
+
+# Startup & Shutdown Events
+@app.on_event("startup")
+def startup_event():
+    from .scheduler import start_scheduler
+    start_scheduler()
+
+@app.on_event("shutdown")
+def shutdown_event():
+    from .scheduler import shutdown_scheduler
+    shutdown_scheduler()

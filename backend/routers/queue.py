@@ -21,14 +21,28 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
         # Default to Doctor
         prefix = "DP" if queue_data.isPriority else "D"
 
-    # Check for existing active queue for this patient
+    # Lazy Cleanup: Auto-complete old active queues (yesterday or older)
+    old_queues = db.query(models.PatientQueue).filter(
+        models.PatientQueue.userId == queue_data.userId,
+        models.PatientQueue.status.in_(["Waiting", "In Consultation"]),
+        models.PatientQueue.appointmentTime < today_start
+    ).all()
+
+    for old_q in old_queues:
+        old_q.status = "Completed" # Mark as completed/expired so they don't block
+        
+    if old_queues:
+        db.commit()
+
+    # Check for existing active queue for this patient (TODAY ONLY)
     existing_queue = db.query(models.PatientQueue).filter(
         models.PatientQueue.userId == queue_data.userId,
-        models.PatientQueue.status.in_(["Waiting", "In Consultation"])
+        models.PatientQueue.status.in_(["Waiting", "In Consultation"]),
+        models.PatientQueue.appointmentTime >= today_start
     ).first()
 
     if existing_queue:
-        raise HTTPException(status_code=400, detail="Patient already has an active queue (Waiting or In Consultation)")
+        raise HTTPException(status_code=400, detail="Patient already has an active queue for today")
 
     # Count for today with this specific prefix
     count = db.query(models.PatientQueue).filter(
@@ -65,7 +79,8 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
 
 @router.get("/", response_model=List[schemas.PatientQueue])
 def get_queue(status: str = None, db: Session = Depends(database.get_db)):
-    query = db.query(models.PatientQueue)
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    query = db.query(models.PatientQueue).filter(models.PatientQueue.appointmentTime >= today_start)
     if status:
         query = query.filter(models.PatientQueue.status == status)
     

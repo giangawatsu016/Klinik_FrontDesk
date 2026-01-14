@@ -28,6 +28,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   // New Patient Form Key
   final _formKey = GlobalKey<FormState>();
+  final _doctorFormKey =
+      GlobalKey<FormState>(); // Added validation key for Doctor Step
 
   // New Patient Data
   String firstName = '';
@@ -278,8 +280,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   void _submitToQueue() async {
     try {
-      bool valid = false;
-      String errorMessage = "Please select a doctor or polyclinic";
+      // Validate Doctor/Polyclinic Selection
+      if (!_doctorFormKey.currentState!.validate()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please select a Doctor or Polyclinic'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
 
       if (_verifiedPatient == null || _verifiedPatient!.id == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -292,67 +302,47 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         return;
       }
 
-      if (_isPolyclinic) {
-        if (_selectedPolyclinic != null) {
-          valid = true;
-        } else {
-          errorMessage = "Please select a Polyclinic";
-        }
-      } else {
-        if (selectedDoctor != null) {
-          valid = true;
-        } else {
-          errorMessage = "Please select a Doctor";
-        }
-      }
+      final success = await widget.apiService.addToQueue(
+        patientId: _verifiedPatient!.id!,
+        doctorId: !_isPolyclinic
+            ? selectedDoctor!.medicalFacilityPolyDoctorId
+            : null,
+        isPriority: isPriority,
+        queueType: _isPolyclinic ? "Polyclinic" : "Doctor",
+        polyclinic: _isPolyclinic ? _selectedPolyclinic : null,
+      );
 
-      if (valid) {
-        final success = await widget.apiService.addToQueue(
-          patientId: _verifiedPatient!.id!,
-          doctorId: !_isPolyclinic
-              ? selectedDoctor!.medicalFacilityPolyDoctorId
-              : null,
-          isPriority: isPriority,
-          queueType: _isPolyclinic ? "Polyclinic" : "Doctor",
-          polyclinic: _isPolyclinic ? _selectedPolyclinic : null,
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Patient Registered & Queued Successfully',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.green,
+          ),
         );
 
-        if (!mounted) return;
-
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Patient Registered & Queued Successfully',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          // Reset
-          setState(() {
-            _currentStep = RegistrationStep.selectType;
-            _verifiedPatient = null;
-            _patientType = null;
-            _searchController.clear();
-            _searchResults = [];
-            selectedDoctor = null;
-            _selectedPolyclinic = null;
-            isPriority = false;
-          });
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to add to queue. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        // Reset
+        setState(() {
+          _currentStep = RegistrationStep.selectType;
+          _verifiedPatient = null;
+          _patientType = null;
+          _searchController.clear();
+          _searchResults = [];
+          selectedDoctor = null;
+          _selectedPolyclinic = null;
+          isPriority = false;
+        });
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add to queue. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -827,132 +817,137 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     // Extract unique polyclinics from doctors
     final Set<String> polyclinics = doctors.map((d) => d.polyName).toSet();
 
-    return Column(
-      children: [
-        if (_verifiedPatient != null)
-          Card(
-            color: Colors.green.shade50,
-            child: ListTile(
-              title: Text(
-                "Patient: ${_verifiedPatient!.firstName} ${_verifiedPatient!.lastName}",
+    return Form(
+      key: _doctorFormKey,
+      child: Column(
+        children: [
+          if (_verifiedPatient != null)
+            Card(
+              color: Colors.green.shade50,
+              child: ListTile(
+                title: Text(
+                  "Patient: ${_verifiedPatient!.firstName} ${_verifiedPatient!.lastName}",
+                ),
+                subtitle: Text("ID: ${_verifiedPatient!.identityCard}"),
+                leading: Icon(Icons.check_circle, color: Colors.green),
               ),
-              subtitle: Text("ID: ${_verifiedPatient!.identityCard}"),
-              leading: Icon(Icons.check_circle, color: Colors.green),
             ),
-          ),
-        SizedBox(height: 20),
+          SizedBox(height: 20),
 
-        // Toggle Type
-        Row(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: () => setState(() => _isPolyclinic = false),
-                child: Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: !_isPolyclinic ? Colors.blue : Colors.grey[200],
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      bottomLeft: Radius.circular(8),
+          // Toggle Type
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => setState(() => _isPolyclinic = false),
+                  child: Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: !_isPolyclinic ? Colors.blue : Colors.grey[200],
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        bottomLeft: Radius.circular(8),
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      "Select Doctor",
-                      style: TextStyle(
-                        color: !_isPolyclinic ? Colors.white : Colors.black,
+                    child: Center(
+                      child: Text(
+                        "Select Doctor",
+                        style: TextStyle(
+                          color: !_isPolyclinic ? Colors.white : Colors.black,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              child: InkWell(
-                onTap: () => setState(() => _isPolyclinic = true),
-                child: Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: _isPolyclinic ? Colors.blue : Colors.grey[200],
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
+              Expanded(
+                child: InkWell(
+                  onTap: () => setState(() => _isPolyclinic = true),
+                  child: Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _isPolyclinic ? Colors.blue : Colors.grey[200],
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      "Go to Polyclinic",
-                      style: TextStyle(
-                        color: _isPolyclinic ? Colors.white : Colors.black,
+                    child: Center(
+                      child: Text(
+                        "Go to Polyclinic",
+                        style: TextStyle(
+                          color: _isPolyclinic ? Colors.white : Colors.black,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        SizedBox(height: 20),
-
-        if (!_isPolyclinic)
-          DropdownButtonFormField<Doctor>(
-            decoration: InputDecoration(
-              labelText: 'Select Doctor',
-              border: OutlineInputBorder(),
-            ),
-            // ignore: deprecated_member_use
-            value: selectedDoctor,
-            items: doctors
-                .map(
-                  (d) => DropdownMenuItem(
-                    value: d,
-                    child: Text(
-                      "${d.gelarDepan} ${d.namaDokter} (${d.polyName})",
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: (v) => setState(() => selectedDoctor = v),
-          )
-        else
-          DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              labelText: 'Select Polyclinic',
-              border: OutlineInputBorder(),
-            ),
-            // ignore: deprecated_member_use
-            value: _selectedPolyclinic,
-            items: polyclinics
-                .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                .toList(),
-            onChanged: (v) => setState(() => _selectedPolyclinic = v),
+            ],
           ),
+          SizedBox(height: 20),
 
-        CheckboxListTile(
-          title: Text("Priority Patient"),
-          value: isPriority,
-          onChanged: (v) => setState(() => isPriority = v!),
-        ),
-        Spacer(),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextButton(
-              onPressed: () =>
-                  setState(() => _currentStep = RegistrationStep.inputData),
-              child: Text("Back"),
-            ),
-            ElevatedButton(
-              onPressed: _submitToQueue,
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+          if (!_isPolyclinic)
+            DropdownButtonFormField<Doctor>(
+              decoration: InputDecoration(
+                labelText: 'Select Doctor',
+                border: OutlineInputBorder(),
               ),
-              child: Text("Assign to Queue"),
+              // ignore: deprecated_member_use
+              value: selectedDoctor,
+              items: doctors
+                  .map(
+                    (d) => DropdownMenuItem(
+                      value: d,
+                      child: Text(
+                        "${d.gelarDepan} ${d.namaDokter} (${d.polyName})",
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) => setState(() => selectedDoctor = v),
+              validator: (v) => v == null ? 'Please select a Doctor' : null,
+            )
+          else
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: 'Select Polyclinic',
+                border: OutlineInputBorder(),
+              ),
+              // ignore: deprecated_member_use
+              value: _selectedPolyclinic,
+              items: polyclinics
+                  .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedPolyclinic = v),
+              validator: (v) => v == null ? 'Please select a Polyclinic' : null,
             ),
-          ],
-        ),
-      ],
+
+          CheckboxListTile(
+            title: Text("Priority Patient"),
+            value: isPriority,
+            onChanged: (v) => setState(() => isPriority = v!),
+          ),
+          Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: () =>
+                    setState(() => _currentStep = RegistrationStep.inputData),
+                child: Text("Back"),
+              ),
+              ElevatedButton(
+                onPressed: _submitToQueue,
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                ),
+                child: Text("Assign to Queue"),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

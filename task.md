@@ -18,10 +18,11 @@
 - [x] Connect Backend to ERPNext
 - [x] Install Healthcare Module
 - [x] Sync Existing Data
-    - [x] Update `FrappeService` to use `Patient` Doctype
-    - [x] Create `sync_patients.py` script
-    - [x] Execution: Successfully synced 8 dummy patients (verified)
+- [x] Resolve Port Conflict (8000 -> 8001)
 
-## 4. Documentation
+## 4. Feature Enhancements
+- [x] Daily Queue Cleanup (Filter & Lazy Reset)
+
+## 5. Documentation
 - [x] Update Implementation History
 - [x] Update Vulnerability Report

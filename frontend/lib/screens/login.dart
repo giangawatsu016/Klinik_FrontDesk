@@ -93,6 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.5),
                     ),
+                    onSubmitted: (_) => _login(),
                   ),
                   SizedBox(height: 16),
                   TextField(
@@ -106,6 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.5),
                     ),
+                    onSubmitted: (_) => _login(),
                   ),
                   SizedBox(height: 24),
                   ElevatedButton(
