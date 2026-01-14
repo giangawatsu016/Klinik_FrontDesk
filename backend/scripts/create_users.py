@@ -1,0 +1,54 @@
+import sys
+import os
+
+# Add the parent directory to sys.path to resolve 'backend' modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from sqlalchemy.orm import Session
+from database import SessionLocal, engine
+from models import User, Base
+from auth_utils import get_password_hash
+
+def create_users():
+    db = SessionLocal()
+    try:
+        # Define users to create
+        users_to_create = [
+            {"username": "super", "password": "super123", "role": "super_admin", "name": "Super Admin"},
+            {"username": "admin", "password": "admin123", "role": "admin", "name": "Administrator"},
+            {"username": "staff", "password": "staff123", "role": "staff", "name": "Front Desk Staff"},
+        ]
+
+        print("--- Creating Users ---")
+        for user_data in users_to_create:
+            # Check if user exists
+            existing_user = db.query(User).filter(User.username == user_data["username"]).first()
+            
+            if existing_user:
+                print(f"User '{user_data['username']}' already exists. Updating role/password...")
+                existing_user.password_hash = get_password_hash(user_data["password"])
+                existing_user.role = user_data["role"]
+                existing_user.full_name = user_data["name"]
+            else:
+                print(f"Creating new user '{user_data['username']}' ({user_data['role']})...")
+                new_user = User(
+                    username=user_data["username"],
+                    password_hash=get_password_hash(user_data["password"]),
+                    full_name=user_data["name"],
+                    role=user_data["role"]
+                )
+                db.add(new_user)
+        
+        db.commit()
+        print("--- Success! All users created/updated. ---")
+        print("\nCredentials:")
+        for user in users_to_create:
+            print(f"Username: {user['username']} | Password: {user['password']} | Role: {user['role']}")
+
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        db.close()
+
+if __name__ == "__main__":
+    create_users()

@@ -157,11 +157,51 @@ This document chronicles the entire development and implementation journey of th
     -   Fetch from `/patients/` with pagination support.
     -   Implement Detail Popup showing full profile + Address + Insurance.
 
+### 7.3 Integration Note (Satu Sehat)
+*   **Status:** Implemented & Verified (Auth OK).
+*   **Action:**
+    -   Integrated `SatuSehatClient` for OAuth2 authentication.
+    -   Added `ihs_number` column to Patient table.
+    -   **Pending:** User needs to enable "FHIR" product in Satu Sehat Portal (Error: `no apiproduct match found`).
+
 ---
 
 ## Summary of Artifacts Created
 1.  **PRD (Product Requirements Document) v2.0**
 2.  **FSD (Functional Specification Document) v2.0**
 3.  **Source Code** (Backend: FastAPI, Frontend: Flutter)
-4.  **Test Plans** (JMeter .jmx)
+4.  **Test Plans** (JMeter .jmx - Standard & CSV)
+    - `Klinik_Load_Test_CSV.jmx` (New: Bulk Create Patients from CSV)
 5.  **Migration Scripts** (Python & SQL)
+
+## Phase 8: Security & Local Integration (v2.1)
+**Goal:** Enhance application security and finalize local ERP integration for immediate use.
+
+### 8.1 Security Hardening
+*   **Action:** Audit codebase for vulnerabilities.
+*   **Implementation:**
+    -   Ran `bandit` security scan.
+    -   Fixed **Request Timeouts**: Added `timeout` to all external API calls (Satu Sehat, Frappe, Master Data) to prevent hanging.
+    -   Fixed **Silent Errors**: Replaced bare `except:` blocks with explicit exception handling and logging.
+
+### 8.2 Automated Login Testing
+*   **Action:** Verify stability of the Login-to-Dashboard flow.
+*   **Implementation:**
+    -   Created `backend/tests/login_automation.py` using **Playwright**.
+    -   Automated 9 scenarios (Valid, Invalid, Empty, Long Inputs, etc.).
+    -   Implemented **Word Report Generation** (`python-docx`) with screenshots and Pass/Fail status.
+    -   Implemented "Robust Selectors" for Flutter Web (handling dynamic DOM IDs).
+
+### 8.3 Full ERPNext Local Integration
+*   **Action:** Establish a complete, offline-capable ERP environment.
+*   **Implementation:**
+    -   **Environment:** Configured **WSL 2 (Ubuntu 22.04)** to run Frappe Bench.
+    -   **Database:** Solved MariaDB root permission issues by creating a dedicated `adminbench` user.
+    -   **App Installation:** Installed **ERPNext v15** and **Healthcare Module** (v15 branch).
+    -   **Domain Mapping:** Mapped `localhost` to `clinic.localhost` for seamless browser access.
+    -   **Integration:**
+        -   Verified backend connectivity (`check_frappe.py`) via API Keys.
+        -   **Synced Legacy Data:** Successfully migrated 8 existing patients using `sync_patients.py`.
+        -   **Real-time Sync:** Confirmed `create_patient` API automatically pushes new data to ERPNext.
+
+---

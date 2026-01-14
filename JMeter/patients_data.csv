@@ -1,0 +1,11 @@
+firstName;lastName;phone;gender;birthday;identityCard;religion;profession;education;province;city;district;subdistrict;rt;rw;postalCode;address_details;issuerId;insuranceName;noAssuransi;maritalStatusId
+Budi;Santoso;081234567890;Male;1990-01-01;3201010101900001;Islam;Swasta;S1;Jawa Barat;Bandung;Cicendo;Arjuna;01;02;40172;Jl. Arjuna No. 1;1;;0;1
+Siti;Aminah;081234567891;Female;1992-05-15;3201011505920002;Islam;PNS;S1;Jawa Barat;Bandung;Andir;Campaka;03;04;40184;Jl. Campaka No. 5;1;;0;1
+Andi;Wijaya;081234567892;Male;1985-11-20;3201012011850003;Kristen;Wiraswasta;SMA;DKI Jakarta;Jakarta Pusat;Gambir;Gambir;05;06;10110;Jl. Gambir No. 10;2;BPJS;123456789;2
+Dewi;Sartika;081234567893;Female;1995-03-10;3201011003950004;Islam;Mahasiswa;S1;DKI Jakarta;Jakarta Selatan;Tebet;Tebet Barat;07;08;12810;Jl. Tebet Barat No. 20;1;;0;1
+Eko;Prasetio;081234567894;Male;1988-08-08;3201010808880005;Katolik;Karyawan;D3;Jawa Tengah;Semarang;Semarang Tengah;Sekayu;09;10;50132;Jl. Sekayu No. 8;2;BPJS;987654321;2
+Rina;Mulyani;081234567895;Female;1993-12-25;3201012512930006;Islam;Guru;S1;Jawa Timur;Surabaya;Gubeng;Gubeng;11;12;60281;Jl. Gubeng No. 15;1;;0;1
+Dedi;Kurniawan;081234567896;Male;1991-06-30;3201013006910007;Hindu;TNI;SMA;Bali;Denpasar;Denpasar Barat;Dauh Puri;13;14;80113;Jl. Dauh Puri No. 7;1;;0;2
+Maya;Putri;081234567897;Female;1998-02-14;3201011402980008;Buddha;Pelajar;SMA;Sumatera Utara;Medan;Medan Kota;Mesjid;15;16;20212;Jl. Mesjid No. 3;1;;0;1
+Bayu;Nugroho;081234567898;Male;1987-09-09;3201010909870009;Konghucu;Pedagang;SMP;Kalimantan Barat;Pontianak;Pontianak Kota;Darat Sekip;17;18;78117;Jl. Darat Sekip No. 9;1;;0;2
+Lina;Wati;081234567899;Female;1996-07-22;3201012207960010;Islam;Ibu Rumah Tangga;SMA;Sulawesi Selatan;Makassar;Ujung Pandang;Baru;19;20;90115;Jl. Baru No. 4;1;;0;2

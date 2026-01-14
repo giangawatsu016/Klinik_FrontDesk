@@ -31,10 +31,30 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _authToken = data['access_token'];
+
+        // Fetch User Profile to get Role
+        try {
+          final meResponse = await http.get(
+            Uri.parse('$baseUrl/auth/me'),
+            headers: _headers,
+          );
+          if (meResponse.statusCode == 200) {
+            final meData = jsonDecode(meResponse.body);
+            return User(
+              username: username,
+              fullName: meData['full_name'] ?? "Unknown",
+              role: meData['role'] ?? "staff",
+              token: _authToken!,
+            );
+          }
+        } catch (_) {
+          // Fallback if /me fails
+        }
+
         return User(
           username: username,
           fullName: "Staff / Admin",
-          role: "staff",
+          role: "staff", // Default fallback
           token: _authToken!,
         );
       }

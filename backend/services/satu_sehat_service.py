@@ -28,7 +28,8 @@ class SatuSehatClient:
                 data={
                     "client_id": self.client_id,
                     "client_secret": self.client_secret
-                }
+                },
+                timeout=30
             )
             
             if resp.status_code == 200:
@@ -142,7 +143,7 @@ class SatuSehatClient:
         try:
             # POST /Patient
             url = f"{self.base_url}/Patient"
-            resp = requests.post(url, headers=headers, json=payload)
+            resp = requests.post(url, headers=headers, json=payload, timeout=30)
             
             if resp.status_code in [200, 201]:
                 data = resp.json()

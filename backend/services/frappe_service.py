@@ -34,17 +34,15 @@ class FrappeClient:
             return None
 
     def create_patient(self, clinic_patient: dict):
-        # Fallback: Sync to 'Customer' since 'Patient' (Healthcare) is not installed.
-        fullname = f"{clinic_patient.get('firstName')} {clinic_patient.get('lastName')}"
+        # Sync to 'Patient' (Healthcare Module)
         data = {
-            "customer_name": fullname,
-            "customer_type": "Individual",
-            "customer_group": "All Customer Groups",
-            "territory": "All Territories",
-            "mobile_no": clinic_patient.get("phone"),
-            "email_id": "", # Optional
+            "first_name": clinic_patient.get('firstName'),
+            "last_name": clinic_patient.get('lastName'),
+            "sex": clinic_patient.get("gender"), # Ensure "Male"/"Female" matches ERPNext options
+            "mobile": clinic_patient.get("phone"),
+            "dob": str(clinic_patient.get("birthday")) if clinic_patient.get("birthday") else None,
         }
-        return self._post("Customer", data)
+        return self._post("Patient", data)
 
     def create_appointment(self, queue_item: dict, patient_name: str):
         # Fallback: Sync to 'Event' (Calendar) since 'Patient Appointment' is missing.

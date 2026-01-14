@@ -54,42 +54,39 @@ from functools import lru_cache
 @lru_cache(maxsize=1)
 def get_provinces():
     try:
-        resp = requests.get(f"{BASE_URL_WILAYAH}/provinces.json")
+        resp = requests.get(f"{BASE_URL_WILAYAH}/provinces.json", timeout=10)
         if resp.status_code == 200:
             return resp.json()
-    except:
-        pass
+    except Exception as e:
+        print(f"Error fetching provinces: {e}")
     return []
 
 @router.get("/address/cities/{province_id}")
-@lru_cache(maxsize=100)
-def get_cities(province_id: str):
+async def get_cities(province_id: str):
     try:
-        resp = requests.get(f"{BASE_URL_WILAYAH}/regencies/{province_id}.json")
+        resp = requests.get(f"{BASE_URL_WILAYAH}/regencies/{province_id}.json", timeout=10)
         if resp.status_code == 200:
             return resp.json()
-    except:
-        pass
+    except Exception as e:
+        print(f"Error fetching cities: {e}")
     return []
 
 @router.get("/address/districts/{city_id}")
-@lru_cache(maxsize=500)
-def get_districts(city_id: str):
+async def get_districts(city_id: str):
     try:
-        resp = requests.get(f"{BASE_URL_WILAYAH}/districts/{city_id}.json")
+        resp = requests.get(f"{BASE_URL_WILAYAH}/districts/{city_id}.json", timeout=10)
         if resp.status_code == 200:
             return resp.json()
-    except:
-        pass
+    except Exception as e:
+        print(f"Error fetching districts: {e}")
     return []
 
 @router.get("/address/subdistricts/{district_id}")
-@lru_cache(maxsize=1000)
-def get_subdistricts(district_id: str):
+async def get_subdistricts(district_id: str):
     try:
-        resp = requests.get(f"{BASE_URL_WILAYAH}/villages/{district_id}.json")
+        resp = requests.get(f"{BASE_URL_WILAYAH}/villages/{district_id}.json", timeout=10)
         if resp.status_code == 200:
             return resp.json()
-    except:
-        pass
+    except Exception as e:
+        print(f"Error fetching subdistricts: {e}")
     return []

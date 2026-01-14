@@ -1,43 +1,34 @@
-# Implementation Plan - Doctor & Patient Lists
+# Implementation Plan - Satu Sehat Integration
 
 ## Goal
-Implement list views for Doctors and Patients in the Admin Dashboard, allowing users to view details for each entry.
+Integrate Klinik Admin with **Satu Sehat Platform (SSP)** using the provided Development Credentials. The system will sync new patients to SSP via FHIR API.
 
 ## User Review Required
-- None. Standard UI components will be used.
+- **Credentials**: Confirm if the provided Client ID/Secret are for the **Development** or **Production** environment. (Assuming Development based on context).
 
 ## Proposed Changes
 
+### Configuration
+#### [MODIFY] [.env]
+- Add `SATUSEHAT_AUTH_URL`, `SATUSEHAT_BASE_URL`, `SATUSEHAT_CLIENT_ID`, `SATUSEHAT_CLIENT_SECRET`, `SATUSEHAT_ORG_ID`.
+
 ### Backend
-- **Verify Endpoints**:
-    - `GET /master/doctors`: Ensure it returns full doctor details (including NIK if applicable).
-    - `GET /patients/`: Ensure it returns a paginated list of patients.
+#### [NEW] [backend/services/satu_sehat_service.py](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/backend/services/satu_sehat_service.py)
+- **Class `SatuSehatClient`**:
+    - `get_token()`: Handles OAuth2 Client Credentials flow. Caches token until expiry.
+    - `create_patient_fhir(patient_data)`: Maps local patient data to FHIR `Patient` resource JSON.
+    - `post_patient()`: Sends POST request to `/Patient` endpoint.
 
-### Frontend
-#### [NEW] [doctor_list.dart](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/frontend/lib/screens/doctor_list.dart)
-- Displays a `ListView` of doctors fetched from `ApiService.getDoctors()`.
-- `ListTile` showing Name and Specialization (Poly).
-- On Tap: Opens a Dialog showing full details (ID, Gelar, Availability).
+#### [MODIFY] [backend/routers/patients.py](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/backend/routers/patients.py)
+- In `create_patient`:
+    - Call `SatuSehatClient.post_patient()` after local creation (or alongside Frappe sync).
+    - Save the returned `id` (IHS Number) to a new column `ihs_number` in `Patient` table.
 
-#### [NEW] [patient_list.dart](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/frontend/lib/screens/patient_list.dart)
-- Displays a `ListView` of patients fetched from `ApiService.getPatients()`.
-- `ListTile` showing Name and Phone.
-- On Tap: Opens a Dialog showing full details (NIK, Address, BPJS, etc.).
-
-#### [MODIFY] [dashboard.dart](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/frontend/lib/screens/dashboard.dart)
-- Add "Patients" to `NavigationRail` destinations (below Doctors).
-- Update `pages` list to include `DoctorListScreen` and `PatientListScreen`.
-
-#### [MODIFY] [api_service.dart](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/frontend/lib/services/api_service.dart)
-- Ensure `getPatients` method exists and handles pagination (or default limit).
+#### [MODIFY] [backend/models.py](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/backend/models.py)
+- Add `ihs_number = Column(String(100), nullable=True)` to `Patient` model.
 
 ## Verification Plan
-### Manual Verification
-- **Doctors**:
-    - Click "Doctors" sidebar item.
-    - Verify list loads.
-    - Click a doctor -> Verify detail dialog.
-- **Patients**:
-    - Click "Patients" sidebar item.
-    - Verify list loads.
-    - Click a patient -> Verify detail dialog.
+### Automated Tests
+- Create a script `test_satu_sehat.py` to:
+    1. Authenticate and print Access Token.
+    2. Create a dummy patient and print the returned IHS Number.

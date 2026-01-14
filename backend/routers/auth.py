@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 @router.post("/token", response_model=schemas.Token)
-@limiter.limit("5/minute")
+@limiter.limit("60/minute")
 async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
     if not user or not auth_utils.verify_password(form_data.password, user.password_hash):
@@ -43,3 +43,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
     db.commit()
     db.refresh(new_user)
     return new_user
+
+@router.get("/me", response_model=schemas.User)
+async def read_users_me(current_user: models.User = Depends(auth_utils.get_current_user)):
+    return current_user
