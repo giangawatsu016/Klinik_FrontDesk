@@ -79,7 +79,15 @@ To provide a modern, efficient, and user-friendly desktop application for clinic
 *   **Reliability:** Offline capability (limited) or graceful error handling when API is down.
 *   **Compatibility:** Windows 10/11.
 
+
 ## 6. Success Metrics
 *   **Registration Time:** Reduce time to register a new patient to under 2 minutes.
 *   **Queue Accuracy:** Zero duplicate queue numbers per day.
 *   **Data Integrity:** 100% match between Local Database and ERPNext Customer list.
+
+## 7. Quality Assurance & Reliability
+*   **Automated Testing:**
+    *   **Login Flow:** Full coverage of positive and negative login scenarios using Playwright.
+    *   **Reporting:** Automated generation of Word (DOCX) reports with multi-step screenshots (Empty Form -> Filled -> Result) for every test run.
+    *   **Environment Support:** Infrastructure compatible with Flutter Web (CanvasKit) rendering engine.
+

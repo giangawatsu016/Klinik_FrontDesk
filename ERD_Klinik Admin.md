@@ -40,6 +40,7 @@ erDiagram
         int id PK
         string identityCard "NIK - Unique"
         string frappe_id "ERPNext Link - Nullable"
+        string ihs_number "Satu Sehat ID - Nullable"
         string firstName
         string lastName "Nullable"
         string phone "Unique (14 digits)"

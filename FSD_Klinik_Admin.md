@@ -38,6 +38,7 @@ The system covers:
 *   **REQ-AUTH-02**: Passwords must be hashed using `bcrypt`.
 *   **REQ-AUTH-03**: The system must verify JWT tokens for protected endpoints.
 *   **REQ-AUTH-04**: **Logout Feature**: Users can invalidate their local session via a dedicated Logout button in the sidebar.
+*   **REQ-AUTH-05**: **Keyboard Accessibility**: Users must be able to submit the login form by pressing the "Enter" key on the keyboard without needing to click the button.
 
 ### 3.2 Patient Management Module
 *   **REQ-PAT-01**: Staff can register new patients with mandatory fields: NIK, Name, DOB (Birthday), Phone, Address.
@@ -112,7 +113,20 @@ The system covers:
 
 ---
 
-## 7. Delivery Artifacts
+
+---
+
+## 8. Testing & Quality Assurance Module
+### 8.1 Automated Regression Testing
+*   **REQ-TEST-01**: **Login Automation**: System includes a Playwright-based test suite to verify login scenarios (Valid, Invalid, Empty, Layout).
+*   **REQ-TEST-02**: **Reporting**: Test suite generates granular DOCX reports including:
+    *   3-Step Screenshots (Empty -> Filled -> Result).
+    *   Color-coded Pass/Fail status.
+*   **REQ-TEST-03**: **CanvasKit Support**: Test infrastructure supports "Blind Tab" navigation to validate Flutter Web CanvasKit rendering without direct DOM accessibility.
+
+---
+
+## 9. Delivery Artifacts
 *   Source Code (GitHub).
 *   **Postman Collection** (API Testing).
 *   **JMeter Test Plan** (`.jmx` for Load Testing).
