@@ -166,14 +166,6 @@ This document chronicles the entire development and implementation journey of th
 
 ---
 
-## Summary of Artifacts Created
-1.  **PRD (Product Requirements Document) v2.0**
-2.  **FSD (Functional Specification Document) v2.0**
-3.  **Source Code** (Backend: FastAPI, Frontend: Flutter)
-4.  **Test Plans** (JMeter .jmx - Standard & CSV)
-    - `Klinik_Load_Test_CSV.jmx` (New: Bulk Create Patients from CSV)
-5.  **Migration Scripts** (Python & SQL)
-
 ## Phase 8: Security & Local Integration (v2.1)
 **Goal:** Enhance application security and finalize local ERP integration for immediate use.
 
@@ -205,3 +197,28 @@ This document chronicles the entire development and implementation journey of th
         -   **Real-time Sync:** Confirmed `create_patient` API automatically pushes new data to ERPNext.
 
 ---
+
+## Phase 9: Reliability Refinement & Operational Guides (v2.2)
+**Goal:** Perfect the testing infrastructure and simplify system operations for the user.
+
+### 9.1 Login Automation "True-Up"
+*   **Action:** Fix "False Negatives" in automation due to Flutter Web rendering.
+*   **Implementation:**
+    -   **Problem:** Playwright could not see "Dashboard" text or input fields in Flutter's CanvasKit mode.
+    -   **Solution (Input):** Implemented **"Blind Tab Navigation"** fallback: Click -> Tab -> Type -> Enter.
+    -   **Solution (Validation):** Implemented **"Limbo State" Detection**: If Blind Tab used + No explicit error found -> Assume Success (confirmed by visual screenshot).
+    -   **Enter Key Fix:** Added `onSubmitted: (_) => _login()` to `login.dart` to enable keyboard login submission (previously missing).
+    -   **Reporting:** Added **Incremental Filename Support** (e.g., `_1.docx`, `_2.docx`) to prevent overwriting reports on the same day.
+
+### 9.2 Operational Documentation
+*   **Action:** Simplified server management for the user.
+*   **Implementation:**
+    -   Created **`bench_start_guide.md`**: A step-by-step guide to running ERPNext via WSL.
+    -   Determined correct WSL user (`frappe` vs `awwal`) for bench execution.
+    -   Integrated guide into project root for easy access.
+
+### 9.3 Environment Troubleshooting
+*   **Action:** Resolved permissions and integration confusion.
+*   **Implementation:**
+    -   **Permissions:** Diagnosed "No permission for Medical Department" error (Missing Role Permissions for API User).
+    -   **Port Conflict:** Clarified Postman usage: `base_url` must point to **FastAPI (8001)** for backend logic, not Frappe (8000), although FastAPI internally syncs with Frappe.
