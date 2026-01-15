@@ -44,6 +44,7 @@ class Patient {
   final String? insuranceName;
   final String? noAssuransi;
   final int maritalStatusId;
+  final String? frappeId;
 
   Patient({
     this.id,
@@ -68,6 +69,7 @@ class Patient {
     this.insuranceName,
     this.noAssuransi,
     required this.maritalStatusId,
+    this.frappeId,
   });
 
   Map<String, dynamic> toJson() {
@@ -93,6 +95,7 @@ class Patient {
       'insuranceName': insuranceName,
       'noAssuransi': noAssuransi,
       'maritalStatusId': maritalStatusId,
+      'frappe_id': frappeId,
     };
   }
 
@@ -122,6 +125,7 @@ class Patient {
       insuranceName: json['insuranceName'],
       maritalStatusId: json['maritalStatusId'] ?? 1,
       noAssuransi: json['noAssuransi'],
+      frappeId: json['frappe_id'],
     );
   }
 }
@@ -186,6 +190,35 @@ class Doctor {
       namaDokter: json['namaDokter'],
       polyName: json['polyName'],
       gelarDepan: json['gelarDepan'] ?? '',
+    );
+  }
+}
+
+class Medicine {
+  final int id;
+  final String erpnextItemCode;
+  final String name;
+  final String? description;
+  final int stock;
+  final String? unit;
+
+  Medicine({
+    required this.id,
+    required this.erpnextItemCode,
+    required this.name,
+    this.description,
+    required this.stock,
+    this.unit,
+  });
+
+  factory Medicine.fromJson(Map<String, dynamic> json) {
+    return Medicine(
+      id: json['id'],
+      erpnextItemCode: json['erpnext_item_code'],
+      name: json['name'],
+      description: json['description'],
+      stock: json['stock'] ?? 0,
+      unit: json['unit'],
     );
   }
 }

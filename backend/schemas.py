@@ -116,3 +116,19 @@ class PatientQueue(QueueBase):
     
     class Config:
         from_attributes = True
+
+# Medicine Schemas
+class MedicineBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    stock: int
+    unit: Optional[str] = "Unit"
+
+class MedicineCreate(MedicineBase):
+    erpnext_item_code: Optional[str] = None
+
+class Medicine(MedicineBase):
+    id: int
+    erpnext_item_code: str
+    class Config:
+        from_attributes = True

@@ -49,9 +49,42 @@ def create_patient(patient: schemas.PatientCreate, background_tasks: BackgroundT
     
     return new_patient
 
+@router.put("/{patient_id}", response_model=schemas.Patient)
+def update_patient(patient_id: int, patient_update: schemas.PatientCreate, db: Session = Depends(database.get_db)):
+    # Note: Using PatientCreate schema allows updating all fields
+    db_patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
+    if not db_patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Update Local Fields
+    update_data = patient_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_patient, key, value)
+    
+    db.commit()
+    db.refresh(db_patient)
+    
+    # Sync to ERPNext
+    if db_patient.frappe_id:
+        try:
+            from ..services.frappe_service import frappe_client
+            # Map fields
+            erp_data = {
+                "first_name": patient_update.firstName,
+                "last_name": patient_update.lastName,
+                "sex": patient_update.gender,
+                "mobile": patient_update.phone,
+                "dob": str(patient_update.birthday) if patient_update.birthday else None,
+            }
+            frappe_client.update_patient(db_patient.frappe_id, erp_data)
+        except Exception as e:
+            print(f"Failed to sync update to ERPNext: {e}")
+            
+    return db_patient
+
 @router.get("/", response_model=List[schemas.Patient])
 def get_patients(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
-    return db.query(models.Patient).offset(skip).limit(limit).all()
+    return db.query(models.Patient).order_by(models.Patient.firstName.asc()).offset(skip).limit(limit).all()
 
 @router.get("/search", response_model=List[schemas.Patient])
 def search_patients(query: str, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):

@@ -40,6 +40,29 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
     }
   }
 
+  Future<void> _syncDoctors() async {
+    setState(() => _isLoading = true);
+    try {
+      final res = await widget.apiService.syncDoctors();
+      if (mounted) {
+        String msg = "Synced ${res['count']} new doctors.";
+        if (res['status'] == 'failed') msg = "Sync Failed: ${res['message']}";
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
+        _loadDoctors(); // Reload list
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Sync Error: $e")));
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   void _showDoctorDetail(Doctor doctor) {
     showDialog(
       context: context,
@@ -52,10 +75,16 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
             _detailRow("Name", "${doctor.gelarDepan} ${doctor.namaDokter}"),
             _detailRow("Polyclinic", doctor.polyName),
             _detailRow("ID", doctor.medicalFacilityPolyDoctorId.toString()),
-            // Add more fields if available in model later
           ],
         ),
         actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _showAddDoctorDialog(existingDoctor: doctor);
+            },
+            child: Text("Edit", style: TextStyle(color: Colors.orange)),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text("Close"),
@@ -85,55 +114,188 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Center(child: CircularProgressIndicator());
-    }
-
-    if (_doctors.isEmpty) {
-      return Center(child: Text("No doctors found."));
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: GlassContainer(
-        opacity: 0.8,
-        child: Column(
-          children: [
-            Padding(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddDoctorDialog,
+        backgroundColor: Colors.blue.shade900,
+        child: Icon(Icons.add, color: Colors.white),
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _doctors.isEmpty
+          ? Center(child: Text("No doctors found."))
+          : Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                "Doctor List",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade900,
+              child: GlassContainer(
+                opacity: 0.8,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Doctor List",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade900,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.sync, color: Colors.blue.shade900),
+                            tooltip: "Sync from ERPNext",
+                            onPressed: _syncDoctors,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: _doctors.length,
+                        separatorBuilder: (context, index) => Divider(),
+                        itemBuilder: (context, index) {
+                          final doctor = _doctors[index];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.blue.shade100,
+                              child: Icon(
+                                Icons.medical_services,
+                                color: Colors.blue.shade800,
+                              ),
+                            ),
+                            title: Text(
+                              "${doctor.gelarDepan} ${doctor.namaDokter}",
+                            ),
+                            subtitle: Text(doctor.polyName),
+                            trailing: Icon(
+                              Icons.info_outline,
+                              color: Colors.grey,
+                            ),
+                            onTap: () => _showDoctorDetail(doctor),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            Expanded(
-              child: ListView.separated(
-                itemCount: _doctors.length,
-                separatorBuilder: (context, index) => Divider(),
-                itemBuilder: (context, index) {
-                  final doctor = _doctors[index];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.blue.shade100,
-                      child: Icon(
-                        Icons.medical_services,
-                        color: Colors.blue.shade800,
-                      ),
-                    ),
-                    title: Text("${doctor.gelarDepan} ${doctor.namaDokter}"),
-                    subtitle: Text(doctor.polyName),
-                    trailing: Icon(Icons.info_outline, color: Colors.grey),
-                    onTap: () => _showDoctorDetail(doctor),
-                  );
-                },
+    );
+  }
+
+  void _showAddDoctorDialog({Doctor? existingDoctor}) {
+    final formKey = GlobalKey<FormState>();
+    String name = existingDoctor?.namaDokter ?? '';
+    String title = existingDoctor?.gelarDepan ?? '';
+    String poly = existingDoctor?.polyName ?? 'General';
+
+    bool isEditing = existingDoctor != null;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isEditing ? "Edit Doctor" : "Add New Doctor"),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                initialValue: name,
+                decoration: InputDecoration(labelText: "Name (e.g. John Doe)"),
+                validator: (v) => v!.isEmpty ? "Required" : null,
+                onSaved: (v) => name = v!,
               ),
-            ),
-          ],
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(labelText: "Title"),
+                initialValue: title.isNotEmpty ? title : 'Dr.',
+                items: ['Dr.', 'Prof.', 'Sp.', 'Ns.', 'Bidan', 'Other']
+                    .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                    .toList(),
+                onChanged: (v) => title = v!,
+                onSaved: (v) => title = v!,
+              ),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(labelText: "Polyclinic"),
+                initialValue: poly,
+                items:
+                    [
+                          'General',
+                          'Dental',
+                          'Pediatric',
+                          'Neurology',
+                          'Cardiology',
+                          'Internal Medicine',
+                          'Surgery',
+                          'Obgyn',
+                        ]
+                        .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                        .toList(),
+                onChanged: (v) => poly = v!,
+                onSaved: (v) => poly = v!,
+              ),
+            ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                formKey.currentState!.save();
+
+                if (isEditing) {
+                  // Update Logic
+                  final updatedDoc = Doctor(
+                    medicalFacilityPolyDoctorId:
+                        existingDoctor.medicalFacilityPolyDoctorId,
+                    namaDokter: name,
+                    gelarDepan: title,
+                    polyName: poly,
+                  );
+                  final res = await widget.apiService.updateDoctor(
+                    existingDoctor.medicalFacilityPolyDoctorId,
+                    updatedDoc,
+                  );
+                  if (res != null) {
+                    if (ctx.mounted) Navigator.pop(ctx); // Close Dialog
+                    if (mounted) {
+                      _loadDoctors();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Doctor Updated Successfully")),
+                      );
+                    }
+                  }
+                } else {
+                  // Create Logic
+                  final newDoc = Doctor(
+                    medicalFacilityPolyDoctorId: 0,
+                    namaDokter: name,
+                    gelarDepan: title,
+                    polyName: poly,
+                  );
+                  final res = await widget.apiService.createDoctor(newDoc);
+                  if (res != null) {
+                    if (ctx.mounted) Navigator.pop(ctx);
+                    if (mounted) {
+                      _loadDoctors();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Doctor Added Successfully")),
+                      );
+                    }
+                  }
+                }
+              }
+            },
+            child: Text(isEditing ? "Save Changes" : "Add"),
+          ),
+        ],
       ),
     );
   }

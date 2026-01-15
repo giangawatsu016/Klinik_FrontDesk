@@ -205,4 +205,106 @@ class ApiService {
     } catch (_) {}
     return [];
   }
+
+  Future<Doctor?> createDoctor(Doctor doctor) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/master/doctors'),
+      headers: _headers,
+      body: jsonEncode({
+        "gelarDepan": doctor.gelarDepan,
+        "namaDokter": doctor.namaDokter,
+        "polyName": doctor.polyName,
+        "is_available": true,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return Doctor.fromJson(jsonDecode(response.body));
+    }
+    return null;
+  }
+
+  Future<Doctor?> updateDoctor(int id, Doctor doctor) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/master/doctors/$id'),
+      headers: _headers,
+      body: jsonEncode({
+        "gelarDepan": doctor.gelarDepan,
+        "namaDokter": doctor.namaDokter,
+        "polyName": doctor.polyName,
+        "is_available": true,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return Doctor.fromJson(jsonDecode(response.body));
+    }
+    return null;
+  }
+
+  Future<Patient?> updatePatient(int id, Patient patient) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/patients/$id'),
+      headers: _headers,
+      body: jsonEncode(patient.toJson()),
+    );
+    if (response.statusCode == 200) {
+      return Patient.fromJson(jsonDecode(response.body));
+    }
+    throw Exception("Update Failed: ${response.statusCode}");
+  }
+
+  // Medicine Methods
+  Future<List<Medicine>> getMedicines() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/medicines/'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Medicine.fromJson(json)).toList();
+    }
+    return [];
+  }
+
+  Future<Medicine?> createMedicine(Medicine medicine) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/medicines/'),
+      headers: _headers,
+      body: jsonEncode({
+        "name": medicine.name,
+        "stock": medicine.stock,
+        "unit": medicine.unit,
+        "description": medicine.description,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return Medicine.fromJson(jsonDecode(response.body));
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>> syncMedicines() async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/medicines/sync'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to sync medicines');
+    }
+  }
+
+  Future<Map<String, dynamic>> syncDoctors() async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/master/doctors/sync'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to sync doctors');
+    }
+  }
 }

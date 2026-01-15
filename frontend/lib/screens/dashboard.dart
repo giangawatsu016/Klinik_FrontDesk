@@ -7,6 +7,7 @@ import 'queue_monitor.dart';
 import 'login.dart';
 import 'doctor_list.dart';
 import 'patient_list.dart';
+import 'medicine_inventory.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -32,6 +33,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       RegistrationScreen(apiService: widget.apiService),
       DoctorListScreen(apiService: widget.apiService),
       PatientListScreen(apiService: widget.apiService),
+      MedicineInventoryScreen(apiService: widget.apiService),
     ];
 
     return Scaffold(
@@ -99,6 +101,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icon(Icons.people_outline),
                   selectedIcon: Icon(Icons.people),
                   label: Text('Patients'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.medication_outlined),
+                  selectedIcon: Icon(Icons.medication),
+                  label: Text('Medicines'),
                 ),
               ],
               trailing: Expanded(

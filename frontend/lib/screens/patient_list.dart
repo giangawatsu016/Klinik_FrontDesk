@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../widgets/glass_container.dart';
+import 'registration.dart';
 
 class PatientListScreen extends StatefulWidget {
   final ApiService apiService;
@@ -85,6 +86,22 @@ class _PatientListScreenState extends State<PatientListScreen> {
         ),
         actions: [
           TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RegistrationScreen(
+                    apiService: widget.apiService,
+                    isRegistrationOnly: true,
+                    patientToEdit: patient,
+                  ),
+                ),
+              ).then((_) => _loadPatients());
+            },
+            child: Text("Edit", style: TextStyle(color: Colors.orange)),
+          ),
+          TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text("Close"),
           ),
@@ -129,57 +146,76 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Center(child: CircularProgressIndicator());
-    }
-
-    if (_patients.isEmpty) {
-      return Center(child: Text("No patients found."));
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: GlassContainer(
-        opacity: 0.8,
-        child: Column(
-          children: [
-            Padding(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RegistrationScreen(
+                apiService: widget.apiService,
+                isRegistrationOnly: true,
+              ),
+            ),
+          ).then((_) => _loadPatients());
+        },
+        backgroundColor: Colors.purple.shade900,
+        child: Icon(Icons.add, color: Colors.white),
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _patients.isEmpty
+          ? Center(child: Text("No patients found."))
+          : Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                "Patient List",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade900,
+              child: GlassContainer(
+                opacity: 0.8,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "Patient List",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade900,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: _patients.length,
+                        separatorBuilder: (context, index) => Divider(),
+                        itemBuilder: (context, index) {
+                          final patient = _patients[index];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.purple.shade100,
+                              child: Icon(
+                                Icons.person,
+                                color: Colors.purple.shade800,
+                              ),
+                            ),
+                            title: Text(
+                              "${patient.firstName} ${patient.lastName}",
+                            ),
+                            subtitle: Text(patient.phone),
+                            trailing: Icon(
+                              Icons.arrow_forward_ios,
+                              size: 16,
+                              color: Colors.grey,
+                            ),
+                            onTap: () => _showPatientDetail(patient),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            Expanded(
-              child: ListView.separated(
-                itemCount: _patients.length,
-                separatorBuilder: (context, index) => Divider(),
-                itemBuilder: (context, index) {
-                  final patient = _patients[index];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.purple.shade100,
-                      child: Icon(Icons.person, color: Colors.purple.shade800),
-                    ),
-                    title: Text("${patient.firstName} ${patient.lastName}"),
-                    subtitle: Text(patient.phone),
-                    trailing: Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                      color: Colors.grey,
-                    ),
-                    onTap: () => _showPatientDetail(patient),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

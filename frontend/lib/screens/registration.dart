@@ -5,8 +5,15 @@ import '../models/models.dart';
 
 class RegistrationScreen extends StatefulWidget {
   final ApiService apiService;
+  final bool isRegistrationOnly;
+  final Patient? patientToEdit;
 
-  const RegistrationScreen({super.key, required this.apiService});
+  const RegistrationScreen({
+    super.key,
+    required this.apiService,
+    this.isRegistrationOnly = false,
+    this.patientToEdit,
+  });
 
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
@@ -28,8 +35,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   // New Patient Form Key
   final _formKey = GlobalKey<FormState>();
-  final _doctorFormKey =
-      GlobalKey<FormState>(); // Added validation key for Doctor Step
+  final _doctorFormKey = GlobalKey<FormState>();
 
   // New Patient Data
   String firstName = '';
@@ -61,6 +67,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   List<Doctor> doctors = [];
   Doctor? selectedDoctor;
   bool isPriority = false;
+  bool _isPolyclinic = false;
+  String? _selectedPolyclinic;
 
   // Dynamic Address Data
   List<Map<String, dynamic>> _provinces = [];
@@ -110,6 +118,44 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     super.initState();
     _loadDoctors();
     _loadProvinces();
+
+    if (widget.patientToEdit != null) {
+      _initializeEditMode(widget.patientToEdit!);
+    } else if (widget.isRegistrationOnly) {
+      _currentStep = RegistrationStep.inputData;
+      _patientType = PatientType.newPatient;
+    }
+  }
+
+  void _initializeEditMode(Patient p) {
+    _currentStep = RegistrationStep.inputData;
+    _patientType = PatientType.newPatient; // Re-use New Patient Form
+
+    firstName = p.firstName;
+    lastName = p.lastName;
+    phone = p.phone;
+    identityCard = p.identityCard;
+    gender = p.gender;
+    birthday = DateTime.tryParse(p.birthday) ?? DateTime(2000);
+
+    religion = p.religion;
+    profession = p.profession;
+    education = p.education;
+
+    // Address
+    province = p.province;
+    city = p.city;
+    district = p.district;
+    subdistrict = p.subdistrict;
+    rt = p.rt;
+    rw = p.rw;
+    postalCode = p.postalCode;
+    addressDetails = p.addressDetails ?? '';
+
+    issuerId = p.issuerId;
+    insuranceName = p.insuranceName;
+    noAssuransi = p.noAssuransi ?? '';
+    // maritalStatusId = p.maritalStatusId; // Assuming model has it or default
   }
 
   void _loadProvinces() async {
@@ -223,7 +269,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   void _selectExistingPatient(Patient patient) {
     setState(() {
       _verifiedPatient = patient;
-      _currentStep = RegistrationStep.selectDoctor;
+      if (widget.isRegistrationOnly) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Patient Selected Successfully"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        _currentStep = RegistrationStep.selectDoctor;
+      }
     });
   }
 
@@ -231,7 +287,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      final newPatient = Patient(
+      final newItem = Patient(
+        id: widget.patientToEdit?.id,
         firstName: firstName,
         lastName: lastName,
         identityCard: identityCard,
@@ -253,19 +310,44 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         insuranceName: insuranceName,
         noAssuransi: noAssuransi,
         maritalStatusId: maritalStatusId,
+        frappeId: widget.patientToEdit?.frappeId,
       );
 
       try {
-        final createdPatient = await widget.apiService.registerPatient(
-          newPatient,
-        );
+        if (widget.patientToEdit != null) {
+          await widget.apiService.updatePatient(
+            widget.patientToEdit!.id!,
+            newItem,
+          );
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Patient Updated Successfully"),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        } else {
+          final createdPatient = await widget.apiService.registerPatient(
+            newItem,
+          );
+          if (!mounted) return;
 
-        if (!mounted) return;
-
-        setState(() {
-          _verifiedPatient = createdPatient;
-          _currentStep = RegistrationStep.selectDoctor;
-        });
+          if (widget.isRegistrationOnly) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Patient Registered Successfully"),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Navigator.pop(context);
+            return;
+          }
+          setState(() {
+            _verifiedPatient = createdPatient;
+            _currentStep = RegistrationStep.selectDoctor;
+          });
+        }
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -356,7 +438,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final content = Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
@@ -367,6 +449,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ],
       ),
     );
+
+    if (widget.isRegistrationOnly) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.patientToEdit != null ? "Edit Patient" : "New Patient",
+          ),
+        ),
+        body: content,
+      );
+    }
+    return content;
   }
 
   Widget _buildHeader() {
@@ -375,7 +469,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ? "Select Registration Type"
           : _currentStep == RegistrationStep.inputData
           ? (_patientType == PatientType.newPatient
-                ? "New Patient Registration"
+                ? (widget.patientToEdit != null
+                      ? "Edit Patient Details"
+                      : "New Patient Registration")
                 : "Find Existing Patient")
           : "Assign Doctor",
       style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -506,6 +602,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               children: [
                 Expanded(
                   child: TextFormField(
+                    initialValue: firstName,
                     decoration: InputDecoration(labelText: 'First Name'),
                     onSaved: (v) => firstName = v!,
                     validator: (v) => v!.isEmpty ? 'Required' : null,
@@ -514,6 +611,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 SizedBox(width: 16),
                 Expanded(
                   child: TextFormField(
+                    initialValue: lastName,
                     decoration: InputDecoration(labelText: 'Last Name'),
                     onSaved: (v) => lastName = v ?? '',
                     validator: null,
@@ -522,6 +620,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ],
             ),
             TextFormField(
+              initialValue: identityCard,
               decoration: InputDecoration(labelText: 'ID Card (NIK)'),
               keyboardType: TextInputType.number,
               maxLength: 16,
@@ -534,6 +633,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               },
             ),
             TextFormField(
+              initialValue: phone,
               decoration: InputDecoration(
                 labelText: 'Phone',
                 counterText:
@@ -541,7 +641,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               maxLength: 14,
               keyboardType: TextInputType.phone,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(14),
+              ],
               onSaved: (v) => phone = v!,
               validator: (v) => v!.isEmpty ? 'Required' : null,
             ),
@@ -587,6 +690,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
             _buildSectionTitle("Background"),
             TextFormField(
+              initialValue: profession,
               decoration: InputDecoration(labelText: 'Profession'),
               onSaved: (v) => profession = v!,
             ),
@@ -606,8 +710,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     key: ValueKey("prov_$_selectedProvinceId"),
-                    initialValue: _selectedProvinceId,
-                    decoration: InputDecoration(labelText: 'Province'),
+                    initialValue:
+                        _selectedProvinceId ??
+                        (province.isNotEmpty ? null : null),
+                    decoration: InputDecoration(
+                      labelText: 'Province (Reselect to update)',
+                    ),
+                    hint: province.isNotEmpty ? Text(province) : null,
                     items: _provinces
                         .map(
                           (e) => DropdownMenuItem(
@@ -617,7 +726,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         )
                         .toList(),
                     onChanged: _onProvinceChanged,
-                    validator: (v) => v == null ? 'Required' : null,
+                    validator: (v) =>
+                        (v == null && province.isEmpty) ? 'Required' : null,
                   ),
                 ),
                 SizedBox(width: 16),
@@ -626,6 +736,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     key: ValueKey("city_$_selectedCityId"),
                     initialValue: _selectedCityId,
                     decoration: InputDecoration(labelText: 'City'),
+                    hint: city.isNotEmpty ? Text(city) : null,
                     items: _cities
                         .map(
                           (e) => DropdownMenuItem(
@@ -635,7 +746,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         )
                         .toList(),
                     onChanged: _onCityChanged,
-                    validator: (v) => v == null ? 'Required' : null,
+                    validator: (v) =>
+                        (v == null && city.isEmpty) ? 'Required' : null,
                   ),
                 ),
               ],
@@ -647,6 +759,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     key: ValueKey("dist_$_selectedDistrictId"),
                     initialValue: _selectedDistrictId,
                     decoration: InputDecoration(labelText: 'District'),
+                    hint: district.isNotEmpty ? Text(district) : null,
                     items: _districts
                         .map(
                           (e) => DropdownMenuItem(
@@ -656,7 +769,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         )
                         .toList(),
                     onChanged: _onDistrictChanged,
-                    validator: (v) => v == null ? 'Required' : null,
+                    validator: (v) =>
+                        (v == null && district.isEmpty) ? 'Required' : null,
                   ),
                 ),
                 SizedBox(width: 16),
@@ -665,6 +779,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     key: ValueKey("sub_$_selectedSubdistrictId"),
                     initialValue: _selectedSubdistrictId,
                     decoration: InputDecoration(labelText: 'Subdistrict'),
+                    hint: subdistrict.isNotEmpty ? Text(subdistrict) : null,
                     items: _subdistricts
                         .map(
                           (e) => DropdownMenuItem(
@@ -674,7 +789,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         )
                         .toList(),
                     onChanged: _onSubdistrictChanged,
-                    validator: (v) => v == null ? 'Required' : null,
+                    validator: (v) =>
+                        (v == null && subdistrict.isEmpty) ? 'Required' : null,
                   ),
                 ),
               ],
@@ -683,6 +799,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               children: [
                 Expanded(
                   child: TextFormField(
+                    initialValue: rt,
                     decoration: InputDecoration(labelText: 'RT'),
                     onSaved: (v) => rt = v!,
                   ),
@@ -690,6 +807,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 SizedBox(width: 16),
                 Expanded(
                   child: TextFormField(
+                    initialValue: rw,
                     decoration: InputDecoration(labelText: 'RW'),
                     onSaved: (v) => rw = v!,
                   ),
@@ -697,6 +815,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 SizedBox(width: 16),
                 Expanded(
                   child: TextFormField(
+                    initialValue: postalCode,
                     decoration: InputDecoration(labelText: 'Postal Code'),
                     onSaved: (v) => postalCode = v!,
                   ),
@@ -704,6 +823,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ],
             ),
             TextFormField(
+              initialValue: addressDetails,
               decoration: InputDecoration(labelText: 'Full Address'),
               onSaved: (v) => addressDetails = v!,
             ),
@@ -754,6 +874,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
             if (issuerId != 1)
               TextFormField(
+                initialValue: noAssuransi,
                 decoration: InputDecoration(labelText: 'Insurance Number'),
                 onSaved: (v) => noAssuransi = v!,
                 validator: (v) => v!.isEmpty ? 'Required for Insurance' : null,
@@ -764,8 +885,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               onPressed: _submitNewPatient,
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 20),
+                backgroundColor: widget.isRegistrationOnly
+                    ? Colors.green.shade700
+                    : Colors.blue,
               ),
-              child: Text("Register & Proceed"),
+              child: Text(
+                widget.isRegistrationOnly
+                    ? (widget.patientToEdit != null
+                          ? "Update Patient"
+                          : "Register Patient")
+                    : "Register & Proceed",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
             ),
             TextButton(
               onPressed: () =>
@@ -809,9 +940,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
     );
   }
-
-  bool _isPolyclinic = false;
-  String? _selectedPolyclinic;
 
   Widget _buildDoctorSelection() {
     // Extract unique polyclinics from doctors

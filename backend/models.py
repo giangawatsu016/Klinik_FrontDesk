@@ -91,3 +91,13 @@ class PatientQueue(Base):
     
     patient = relationship("Patient", back_populates="queues")
     doctor = relationship("DoctorEntity")
+
+class Medicine(Base):
+    __tablename__ = "medicines"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    erpnext_item_code = Column(String(100), unique=True, index=True)
+    name = Column(String(200)) # Item Name
+    description = Column(Text, nullable=True)
+    stock = Column(Integer, default=0) # Syncs with actual_qty
+    unit = Column(String(50)) # stock_uom

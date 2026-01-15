@@ -35,6 +35,16 @@ erDiagram
         boolean is_available
     }
 
+    %% Core: Medicine
+    Medicine {
+        int id PK
+        string erpnext_item_code "Unique - Link to ERPNext Item"
+        string name
+        string description
+        int stock "Mapped from actual_qty"
+        string unit "uom"
+    }
+
     %% Core: Patient
     Patient {
         int id PK

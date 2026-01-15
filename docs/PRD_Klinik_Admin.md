@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
 **Project Name:** Klinik Admin System (Desktop App)
-**Version:** 2.0
+**Version:** 2.1
 **Status:** Live / Maintenance
-**Last Updated:** 2026-01-12
+**Last Updated:** 2026-01-15
 
 ## 1. Product Overview
 ### 1.1 Vision
@@ -17,7 +17,7 @@ To provide a modern, efficient, and user-friendly desktop application for clinic
 ### 1.3 Scope
 *   **Platform:** Windows Desktop (Flutter-based).
 *   **Primary Users:** Receptionists / Front Desk Staff.
-*   **Key Modules:** Authentication, Dashboard, Patient Registration, Queue Management, Master Data (Address, Doctors).
+*   **Key Modules:** Authentication, Dashboard, Patient Registration, Queue Management, Master Data (Address, Doctors, Medicines).
 
 ## 2. Target Audience & Personas
 *   **Receptionist (Staff):** Needs a fast, keyboard-friendly interface to input patient data quickly and assign them to doctors.
@@ -40,9 +40,12 @@ To provide a modern, efficient, and user-friendly desktop application for clinic
 *   **Existing Patient Search:**
     *   Fast lookup by NIK or Phone number.
     *   One-click selection to add to queue.
+*   **Patient Edit (New):**
+    *   Ability to update patient details (Name, Address, Insurance).
+    *   Pre-filled form with existing data.
 *   **External Integration (Frappe):** 
     *   Auto-sync new patient data to ERPNext (Mapped to `Customer` Doctype).
-    *   Bulk sync capability for legacy data.
+    *   Sync updates (PUT) to ERPNext using `frappe_id`.
 
 ### 3.3 Queue Management
 *   **Queue Assignment:**
@@ -54,15 +57,31 @@ To provide a modern, efficient, and user-friendly desktop application for clinic
 *   **Daily Cleanup:** Auto-delete previous day's queue records to keep the list fresh.
 *   **Text-to-Speech (TTS):** Audio announcement for calling patients (e.g., "Antrian Nomor D-001...").
 
-### 3.4 Dashboard & Analytics (Renamed from "Queue")
+### 3.4 Master Data Management (Doctors & Patients)
+*   **Doctors:** 
+    *   View list of doctors.
+    *   **Add/Edit:** Manually add new doctors or edit existing ones (Title, Name, Polyclinic).
+    *   **ERPNext Sync:** Sync Doctor create/update to `Healthcare Practitioner`.
+*   **Patients:** View list and manually register new patients without immediate queuing.
+
+### 3.5 Dashboard & Analytics
 *   **Real-time Stats:** Total Patients, Waiting, In-Consultation, Completed.
 *   **Visual Charts:** Patient traffic trends (Daily/Weekly).
 *   **Recent Activity:** List of latest registrations.
 
-### 3.5 Integrations
+### 3.6 Medicine Inventory
+*   **Stock Views:** List of available medicines with real-time search.
+*   **ERPNext Integration:** Pull/Sync stock data from `Item` Doctype in ERPNext.
+*   **Manual Entry:** Ability to manually add medicines (non-synced) with "MANUAL-" code prefix.
+*   **Smart Actions:** "Request Medicine" button disabled automatically if stock is 0.
+
+### 3.7 Integrations
 *   **ERPNext / Frappe:** 
-    *   **Patient Sync:** Local `Patient` -> Remote `Customer` (Two-way ID Link).
-    *   **Appointment Sync:** Local `Queue` -> Remote `Event` (Calendar).
+    *   **Two-Way Sync:**
+        *   Local `Patient` <-> Remote `Customer`
+        *   Local `Doctor` <-> Remote `Healthcare Practitioner`
+        *   Local `Queue` -> Remote `Event`
+        *   Remote `Item` -> Local `Medicine`
 *   **Regional Data:** `emsifa` API for Indonesian administrative region data.
 
 ## 4. User Experience (UX) Requirements
@@ -79,7 +98,6 @@ To provide a modern, efficient, and user-friendly desktop application for clinic
 *   **Reliability:** Offline capability (limited) or graceful error handling when API is down.
 *   **Compatibility:** Windows 10/11.
 
-
 ## 6. Success Metrics
 *   **Registration Time:** Reduce time to register a new patient to under 2 minutes.
 *   **Queue Accuracy:** Zero duplicate queue numbers per day.
@@ -88,6 +106,5 @@ To provide a modern, efficient, and user-friendly desktop application for clinic
 ## 7. Quality Assurance & Reliability
 *   **Automated Testing:**
     *   **Login Flow:** Full coverage of positive and negative login scenarios using Playwright.
-    *   **Reporting:** Automated generation of Word (DOCX) reports with multi-step screenshots (Empty Form -> Filled -> Result) for every test run.
-    *   **Environment Support:** Infrastructure compatible with Flutter Web (CanvasKit) rendering engine.
-
+    *   **Reporting:** Automated generation of Word (DOCX) reports.
+    *   **Environment Support:** Infrastructure compatible with Flutter Web (CanvasKit).

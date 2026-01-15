@@ -86,12 +86,104 @@ class FrappeClient:
             if response.status_code == 202 or response.status_code == 200:
                 print(f"Deletion Success.")
                 return True
-            else:
-                print(f"Deletion Failed ({response.status_code}): {response.text}")
-                return False
         except Exception as e:
             print(f"Frappe Connection Error: {e}")
             return False
+
+    def get_items(self):
+        # Fetch Items that are meant for Sales/Stock
+        filters = {
+            "disabled": 0,
+            "is_stock_item": 1,
+            "is_sales_item": 1
+        }
+        try:
+            return self.get_list("Item", filters=filters)
+        except Exception as e:
+            print(f"Frappe Get Items Error: {e}")
+            return []
+    
+    def get_doctors(self):
+        # Fetch Healthcare Practitioner
+        filters = {"status": "Active"}
+        try:
+            # Need to ensure we fetch practitioner_name and department
+            # get_list by default fetches 'name' (ID). We might need more details.
+            # Using standard get_list, we'll get 'name'.
+            # Ideally we want: practitioner_name, department_name (or department)
+            
+            # Using REST API with fields
+            url = f"{self.base_url}/api/resource/Healthcare Practitioner"
+            params = {
+                "fields": '["name", "practitioner_name", "department"]',
+                "filters": json.dumps(filters),
+                "limit_page_length": 500
+            }
+            response = requests.get(url, headers=self.headers, params=params, timeout=10)
+            if response.status_code == 200:
+                return response.json().get("data", [])
+            return []
+        except Exception as e:
+            print(f"Frappe Get Doctors Error: {e}")
+            return []
+
+    def create_practitioner(self, first_name: str, last_name: str, department: str):
+        # Helper to create a Healthcare Practitioner for testing
+        data = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "department": department,
+            "status": "Active"
+        }
+        return self._post("Healthcare Practitioner", data)
+
+    
+    def _put(self, doctype: str, name: str, data: dict):
+        url = f"{self.base_url}/api/resource/{doctype}/{name}"
+        try:
+            print(f"Updating Frappe {doctype} {name}...", url)
+            response = requests.put(url, headers=self.headers, json=data, timeout=5)
+            if response.status_code == 200:
+                print(f"Frappe Update Success: {response.json()}")
+                return response.json()
+            else:
+                print(f"Frappe Update Failed ({response.status_code}): {response.text}")
+                return None
+        except Exception as e:
+            print(f"Frappe Connection Error: {e}")
+            return None
+
+    def update_practitioner(self, name: str, data: dict):
+        # We assume 'name' is the Frappe ID (e.g., PRA-2023-001)
+        # Note: If local DB stores 'name' as frappe_id, pass that.
+        # But our local `create_practitioner` didn't save the ID. We might need to search it first or rely on standard naming if possible.
+        # However, for now, we'll try to find it by practitioner_name if name isn't a direct ID, OR we assume updating by Name is tricky without ID.
+        # Implementation Plan Assumption: We might need to fetch ID first.
+        # For simplicity in this iteration: We'll implement the method accepting ID.
+        return self._put("Healthcare Practitioner", name, data)
+
+    def update_patient(self, name: str, data: dict):
+        # name should be the Frappe ID (e.g. PAT-2023-001) stored in Patient.frappe_id
+        return self._put("Patient", name, data)
+
+    def get_item_stock(self, item_code):
+        # ... (rest of the file as before)
+        try:
+             # Use a Report API or just get list of Bins
+             filters = {"item_code": item_code}
+             url = f"{self.base_url}/api/resource/Bin"
+             params = {
+                "fields": '["actual_qty"]',
+                "filters": json.dumps(filters)
+             }
+             response = requests.get(url, headers=self.headers, params=params, timeout=5)
+             if response.status_code == 200:
+                 bins = response.json().get("data", [])
+                 total_qty = sum([b.get("actual_qty", 0) for b in bins])
+                 return total_qty
+             return 0
+        except:
+             return 0
 
 # Singleton
 frappe_client = FrappeClient()
