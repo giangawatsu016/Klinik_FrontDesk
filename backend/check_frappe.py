@@ -24,7 +24,7 @@ def check_frappe_data():
     
     try:
         print("\n--- Checking Latest Patients ---")
-        r = requests.get(url_patient, headers=headers)
+        r = requests.get(url_patient, headers=headers, timeout=10)
         if r.status_code == 200:
             data = r.json().get('data', [])
             if not data:
@@ -39,7 +39,7 @@ def check_frappe_data():
             # Fallback to Customer
             url_customer = f"{FRAPPE_URL}/api/resource/Customer?fields=[\"name\",\"customer_name\"]&limit_page_length=5&order_by=creation desc"
             print("\n--- Checking Latest Customers (Fallback) ---")
-            r2 = requests.get(url_customer, headers=headers)
+            r2 = requests.get(url_customer, headers=headers, timeout=10)
             if r2.status_code == 200:
                 data2 = r2.json().get('data', [])
                 for item in data2:

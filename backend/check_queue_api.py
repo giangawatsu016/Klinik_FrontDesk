@@ -6,7 +6,7 @@ BASE_URL = "http://localhost:8001"
 
 def check_queue():
     try:
-        response = requests.get(f"{BASE_URL}/queues/")
+        response = requests.get(f"{BASE_URL}/queues/", timeout=5)
         if response.status_code == 200:
             queues = response.json()
             print(f"API Returned {len(queues)} items for TODAY.")

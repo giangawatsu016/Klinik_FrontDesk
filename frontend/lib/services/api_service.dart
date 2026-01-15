@@ -417,4 +417,17 @@ class ApiService {
     }
     return [];
   }
+
+  Future<List<Map<String, dynamic>>> getDiagnosticReports(int patientId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/integration/diagnostic-reports/$patientId'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+      }
+    } catch (_) {}
+    return [];
+  }
 }

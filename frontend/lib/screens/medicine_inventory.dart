@@ -300,6 +300,24 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
     int stock = medicine?.stock ?? 0;
     String unit = medicine?.unit ?? initialUnit ?? 'Tablet';
 
+    List<String> validUnits = [
+      "Tablet",
+      "Capsule",
+      "Bottle",
+      "Box",
+      "Pcs",
+      "Strip",
+      "Tube",
+      "Vial",
+      "Ampoule",
+      "Sachet",
+    ];
+
+    // Ensure current unit is in the list to prevent Dropdown assertion error
+    if (!validUnits.contains(unit) && unit.isNotEmpty) {
+      validUnits.add(unit);
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -352,21 +370,9 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(labelText: "Unit"),
                 initialValue: unit,
-                items:
-                    [
-                          "Tablet",
-                          "Capsule",
-                          "Bottle",
-                          "Box",
-                          "Pcs",
-                          "Strip",
-                          "Tube",
-                          "Vial",
-                          "Ampoule",
-                          "Sachet",
-                        ]
-                        .map((u) => DropdownMenuItem(value: u, child: Text(u)))
-                        .toList(),
+                items: validUnits
+                    .map((u) => DropdownMenuItem(value: u, child: Text(u)))
+                    .toList(),
                 onChanged: (v) => unit = v!,
                 onSaved: (v) => unit = v!,
               ),

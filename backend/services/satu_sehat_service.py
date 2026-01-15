@@ -1,9 +1,12 @@
 import os
 import requests
 import time
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# Explicitly load .env from backend/ directory
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 SATUSEHAT_AUTH_URL = os.getenv("SATUSEHAT_AUTH_URL")
 SATUSEHAT_BASE_URL = os.getenv("SATUSEHAT_BASE_URL")
@@ -212,5 +215,79 @@ class SatuSehatClient:
             "unit": unit,
             "description": f"{manufacturer} - {packaging}"
         }
+
+    def get_diagnostic_reports(self, ihs_number: str):
+        """
+        Fetch Diagnostic Reports for a specific patient (IHS Number).
+        GET /DiagnosticReport?subject={ihs_number}
+        """
+        token = self.get_access_token()
+        if not token:
+            raise Exception("Failed to get Access Token")
+
+        url = f"{self.base_url}/DiagnosticReport"
+        headers = {
+            "Authorization": f"Bearer {token}"
+        }
+        params = {
+            "subject": ihs_number,
+            "_sort": "-date" # Sort by latest
+        }
+
+        try:
+            print(f"Fetching Diagnostic Reports for IHS: {ihs_number}")
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            
+            if response.status_code == 200:
+                bundle = response.json()
+                if bundle.get("total", 0) > 0 and bundle.get("entry"):
+                    items = [e["resource"] for e in bundle["entry"]]
+                    return [self._parse_diagnostic_report(i) for i in items]
+                else:
+                    return []
+            else:
+                print(f"SatuSehat DiagnosticReport Error ({response.status_code}): {response.text}")
+                return []
+        except Exception as e:
+            print(f"SatuSehat Request Error: {e}")
+            return []
+
+    def _parse_diagnostic_report(self, resource: dict):
+        """
+        Parse DiagnosticReport FHIR Resource
+        """
+        # Code / Display Name
+        code_text = ""
+        codes = resource.get("code", {}).get("coding", [])
+        if codes:
+            code_text = codes[0].get("display", codes[0].get("code", "Unknown Test"))
+        else:
+            code_text = resource.get("code", {}).get("text", "Unknown Report")
+
+        # Effective DateTime
+        date_time = resource.get("effectiveDateTime", "")
+        
+        # Performer
+        performer_text = ""
+        performers = resource.get("performer", [])
+        if performers:
+            performer_text = performers[0].get("display", "Unknown Performer")
+
+        return {
+            "id": resource.get("id"),
+            "status": resource.get("status"),
+            "code": code_text,
+            "effectiveDateTime": date_time,
+            "performer": performer_text,
+            "category": self._get_category_text(resource)
+        }
+
+    def _get_category_text(self, resource: dict):
+        cats = resource.get("category", [])
+        if cats:
+            codings = cats[0].get("coding", [])
+            if codings:
+                return codings[0].get("display", "")
+        return ""
 
 satu_sehat_client = SatuSehatClient()

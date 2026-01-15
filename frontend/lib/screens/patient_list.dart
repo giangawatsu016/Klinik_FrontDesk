@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import '../models/models.dart';
 import '../widgets/glass_container.dart';
 import 'registration.dart';
+import 'patient_detail.dart';
 
 class PatientListScreen extends StatefulWidget {
   final ApiService apiService;
@@ -42,104 +43,33 @@ class _PatientListScreenState extends State<PatientListScreen> {
   }
 
   void _showPatientDetail(Patient patient) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Patient Details"),
-        content: SizedBox(
-          width: 500, // Wider for detailed info
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _sectionHeader("Personal Info"),
-                _detailRow("Name", "${patient.firstName} ${patient.lastName}"),
-                _detailRow("Identity Card (NIK)", patient.identityCard),
-                _detailRow("Phone", patient.phone),
-                _detailRow("Gender", patient.gender),
-                _detailRow("Birthday", patient.birthday),
-                _detailRow("Religion", patient.religion),
-                _detailRow("Profession", patient.profession),
-                _detailRow("Education", patient.education),
-
-                SizedBox(height: 16),
-                _sectionHeader("Contact & Address"),
-                _detailRow("Address", patient.addressDetails ?? "-"),
-                _detailRow(
-                  "Region",
-                  "${patient.subdistrict}, ${patient.district}, ${patient.city}, ${patient.province}",
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PatientDetailScreen(
+          patient: patient,
+          apiService: widget.apiService,
+          onEdit: () async {
+            // Edit Logic (Close detail first, or push replacement)
+            // Ideally, push edit screen on top
+            final nav = Navigator.of(context);
+            await nav.push(
+              MaterialPageRoute(
+                builder: (context) => RegistrationScreen(
+                  apiService: widget.apiService,
+                  isRegistrationOnly: true,
+                  patientToEdit: patient,
                 ),
-                _detailRow("RT/RW", "${patient.rt} / ${patient.rw}"),
-                _detailRow("Postal Code", patient.postalCode),
+              ),
+            );
 
-                SizedBox(height: 16),
-                _sectionHeader("Insurance / Payment"),
-                _detailRow("Issuer ID", patient.issuerId.toString()),
-                if (patient.insuranceName != null)
-                  _detailRow("Insurance Name", patient.insuranceName!),
-                if (patient.noAssuransi != null)
-                  _detailRow("Policy Number", patient.noAssuransi!),
-              ],
-            ),
-          ),
+            // Reload patient list when returning from Edit
+            if (mounted) {
+              _loadPatients();
+              nav.pop();
+            }
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RegistrationScreen(
-                    apiService: widget.apiService,
-                    isRegistrationOnly: true,
-                    patientToEdit: patient,
-                  ),
-                ),
-              ).then((_) => _loadPatients());
-            },
-            child: Text("Edit", style: TextStyle(color: Colors.orange)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Close"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _sectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.blue.shade900,
-          decoration: TextDecoration.underline,
-        ),
-      ),
-    );
-  }
-
-  Widget _detailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              "$label:",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(child: Text(value)),
-        ],
       ),
     );
   }

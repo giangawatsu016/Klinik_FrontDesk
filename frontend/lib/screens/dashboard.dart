@@ -8,6 +8,7 @@ import 'doctor_list.dart';
 import 'patient_list.dart';
 import 'medicine_inventory.dart';
 import 'user_management.dart';
+import 'diagnostic_reports.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -75,6 +76,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "selectedIcon": Icons.manage_accounts,
         "label": "Users",
       },
+      {
+        "id": "diagnosis",
+        "page": DiagnosticReportsScreen(apiService: widget.apiService),
+        "icon": Icons.analytics_outlined,
+        "selectedIcon": Icons.analytics,
+        "label": "Diagnosis",
+      },
     ];
 
     // Filter based on Role
@@ -97,8 +105,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return role == "Super Admin" || role == "Administrator";
       }
 
-      // Doctors, Patients, Medicines
-      if (["doctors", "patients", "medicines"].contains(id)) {
+      // Doctors, Patients, Medicines, Diagnosis
+      if (["doctors", "patients", "medicines", "diagnosis"].contains(id)) {
         // Not visible to Super Admin (who only sees Users)
         return role != "Super Admin";
       }

@@ -62,6 +62,7 @@ class Patient {
   final String? noAssuransi;
   final int maritalStatusId;
   final String? frappeId;
+  final String? ihsNumber;
 
   Patient({
     this.id,
@@ -87,6 +88,7 @@ class Patient {
     this.noAssuransi,
     required this.maritalStatusId,
     this.frappeId,
+    this.ihsNumber,
   });
 
   Map<String, dynamic> toJson() {
@@ -113,6 +115,7 @@ class Patient {
       'noAssuransi': noAssuransi,
       'maritalStatusId': maritalStatusId,
       'frappe_id': frappeId,
+      'ihs_number': ihsNumber,
     };
   }
 
@@ -143,6 +146,7 @@ class Patient {
       maritalStatusId: json['maritalStatusId'] ?? 1,
       noAssuransi: json['noAssuransi'],
       frappeId: json['frappe_id'],
+      ihsNumber: json['ihs_number'],
     );
   }
 }

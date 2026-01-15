@@ -1,1 +1,0 @@
-ALTER TABLE patient ADD COLUMN insuranceName VARCHAR(100) NULL;
