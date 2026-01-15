@@ -55,6 +55,9 @@ The system covers:
 *   **REQ-INT-02**: **Patient Sync**: Local Patient -> ERPNext Customer.
 *   **REQ-INT-03**: **Doctor Sync**: Local Doctor -> Healthcare Practitioner.
 *   **REQ-INT-04**: **Medicine Sync**: ERPNext Item -> Local Medicine.
+*   **REQ-INT-05**: **Satu Sehat Auth**: OAuth2 Token Management.
+*   **REQ-INT-06**: **Patient Verification**: Search NIK -> Auto-fill Form.
+*   **REQ-INT-07**: **KFA Search**: Search Medicine -> Import.
 
 ### 3.5 User Management Module (New)
 *   **REQ-USER-01**: **List Users**: View all users with Role indicators.

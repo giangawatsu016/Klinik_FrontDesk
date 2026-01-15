@@ -436,7 +436,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         return;
       }
 
-      final success = await widget.apiService.addToQueue(
+      await widget.apiService.addToQueue(
         patientId: _verifiedPatient!.id!,
         doctorId: !_isPolyclinic
             ? selectedDoctor!.medicalFacilityPolyDoctorId
@@ -448,36 +448,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       if (!mounted) return;
 
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Patient Registered & Queued Successfully',
-              style: TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Patient Registered & Queued Successfully',
+            style: TextStyle(color: Colors.white),
           ),
-        );
+          backgroundColor: Colors.green,
+        ),
+      );
 
-        // Reset
-        setState(() {
-          _currentStep = RegistrationStep.selectType;
-          _verifiedPatient = null;
-          _patientType = null;
-          _searchController.clear();
-          _searchResults = [];
-          selectedDoctor = null;
-          _selectedPolyclinic = null;
-          isPriority = false;
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to add to queue. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      // Reset
+      setState(() {
+        _currentStep = RegistrationStep.selectType;
+        _verifiedPatient = null;
+        _patientType = null;
+        _searchController.clear();
+        _searchResults = [];
+        selectedDoctor = null;
+        _selectedPolyclinic = null;
+        isPriority = false;
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -485,6 +476,77 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  bool _isFetchingSatuSehat = false;
+
+  void _fetchSatuSehatData() async {
+    _formKey.currentState!.save();
+    if (identityCard.length != 16) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("NIK must be 16 digits")));
+      }
+      return;
+    }
+
+    setState(() => _isFetchingSatuSehat = true);
+
+    try {
+      final data = await widget.apiService.fetchPatientFromSatuSehat(
+        identityCard,
+      );
+
+      if (!mounted) return;
+
+      if (data != null) {
+        setState(() {
+          if (data['firstName'] != null) firstName = data['firstName'];
+          if (data['phone'] != null && data['phone'].toString().isNotEmpty) {
+            phone = data['phone'];
+          }
+          if (data['gender'] != null) {
+            gender = data['gender'].toString().toLowerCase() == 'male'
+                ? 'Male'
+                : 'Female';
+          }
+          if (data['birthday'] != null) {
+            try {
+              birthday = DateTime.parse(data['birthday']);
+            } catch (_) {}
+          }
+          if (data['address_details'] != null) {
+            addressDetails = data['address_details'];
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Data fetched from SatuSehat"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Patient not found in SatuSehat"),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error fetching data: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isFetchingSatuSehat = false);
     }
   }
 
@@ -654,6 +716,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               children: [
                 Expanded(
                   child: TextFormField(
+                    key: ValueKey("fname_$firstName"),
                     initialValue: firstName,
                     decoration: InputDecoration(labelText: 'First Name'),
                     onSaved: (v) => firstName = v!,
@@ -671,26 +734,57 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
               ],
             ),
-            TextFormField(
-              initialValue: identityCard,
-              decoration: InputDecoration(labelText: 'ID Card (NIK)'),
-              keyboardType: TextInputType.number,
-              maxLength: 16,
-              onSaved: (v) => identityCard = v!,
-              validator: (v) {
-                if (v == null || v.isEmpty) return 'Required';
-                if (v.length != 16) return 'NIK must be exactly 16 digits';
-                if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Numeric only';
-                return null;
-              },
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    initialValue: identityCard,
+                    decoration: InputDecoration(labelText: 'ID Card (NIK)'),
+                    keyboardType: TextInputType.number,
+                    maxLength: 16,
+                    onChanged: (v) => identityCard = v, // Capture for button
+                    onSaved: (v) => identityCard = v!,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Required';
+                      if (v.length != 16) {
+                        return 'NIK must be exactly 16 digits';
+                      }
+                      if (!RegExp(r'^[0-9]+$').hasMatch(v)) {
+                        return 'Numeric only';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                SizedBox(width: 10),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: ElevatedButton(
+                    onPressed: _isFetchingSatuSehat
+                        ? null
+                        : _fetchSatuSehatData,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    child: _isFetchingSatuSehat
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text("Fetch"),
+                  ),
+                ),
+              ],
             ),
             TextFormField(
+              key: ValueKey("phone_$phone"),
               initialValue: phone,
-              decoration: InputDecoration(
-                labelText: 'Phone',
-                counterText:
-                    "", // Hide default counter if desired, or keep it. I'll hide it for cleaner UI but enforce limit
-              ),
+              decoration: InputDecoration(labelText: 'Phone', counterText: ""),
               maxLength: 14,
               keyboardType: TextInputType.phone,
               inputFormatters: [
@@ -875,6 +969,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ],
             ),
             TextFormField(
+              key: ValueKey("addr_$addressDetails"),
               initialValue: addressDetails,
               decoration: InputDecoration(labelText: 'Full Address'),
               onSaved: (v) => addressDetails = v!,

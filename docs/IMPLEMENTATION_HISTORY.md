@@ -1,45 +1,233 @@
 # Complete Implementation History
+**Project:** Klinik Admin System
+**Date Generated:** 2026-01-15
 
-## Phase 1: Foundation & Authentication (Week 1)
-- [x] **Project Setup**: Initialized Flutter Frontend and FastAPI Backend.
-- [x] **Database**: Set up SQLite (Dev) with SQLAlchemy models (`User`, `Patient`).
-- [x] **Authentication**: Implemented JWT-based Login/Logout.
-- [x] **Dashboard**: Created responsive Dashboard layout with Navigation Rail.
+This document chronicles the entire development and implementation journey of the Klinik Admin application, from initial refactoring to the current stable release (v2.2+).
 
-## Phase 2: Patient Management (Week 2)
-- [x] **Registration Form**: Developed split-step form (Personal -> Address -> Payment).
-- [x] **Address Integration**: Integrated `emsifa` API for Indonesian Region Hierarchy (Province to Subdistrict).
-- [x] **Validation**: Added constraints for NIK (16 digits) and Phone (14 digits).
-- [x] **Edit Support**: Enabled editing existing patient records.
+---
 
-## Phase 3: Queue Management (Week 2)
-- [x] **Queue Logic**: Implemented "Assign to Doctor/Poly" logic.
-- [x] **Numbering System**: Auto-generation of D-XXX and P-XXX tickets.
-- [x] **Daily Cleanup**: Automated reset and cleanup of previous day's queue.
-- [x] **TTS**: Integrated Text-to-Speech for calling numbers.
+## Phase 1: Foundation & Architecture Refactoring
+**Goal:** Migrate from a lightweight prototype (SQLite) to a robust production-ready architecture (MySQL).
 
-## Phase 4: Master Data & Inventory (Week 2)
-- [x] **Doctors**: Manage Doctor list with Polyclinic assignment.
-- [x] **Medicines**: Implemented Medicine Inventory view with Stock Levels.
-- [x] **Manual Entry**: Data entry forms for Doctors and Medicines.
+### 1.1 Database Migration
+*   **Action:** Migrated database backend from SQLite to **MySQL**.
+*   **Implementation:** 
+    -   Updated `backend/database.py` to use `mysql+pymysql` driver.
+    -   Created `alembic` migrations to initialize the schema (`users`, `patient`, `maritalstatus`).
+    -   Configured environment variables (`.env`) for DB credentials.
 
-## Phase 5: ERPNext Integration (Week 3)
-- [x] **Infrastructure**: Created `frappe_service.py` for API communication.
-- [x] **Patient Sync**: Automatic sync of new Patients to ERPNext `Customer`.
-- [x] **Doctor Sync**: Syncing Doctors to `Healthcare Practitioner`.
-- [x] **Queue Sync**: Pushing Queue items to ERPNext `Event` (Calendar).
-- [x] **Inventory Sync**: Pulling real-time Stock from ERPNext `Item`.
+### 1.2 Authentication System
+*   **Action:** Secure the application with Role-Based Access Control (RBAC).
+*   **Implementation:**
+    -   Implemented JWT (JSON Web Token) authentication in `auth_utils.py`.
+    -   Created `LoginScreen` in Flutter with gradient UI.
+    -   Added password hashing using `bcrypt`.
 
-## Phase 6: Role-Based Access Control (Week 3 - Current)
-- [x] **Role Hierarchy**: Defined Super Admin, Administrator, Staff roles.
-- [x] **Backend Security**: Enforced permission checks on API endpoints.
-- [x] **UI Adaptation**: Dynamic Menu visibility based on Role.
-- [x] **User Management**:
-    - Created CRUD Interface for Users.
-    - Added restrictions (Admin cannot edit Super Admin).
-- [x] **User Sync**: Implemented automatic syncing of System Users to ERPNext (via Email).
+---
 
-## Future Roadmap
-- [ ] **Doctor Portal**: Specific view for Doctors to see their queue.
-- [ ] **Electronic Medical Record (EMR)**: Capture diagnosis and prescription.
-- [ ] **Invoicing**: Generate invoices based on consultation.
+## Phase 2: Core Feature Implementation
+**Goal:** Implement the primary business logic for Patient Registration and Queueing.
+
+### 2.1 Indonesian Address System
+*   **Action:** Implement dynamic address selection (Province -> Sub-district).
+*   **Implementation:**
+    -   Integrated with `emsifa.com` API via a proxy in `backend/routers/master_data.py`.
+    -   Created dependent dropdowns in `registration.dart`.
+    -   **Optimization:** Implemented **LRU Cache** (`@lru_cache`) in Python to cache API responses, reducing latency from ~500ms to <10ms for repeated requests.
+
+### 2.2 Insurance & Master Data
+*   **Action:** Handle various payment methods (BPJS, Insurance, General).
+*   **Implementation:**
+    -   Created `Issuer` model and `migration_insurance.sql` to seed data.
+    -   Added logic: If "BPJS" is selected -> Show "Kesehatan/Ketenagakerjaan". If "Insurance" -> Show "Allianz/Prudential/etc.".
+
+### 2.3 Queue Management
+*   **Action:** Manage daily patient flow.
+*   **Implementation:**
+    -   Created `PatientQueue` model.
+    -   Implemented logic to generate queue numbers (e.g., `D-001`, `P-005`) based on Doctor vs Polyclinic selection.
+    -   Added **Daily Cleanup** logic to lazy-delete old queue records.
+
+---
+
+## Phase 3: ERPNext / Frappe Integration
+**Goal:** Synchronize local clinic data with a centralized ERP system.
+
+### 3.1 Integration Strategy (Evolution)
+*   **Attempt 1 (Ideal):** Sync to `Patient` and `Patient Appointment` (Healthcare Module).
+    *   *Result:* Failed due to "Module Not Found" (Server-side 500 Error) on the user's specific Frappe instance.
+*   **Attempt 2 (Stable - Current):** Sync to **Core Modules**.
+    *   **Patient** -> Syncs to `Customer`.
+    *   **Queue** -> Syncs to `Event` (Calendar).
+    *   *Result:* Success.
+
+### 3.2 Implementation Details
+*   Created `backend/services/frappe_service.py` to handle API calls.
+*   Implemented **Two-Way Sync Logic**:
+    1.  Create Patient via API.
+    2.  Capture returned `name` (ID) from Frappe.
+    3.  Save `frappe_id` to local `Patient` table for future updates.
+*   **Bulk Sync:** Created `backend/scripts/sync_existing_patients.py` to upload legacy data to Frappe.
+
+---
+
+## Phase 4: Performance & Optimization
+**Goal:** Ensure the app runs smoothly under load.
+
+### 4.1 Database Pooling
+*   **Action:** Prevent database starvation under high concurrency.
+*   **Implementation:** Configured `SQLAlchemy` engine with `pool_size=20` and `max_overflow=30`.
+
+### 4.2 Load Testing
+*   **Action:** Verify system stability.
+*   **Implementation:**
+    -   Created **JMeter Test Plan** (`Klinik_Load_Test.jmx`).
+    -   Simulated concurrent Queue Monitor polling and Address Lookups.
+
+---
+
+## Phase 5: UX Refinement & Data Constraints (v2.0)
+**Goal:** Polish the user experience and ensure strict data integrity.
+
+### 5.1 UX Improvements
+*   **Phone Number:** Constrained input to max **14 digits** (numeric only) in `registration.dart`.
+*   **Logout:** Added logout button to the Dashboard sidebar.
+*   **Labeling:** Renamed "Queue" sidebar item to "Dashboard".
+
+### 5.2 Data Integrity (Strict Mode)
+*   **Constraints:**
+    -   Made `Last Name` **Optional** (Nullable).
+    -   Enforced **Unique Phone Number** constraint (Database Index + API Check).
+*   **Reset & Cleanup:**
+    -   Created `reset_patients.py`: Wipes local data and builds strict schema.
+    -   Created `reset_frappe_data.py`: Wipes remote data (Customers/Events) to ensure a clean slate.
+
+---
+
+## Phase 6: Stability & Debugging (v2.0.1)
+**Goal:** Resolve connectivity issues and standardize API access for local development.
+
+### 6.1 Backend Connectivity Fixes
+*   **Action:** Resolve "Failed to fetch" errors.
+*   **Implementation:**
+    -   Diagnosed `httpx` and `uvicorn` binding issues with `debug_startup.py`.
+    -   Standardized **CORS** in `main.py` to allow wildcard origins (`allow_origins=["*"]`) for development.
+
+### 6.2 Network Consistency
+*   **Action:** Align Frontend and Backend URLs.
+*   **Implementation:**
+    -   Updated frontend `api_service.dart` to use `http://127.0.0.1:8000`.
+    -   Updated **Postman Collection** to v2.0 reflecting new API paths and optional fields.
+
+### 6.3 Data Hygiene & Cleanup
+*   **Action:** Ensures a clean slate for testing.
+*   **Implementation:**
+    -   **Robust Frappe Delete:** Updated `reset_frappe_data.py` with pagination loop to successfully remove persistent legacy data.
+    -   **Auto-Increment Reset:** Updated `reset_patients.py` to reset `AUTO_INCREMENT` counters to 1 after deletion.
+
+### 6.4 Data Validation Improvements
+*   **Action:** Enforce strict input rules.
+*   **Implementation:**
+    -   **Phone Number:** Enforced 14-digit max length and numeric-only input in Flutter (`registration.dart`).
+    -   **Frappe ID Handling:** Fixed `TypeError` by correctly parsing the dictionary response from Frappe to extract the `name` (ID) string.
+    -   **Schema Update:** Added explicit `frappe_id` column to `Patient` model.
+
+### 6.5 Final Connectivity Tuning
+*   **Action:** Solve CORS blocking for development.
+*   **Implementation:**
+    -   Implemented Robust Regex CORS: `r"https?://(localhost|127\.0\.0\.1)(:\d+)?"`.
+    -   Enabled `allow_credentials=True` to support standard browser behavior.
+
+---
+
+## Phase 7: Administration Lists & Detail Views
+**Goal:** Provide comprehensive views for Doctors and Patients with drill-down details.
+
+### 7.1 Doctor List & Details
+*   **Action:** Replace "Coming Soon" with fully functional list.
+*   **Implementation:**
+    -   Implement `DoctorListScreen` fetching from `/master/doctors`.
+    -   Add `Icon` and `ListTile` UI with "Available" status.
+    -   Implement `showDialog` for detailed info (NIK, Poly, Schedule).
+
+### 7.2 Patient List & Details
+*   **Action:** Enable admins to browse and search the patient database.
+*   **Implementation:**
+    -   Add `PatientListScreen` to Dashboard.
+    -   Fetch from `/patients/` with pagination support.
+    -   Implement Detail Popup showing full profile + Address + Insurance.
+
+---
+
+## Phase 8: Security & Local Integration (v2.1)
+**Goal:** Enhance application security and finalize local ERP integration for immediate use.
+
+### 8.1 Security Hardening
+*   **Action:** Audit codebase for vulnerabilities.
+*   **Implementation:**
+    -   Ran `bandit` security scan.
+    -   Fixed **Request Timeouts**: Added `timeout` to all external API calls.
+    -   Fixed **Silent Errors**: Replaced bare `except:` blocks with explicit exception handling.
+
+### 8.2 Automated Login Testing
+*   **Action:** Verify stability of the Login-to-Dashboard flow.
+*   **Implementation:**
+    -   Created `backend/tests/login_automation.py` using **Playwright**.
+    -   Automated 9 scenarios (Valid, Invalid, Empty, etc.).
+    -   Implemented **Word Report Generation** (`python-docx`).
+
+### 8.3 Full ERPNext Local Integration
+*   **Action:** Establish a complete, offline-capable ERP environment.
+*   **Implementation:**
+    -   **Environment:** Configured **WSL 2 (Ubuntu 22.04)** to run Frappe Bench.
+    -   **Integration:** Verified backend connectivity and Synced Legacy Data.
+
+---
+
+## Phase 9: Reliability Refinement & Operational Guides (v2.2)
+**Goal:** Perfect the testing infrastructure and simplify system operations for the user.
+
+### 9.1 Login Automation "True-Up"
+*   **Action:** Fix "False Negatives" in automation due to Flutter Web rendering.
+*   **Implementation:**
+    -   Implemented **"Blind Tab Navigation"** fallback for CanvasKit.
+    -   Added `onSubmitted` to `login.dart` for Enter key support.
+
+### 9.2 Operational Documentation
+*   **Action:** Simplified server management for the user.
+*   **Implementation:** Created **`bench_start_guide.md`**.
+
+### 9.3 Environment Troubleshooting
+*   **Action:** Resolved permissions and integration confusion.
+*   **Implementation:** Fixed "No permission for Medical Department" error by granting Role Permissions.
+
+---
+
+## Phase 10: Satu Sehat Integration & Advanced Features (v2.3)
+**Goal:** Ensure Compliance with Ministry of Health (Satu Sehat) and enhance Inventory Management.
+
+### 10.1 Satu Sehat Integration (Patient)
+*   **Action:** Verify Patient NIK against national database.
+*   **Implementation:**
+    -   Integrated `SatuSehatClient` (FHIR R4) with OAuth2.
+    -   Added **Automated Patient Verification**: Auto-fill Form data (Name, DOB, Gender, Address) from NIK search.
+    -   Added `ihs_number` column to DB.
+
+### 10.2 KFA Integration (Mediicines)
+*   **Action:** Standardize Medicine Dictionary (Kamus Farmasi).
+*   **Implementation:**
+    -   Implemented **KFA V2 Search API**.
+    -   Added **Import Feature**: Search KFA -> Import to Local Inventory.
+    -   **Bulk Import**: "Import All" button to add multiple search results instantly.
+    -   **Sturdiness**: Handled "No API Product Match" 401 errors by correctly pointing to Staging/Dev environments.
+
+### 10.3 Inventory Management
+*   **Action:** Allow stock adjustments and correction.
+*   **Implementation:**
+    -   Added **Edit / Restock** button on Medicine Cards.
+    -   Implemented `PUT /medicines/{id}` endpoint.
+    -   Visual Stock Indicators (Red for Empty, Green for Available).
+
+### 10.4 Auto-Seeding
+*   **Action:** Pre-populate database with common medicines.
+*   **Implementation:** Created `seed_medicines.py` to auto-import list (Simvastatin, Metformin, etc.) from KFA.

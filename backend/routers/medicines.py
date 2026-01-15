@@ -75,3 +75,21 @@ def sync_medicines(db: Session = Depends(database.get_db), current_user: models.
     
     db.commit()
     return {"status": "success", "count": synced_count}
+@router.put("/{medicine_id}", response_model=schemas.Medicine)
+def update_medicine(medicine_id: int, medicine_update: schemas.MedicineCreate, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
+    db_med = db.query(models.Medicine).filter(models.Medicine.id == medicine_id).first()
+    if not db_med:
+        raise HTTPException(status_code=404, detail="Medicine not found")
+    
+    # Update fields
+    db_med.name = medicine_update.name
+    db_med.stock = medicine_update.stock
+    db_med.unit = medicine_update.unit
+    db_med.description = medicine_update.description
+    # We generally don't update erpnext_item_code unless specific reason, kept as is for now or update if needed
+    if medicine_update.erpnext_item_code:
+        db_med.erpnext_item_code = medicine_update.erpnext_item_code
+
+    db.commit()
+    db.refresh(db_med)
+    return db_med

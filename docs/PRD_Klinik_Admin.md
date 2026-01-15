@@ -72,6 +72,13 @@ To provide a modern, efficient, and user-friendly desktop application for clinic
     *   `Doctor` (Local) <-> `Healthcare Practitioner` (Remote)
     *   `Medicine` (Local) <-> `Item` (Remote)
     *   `Queue` (Local) -> `Event` (Remote)
+*   **Satu Sehat (Ministry of Health):**
+    *   **Patient Verification:** Auto-fill data from NIK via FHIR API.
+    *   **KFA Integration:** Search and Import standard medicine data (Kamus Farmasi).
+
+### 3.8 Medicine Inventory Features
+*   **Stock Management:** Adjust stock levels locally.
+*   **Bulk Import:** Seeding or bulk-add from KFA.
 
 ## 4. User Experience (UX) Requirements
 *   **Glassmorphism Design:** Modern UI with translucent/blur effects.

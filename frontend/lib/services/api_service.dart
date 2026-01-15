@@ -103,7 +103,7 @@ class ApiService {
     );
   }
 
-  Future<bool> addToQueue({
+  Future<void> addToQueue({
     required int patientId,
     int? doctorId,
     required bool isPriority,
@@ -121,7 +121,9 @@ class ApiService {
         "polyclinic": polyclinic,
       }),
     );
-    return response.statusCode == 200;
+    if (response.statusCode != 200) {
+      throw Exception("Queue Error (${response.statusCode}): ${response.body}");
+    }
   }
 
   Future<List<Doctor>> getDoctors() async {
@@ -270,6 +272,25 @@ class ApiService {
       Uri.parse('$baseUrl/medicines/'),
       headers: _headers,
       body: jsonEncode({
+        "erpnext_item_code": medicine.erpnextItemCode,
+        "name": medicine.name,
+        "stock": medicine.stock,
+        "unit": medicine.unit,
+        "description": medicine.description,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return Medicine.fromJson(jsonDecode(response.body));
+    }
+    return null;
+  }
+
+  Future<Medicine?> updateMedicine(int id, Medicine medicine) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/medicines/$id'),
+      headers: _headers,
+      body: jsonEncode({
+        "erpnext_item_code": medicine.erpnextItemCode,
         "name": medicine.name,
         "stock": medicine.stock,
         "unit": medicine.unit,
@@ -365,5 +386,35 @@ class ApiService {
       headers: _headers,
     );
     return response.statusCode == 200;
+  }
+
+  Future<Map<String, dynamic>?> fetchPatientFromSatuSehat(String nik) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/integration/satusehat/patient/$nik'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  Future<List<Map<String, dynamic>>> searchKfaProducts(
+    String query, {
+    int page = 1,
+    int limit = 10,
+  }) async {
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl/integration/kfa/products?query=$query&page=$page&limit=$limit',
+      ),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    }
+    return [];
   }
 }
