@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
@@ -8,6 +7,7 @@ import 'login.dart';
 import 'doctor_list.dart';
 import 'patient_list.dart';
 import 'medicine_inventory.dart';
+import 'user_management.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -28,32 +28,104 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      QueueMonitorScreen(apiService: widget.apiService),
-      RegistrationScreen(apiService: widget.apiService),
-      DoctorListScreen(apiService: widget.apiService),
-      PatientListScreen(apiService: widget.apiService),
-      MedicineInventoryScreen(apiService: widget.apiService),
+    // Define all possible pages
+    final allPages = [
+      {
+        "id": "dashboard",
+        "page": QueueMonitorScreen(apiService: widget.apiService),
+        "icon": Icons.dashboard_outlined,
+        "selectedIcon": Icons.dashboard,
+        "label": "Dashboard",
+      },
+      {
+        "id": "registration",
+        "page": RegistrationScreen(apiService: widget.apiService),
+        "icon": Icons.person_add_outlined,
+        "selectedIcon": Icons.person_add,
+        "label": "Registration",
+      },
+      {
+        "id": "doctors",
+        "page": DoctorListScreen(apiService: widget.apiService),
+        "icon": Icons.medical_services_outlined,
+        "selectedIcon": Icons.medical_services,
+        "label": "Doctors",
+      },
+      {
+        "id": "patients",
+        "page": PatientListScreen(apiService: widget.apiService),
+        "icon": Icons.people_outline,
+        "selectedIcon": Icons.people,
+        "label": "Patients",
+      },
+      {
+        "id": "medicines",
+        "page": MedicineInventoryScreen(apiService: widget.apiService),
+        "icon": Icons.medication_outlined,
+        "selectedIcon": Icons.medication,
+        "label": "Medicines",
+      },
+      {
+        "id": "users",
+        "page": UserManagementScreen(
+          apiService: widget.apiService,
+          currentUser: widget.user,
+        ),
+        "icon": Icons.manage_accounts_outlined,
+        "selectedIcon": Icons.manage_accounts,
+        "label": "Users",
+      },
     ];
 
+    // Filter based on Role
+    final filteredPages = allPages.where((item) {
+      final id = item['id'] as String;
+      final role = widget.user.role; // "Super Admin", "Administrator", "Staff"
+
+      if (id == "dashboard") {
+        // Only Staff can see Dashboard (Queue Monitor)
+        return role == "Staff";
+      }
+
+      if (id == "registration") {
+        // Only Staff can see Registration
+        return role == "Staff";
+      }
+
+      if (id == "users") {
+        // Only Super Admin and Administrator can see Users
+        return role == "Super Admin" || role == "Administrator";
+      }
+
+      // Doctors, Patients, Medicines
+      if (["doctors", "patients", "medicines"].contains(id)) {
+        // Not visible to Super Admin (who only sees Users)
+        return role != "Super Admin";
+      }
+
+      return true;
+    }).toList();
+
+    // Safety check for index
+    if (_selectedIndex >= filteredPages.length) {
+      _selectedIndex = 0;
+    }
+
     return Scaffold(
-      backgroundColor:
-          Colors.transparent, // Let gradient show through (if scaffold wrapped)
-      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.blue.shade100, // Matching gradient start
+      // extendBodyBehindAppBar: true, // Removed to prevent overlap
       appBar: AppBar(
         title: Text(
-          "Klinik Admin - ${widget.user.username}",
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.white.withValues(alpha: 0.1),
-        elevation: 0,
-        centerTitle: true,
-        flexibleSpace: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(color: Colors.transparent),
+          "Klinik Admin - ${widget.user.username} (${widget.user.role})",
+          style: TextStyle(
+            color: Colors.blue.shade900,
+            fontWeight: FontWeight.bold,
           ),
         ),
+        iconTheme: IconThemeData(color: Colors.blue.shade900),
+        backgroundColor: Colors.blue.shade100, // Solid color
+        elevation: 0,
+        centerTitle: true,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -81,33 +153,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               unselectedLabelTextStyle: TextStyle(color: Colors.blue.shade700),
               selectedIconTheme: IconThemeData(color: Colors.blue.shade900),
               unselectedIconTheme: IconThemeData(color: Colors.blue.shade700),
-              destinations: [
-                NavigationRailDestination(
-                  icon: Icon(Icons.dashboard_outlined),
-                  selectedIcon: Icon(Icons.dashboard),
-                  label: Text('Dashboard'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.person_add_outlined),
-                  selectedIcon: Icon(Icons.person_add),
-                  label: Text('Registration'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.medical_services_outlined),
-                  selectedIcon: Icon(Icons.medical_services),
-                  label: Text('Doctors'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.people_outline),
-                  selectedIcon: Icon(Icons.people),
-                  label: Text('Patients'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.medication_outlined),
-                  selectedIcon: Icon(Icons.medication),
-                  label: Text('Medicines'),
-                ),
-              ],
+              destinations: filteredPages.map((item) {
+                return NavigationRailDestination(
+                  icon: Icon(item['icon'] as IconData),
+                  selectedIcon: Icon(item['selectedIcon'] as IconData),
+                  label: Text(item['label'] as String),
+                );
+              }).toList(),
               trailing: Expanded(
                 child: Align(
                   alignment: Alignment.bottomCenter,
@@ -115,7 +167,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     padding: const EdgeInsets.only(bottom: 20.0),
                     child: IconButton(
                       icon: Icon(Icons.logout, color: Colors.red.shade700),
-                      // Better UI:
                       onPressed: _logout,
                       tooltip: 'Logout',
                     ),
@@ -128,7 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               width: 1,
               color: Colors.white.withValues(alpha: 0.3),
             ),
-            Expanded(child: pages[_selectedIndex]),
+            Expanded(child: filteredPages[_selectedIndex]['page'] as Widget),
           ],
         ),
       ),

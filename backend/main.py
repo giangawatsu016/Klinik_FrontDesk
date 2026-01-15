@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from .routers import auth, patients, master_data, queue, medicines
+from .routers import auth, patients, master_data, queue, medicines, users
 import os
 from dotenv import load_dotenv
 from slowapi import _rate_limit_exceeded_handler
@@ -33,6 +33,7 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(auth.router)
+app.include_router(users.router)
 app.include_router(patients.router)
 app.include_router(master_data.router)
 app.include_router(queue.router)

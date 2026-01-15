@@ -1,6 +1,6 @@
 # Product Requirements Document (PRD)
 **Project Name:** Klinik Admin System (Desktop App)
-**Version:** 2.1
+**Version:** 2.2
 **Status:** Live / Maintenance
 **Last Updated:** 2026-01-15
 
@@ -12,99 +12,83 @@ To provide a modern, efficient, and user-friendly desktop application for clinic
 *   Streamline the patient registration process (New & Existing).
 *   Manage daily patient queues for General Practitioners and Polyclinics.
 *   Provide real-time dashboard analytics for clinic traffic.
-*   **Ensure data synchronization with the central ERP system (Frappe/ERPNext).**
+*   **Secure the system with Role-Based Access Control (RBAC).**
+*   **Ensure data synchronization with the central ERP system (Frappe/ERPNext) for Patients, Doctors, Medicines, and Users.**
 
 ### 1.3 Scope
 *   **Platform:** Windows Desktop (Flutter-based).
-*   **Primary Users:** Receptionists / Front Desk Staff.
-*   **Key Modules:** Authentication, Dashboard, Patient Registration, Queue Management, Master Data (Address, Doctors, Medicines).
+*   **Primary Users:** Receptionists / Front Desk Staff, Administrators, Super Admins.
+*   **Key Modules:** Authentication, User Management, Patient Registration, Queue Management, Master Data (Doctors, Medicines), ERPNext Integration.
 
 ## 2. Target Audience & Personas
-*   **Receptionist (Staff):** Needs a fast, keyboard-friendly interface to input patient data quickly and assign them to doctors.
-*   **Administrator:** Needs to manage doctor schedules, user accounts, and view overall clinic performance.
+*   **Receptionist (Staff):** Needs a fast, keyboard-friendly interface to input patient data quickly and check medicine stock.
+*   **Administrator:** Needs to manage staff accounts, doctor schedules, and view overall clinic performance.
+*   **Super Admin:** Full system control, including managing Administrators and configurations.
 
 ## 3. Key Features & Requirements
 
 ### 3.1 Authentication & Security
 *   **Login System:** Secure login with username/password.
-*   **Role-Based Access:** Distinguish between Staff and Admin capabilities.
-*   **Logout Mechanism:** Dedicated logout button in the sidebar (bottom-left) to clear session state.
+*   **Role-Based Access Control (RBAC):**
+    *   **Super Admin:** Full Access. Can manage Admins and Staff.
+    *   **Administrator:** Can manage Staff and Master Data (Doctors, Medicines). Access to Reports.
+    *   **Staff:** Restricted to Patient Registration, Queue, and Dashboard (Queue Monitor).
+*   **Logout Mechanism:** Dedicated logout button in the sidebar.
 
-### 3.2 Patient Management
+### 3.2 User Management (New)
+*   **CRUD Operations:** Create, Read, Update, Delete system users.
+*   **Role Assignment:** Assign roles (superadmin, admin, staff) during creation.
+*   **Permission Enforcement:** UI hides actions based on the logged-in user's role.
+*   **ERPNext User Sync:** Automatically create/update "System User" in ERPNext when a user is managed locally (requires Email).
+
+### 3.3 Patient Management
 *   **New Patient Registration:**
     *   Capture detailed personal info (Name, NIK, Phone, Birthday, Gender).
-    *   **Indonesian Address System:** Full hierarchy support (Province -> City -> District -> Subdistrict) using external API.
-    *   **Validation:** 
-        *   **Phone Number:** Strictly limited to 14 digits, numeric only.
-        *   **NIK:** 16 Digits, unique validation.
-*   **Existing Patient Search:**
-    *   Fast lookup by NIK or Phone number.
-    *   One-click selection to add to queue.
-*   **Patient Edit (New):**
-    *   Ability to update patient details (Name, Address, Insurance).
-    *   Pre-filled form with existing data.
-*   **External Integration (Frappe):** 
-    *   Auto-sync new patient data to ERPNext (Mapped to `Customer` Doctype).
-    *   Sync updates (PUT) to ERPNext using `frappe_id`.
+    *   **Indonesian Address System:** Full hierarchy support (emsifa API).
+*   **Validation:** 14-digit Phone, 16-digit NIK.
+*   **Edit Capabilities:** Update patient details with two-way sync to ERPNext.
 
-### 3.3 Queue Management
-*   **Queue Assignment:**
-    *   Select Doctor or Polyclinic.
-    *   Assign Priority status (Elderly, Emergency).
-    *   **ERPNext Sync:** Push queue entry to ERPNext (Mapped to `Event` Doctype).
-*   **Auto-Numbering:** Smart generating of queue numbers (e.g., D-001 for Doctor, P-001 for Poly).
-*   **Daily Reset:** Queue numbers automatically reset to 001 at midnight.
-*   **Daily Cleanup:** Auto-delete previous day's queue records to keep the list fresh.
-*   **Text-to-Speech (TTS):** Audio announcement for calling patients (e.g., "Antrian Nomor D-001...").
+### 3.4 Queue Management
+*   **Assignment:** Assign to Doctor/Poly with Priority status.
+*   **Auto-Numbering:** D-XXX (Doctor), P-XXX (Poly). Daily Reset.
+*   **Daily Cleanup:** Auto-delete old queue records.
+*   **ERPNext Sync:** Push queue entry to `Event` Doctype.
+*   **TTS:** Audio announcements for queue calling.
 
-### 3.4 Master Data Management (Doctors & Patients)
-*   **Doctors:** 
-    *   View list of doctors.
-    *   **Add/Edit:** Manually add new doctors or edit existing ones (Title, Name, Polyclinic).
-    *   **ERPNext Sync:** Sync Doctor create/update to `Healthcare Practitioner`.
-*   **Patients:** View list and manually register new patients without immediate queuing.
+### 3.5 Master Data Management
+*   **Doctors:** View/Add/Edit with sync to `Healthcare Practitioner`.
+*   **Medicines:** View/Add/Edit with sync to ERPNext `Item` (Stock Levels).
 
-### 3.5 Dashboard & Analytics
-*   **Real-time Stats:** Total Patients, Waiting, In-Consultation, Completed.
-*   **Visual Charts:** Patient traffic trends (Daily/Weekly).
-*   **Recent Activity:** List of latest registrations.
-
-### 3.6 Medicine Inventory
-*   **Stock Views:** List of available medicines with real-time search.
-*   **ERPNext Integration:** Pull/Sync stock data from `Item` Doctype in ERPNext.
-*   **Manual Entry:** Ability to manually add medicines (non-synced) with "MANUAL-" code prefix.
-*   **Smart Actions:** "Request Medicine" button disabled automatically if stock is 0.
+### 3.6 Dashboard & Analytics
+*   **Role-Specific Views:**
+    *   Staff: Queue Monitor, Registration.
+    *   Admin/Super Admin: User Management, Master Data Lists.
+*   **Stats:** Real-time patient counts.
 
 ### 3.7 Integrations
-*   **ERPNext / Frappe:** 
-    *   **Two-Way Sync:**
-        *   Local `Patient` <-> Remote `Customer`
-        *   Local `Doctor` <-> Remote `Healthcare Practitioner`
-        *   Local `Queue` -> Remote `Event`
-        *   Remote `Item` -> Local `Medicine`
-*   **Regional Data:** `emsifa` API for Indonesian administrative region data.
+*   **ERPNext / Frappe (Two-Way Sync):**
+    *   `User` (Local) <-> `User` (Remote)
+    *   `Patient` (Local) <-> `Customer` (Remote)
+    *   `Doctor` (Local) <-> `Healthcare Practitioner` (Remote)
+    *   `Medicine` (Local) <-> `Item` (Remote)
+    *   `Queue` (Local) -> `Event` (Remote)
 
 ## 4. User Experience (UX) Requirements
-*   **Glassmorphism Design:** Modern, clean UI with translucent elements.
-*   **Responsive Layout:** Sidebar navigation with collapsibility.
-*   **Efficiency:** Minimized clicks for common tasks (Registration -> Queue).
-*   **Feedback:** Toast notifications (Snackbars) for success/error states.
-*   **Input Constraints:** Numeric keyboards for Phone/NIK fields.
+*   **Glassmorphism Design:** Modern UI with translucent/blur effects.
+*   **Responsive Layout:** Sidebar navigation adaptable to roles.
+*   **Efficiency:** Keyboard support (Enter to Submit), optimized forms.
 
 ## 5. Non-Functional Requirements
-*   **Performance:**
-    *   Address API caching (LRU Cache) for sub-20ms response on repeat lookups.
-    *   Database connection pooling (SQLAlchemy) to handle up to 50 concurrent requests.
-*   **Reliability:** Offline capability (limited) or graceful error handling when API is down.
+*   **Performance:** Caching for address data, DB pooling.
+*   **Reliability:** Resilient integration (failsafe if ERPDown).
 *   **Compatibility:** Windows 10/11.
 
 ## 6. Success Metrics
-*   **Registration Time:** Reduce time to register a new patient to under 2 minutes.
-*   **Queue Accuracy:** Zero duplicate queue numbers per day.
-*   **Data Integrity:** 100% match between Local Database and ERPNext Customer list.
+*   **Registration Time:** Under 2 minutes.
+*   **Queue Accuracy:** Zero duplicates.
+*   **Sync Accuracy:** 100% data match for Patients and Users between systems.
 
-## 7. Quality Assurance & Reliability
-*   **Automated Testing:**
-    *   **Login Flow:** Full coverage of positive and negative login scenarios using Playwright.
-    *   **Reporting:** Automated generation of Word (DOCX) reports.
-    *   **Environment Support:** Infrastructure compatible with Flutter Web (CanvasKit).
+## 7. Quality Assurance
+*   **Automated Testing:** Playwright suites for Login.
+*   **Regression Testing:** Regular verification of Sync flows.
+

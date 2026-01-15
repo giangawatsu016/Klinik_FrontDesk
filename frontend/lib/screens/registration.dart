@@ -269,6 +269,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   void _selectExistingPatient(Patient patient) {
     setState(() {
       _verifiedPatient = patient;
+
+      // Load Payment Info into State for Step 3
+      issuerId = patient.issuerId;
+      insuranceName = patient.insuranceName;
+      noAssuransi = patient.noAssuransi ?? '';
+
       if (widget.isRegistrationOnly) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -372,6 +378,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         );
         return;
       }
+      _doctorFormKey.currentState!.save();
 
       if (_verifiedPatient == null || _verifiedPatient!.id == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -379,6 +386,51 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             content: Text(
               'Error: Patient data is invalid. Please search again.',
             ),
+          ),
+        );
+        return;
+      }
+
+      // Update Patient Payment Info (Sync logic)
+      try {
+        final updatedPatient = Patient(
+          id: _verifiedPatient!.id,
+          firstName: _verifiedPatient!.firstName,
+          lastName: _verifiedPatient!.lastName,
+          identityCard: _verifiedPatient!.identityCard,
+          phone: _verifiedPatient!.phone,
+          gender: _verifiedPatient!.gender,
+          birthday: _verifiedPatient!.birthday,
+          religion: _verifiedPatient!.religion,
+          profession: _verifiedPatient!.profession,
+          education: _verifiedPatient!.education,
+          province: _verifiedPatient!.province,
+          city: _verifiedPatient!.city,
+          district: _verifiedPatient!.district,
+          subdistrict: _verifiedPatient!.subdistrict,
+          rt: _verifiedPatient!.rt,
+          rw: _verifiedPatient!.rw,
+          postalCode: _verifiedPatient!.postalCode,
+          addressDetails: _verifiedPatient!.addressDetails,
+          issuerId: issuerId, // Updated from formatted Step 3
+          insuranceName: insuranceName,
+          noAssuransi: noAssuransi,
+          maritalStatusId: _verifiedPatient!.maritalStatusId,
+          frappeId: _verifiedPatient!.frappeId,
+        );
+
+        // Call Update API to save payment info
+        await widget.apiService.updatePatient(
+          updatedPatient.id!,
+          updatedPatient,
+        );
+      } catch (e) {
+        // debugPrint("Failed to sync payment info: $e");
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update Payment Info: $e'),
+            backgroundColor: Colors.red,
           ),
         );
         return;
@@ -828,57 +880,64 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               onSaved: (v) => addressDetails = v!,
             ),
 
-            _buildSectionTitle("Pembayaran"),
-            DropdownButtonFormField<int>(
-              // ignore: deprecated_member_use
-              value: issuerId,
-              decoration: InputDecoration(labelText: 'Metode Pembayaran'),
-              items: issuers.entries
-                  .map(
-                    (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                  )
-                  .toList(),
-              onChanged: (v) {
-                setState(() {
-                  issuerId = v!;
-                  insuranceName = null; // Reset sub-selection
-                });
-              },
-            ),
-            if (issuerId == 2) // BPJS
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: DropdownButtonFormField<String>(
-                  initialValue: insuranceName,
-                  decoration: InputDecoration(labelText: 'BPJS Type'),
-                  items: ['BPJS Kesehatan', 'BPJS Ketenagakerjaan']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (v) => setState(() => insuranceName = v),
+            if (widget.isRegistrationOnly) ...[
+              _buildSectionTitle("Pembayaran"),
+              DropdownButtonFormField<int>(
+                // ignore: deprecated_member_use
+                value: issuerId,
+                decoration: InputDecoration(labelText: 'Metode Pembayaran'),
+                items: issuers.entries
+                    .map(
+                      (e) =>
+                          DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) {
+                  setState(() {
+                    issuerId = v!;
+                    insuranceName = null; // Reset sub-selection
+                  });
+                },
+              ),
+              if (issuerId == 2) // BPJS
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: DropdownButtonFormField<String>(
+                    initialValue: insuranceName,
+                    decoration: InputDecoration(labelText: 'BPJS Type'),
+                    items: ['BPJS Kesehatan', 'BPJS Ketenagakerjaan']
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (v) => setState(() => insuranceName = v),
+                    validator: (v) =>
+                        v == null ? 'Please select BPJS Type' : null,
+                  ),
+                ),
+              if (issuerId == 3) // Insurance
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: DropdownButtonFormField<String>(
+                    initialValue: insuranceName,
+                    decoration: InputDecoration(
+                      labelText: 'Insurance Provider',
+                    ),
+                    items: ['Allianz', 'Prudential', 'Manulife']
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (v) => setState(() => insuranceName = v),
+                    validator: (v) =>
+                        v == null ? 'Please select Provider' : null,
+                  ),
+                ),
+              if (issuerId != 1)
+                TextFormField(
+                  initialValue: noAssuransi,
+                  decoration: InputDecoration(labelText: 'Insurance Number'),
+                  onSaved: (v) => noAssuransi = v!,
                   validator: (v) =>
-                      v == null ? 'Please select BPJS Type' : null,
+                      v!.isEmpty ? 'Required for Insurance' : null,
                 ),
-              ),
-            if (issuerId == 3) // Insurance
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: DropdownButtonFormField<String>(
-                  initialValue: insuranceName,
-                  decoration: InputDecoration(labelText: 'Insurance Provider'),
-                  items: ['Allianz', 'Prudential', 'Manulife']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (v) => setState(() => insuranceName = v),
-                  validator: (v) => v == null ? 'Please select Provider' : null,
-                ),
-              ),
-            if (issuerId != 1)
-              TextFormField(
-                initialValue: noAssuransi,
-                decoration: InputDecoration(labelText: 'Insurance Number'),
-                onSaved: (v) => noAssuransi = v!,
-                validator: (v) => v!.isEmpty ? 'Required for Insurance' : null,
-              ),
+            ],
 
             SizedBox(height: 20),
             ElevatedButton(
@@ -1049,6 +1108,62 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   .toList(),
               onChanged: (v) => setState(() => _selectedPolyclinic = v),
               validator: (v) => v == null ? 'Please select a Polyclinic' : null,
+            ),
+
+          SizedBox(height: 20),
+          _buildSectionTitle("Pembayaran"),
+          DropdownButtonFormField<int>(
+            // ignore: deprecated_member_use
+            value: issuerId,
+            decoration: InputDecoration(labelText: 'Metode Pembayaran'),
+            items: issuers.entries
+                .map(
+                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                )
+                .toList(),
+            onChanged: (v) {
+              setState(() {
+                issuerId = v!;
+                insuranceName = null;
+              });
+            },
+            onSaved: (v) => issuerId = v!,
+          ),
+          if (issuerId == 2) // BPJS
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: DropdownButtonFormField<String>(
+                initialValue: insuranceName,
+                decoration: InputDecoration(labelText: 'BPJS Type'),
+                items: ['BPJS Kesehatan', 'BPJS Ketenagakerjaan']
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (v) => setState(() => insuranceName = v),
+                onSaved: (v) => insuranceName = v,
+                validator: (v) => v == null ? 'Please select BPJS Type' : null,
+              ),
+            ),
+          if (issuerId == 3) // Insurance
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: DropdownButtonFormField<String>(
+                initialValue: insuranceName,
+                decoration: InputDecoration(labelText: 'Insurance Provider'),
+                items: ['Allianz', 'Prudential', 'Manulife']
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (v) => setState(() => insuranceName = v),
+                onSaved: (v) => insuranceName = v,
+                validator: (v) => v == null ? 'Please select Provider' : null,
+              ),
+            ),
+          if (issuerId != 1)
+            TextFormField(
+              initialValue: noAssuransi,
+              decoration: InputDecoration(labelText: 'Insurance Number'),
+              onChanged: (v) => noAssuransi = v,
+              onSaved: (v) => noAssuransi = v!,
+              validator: (v) => v!.isEmpty ? 'Required for Insurance' : null,
             ),
 
           CheckboxListTile(

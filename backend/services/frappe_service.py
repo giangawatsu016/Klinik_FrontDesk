@@ -185,5 +185,28 @@ class FrappeClient:
         except:
              return 0
 
+    def create_user(self, email: str, first_name: str, last_name: str = "", role_map: str = "System Manager"):
+        # Sync to 'User'
+        # Determine roles based on internal role?
+        # For now, we allow basic creation.
+        
+        # ERPNext User requires Email and First Name.
+        data = {
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "enabled": 1,
+            "send_welcome_email": 0,
+            # "roles": [{"role": role_map}] # Optional: Assign default role
+        }
+        return self._post("User", data)
+
+    def update_erp_user(self, email: str, data: dict):
+        # Update User by Email (name=email in User doctype usually)
+        return self._put("User", email, data)
+    
+    def delete_erp_user(self, email: str):
+        return self.delete_document("User", email)
+
 # Singleton
 frappe_client = FrappeClient()

@@ -4,17 +4,25 @@ from datetime import date, datetime
 
 class UserBase(BaseModel):
     username: str
+    email: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
     full_name: str
     role: str = "staff"
 
+class UserUpdate(UserBase):
+    password: Optional[str] = None
+    full_name: Optional[str] = None
+    role: Optional[str] = None
+    email: Optional[str] = None
+
 class User(UserBase):
     id: int
     full_name: str
     role: str
     is_active: bool
+    email: Optional[str] # Redundant if in UserBase but good for clarity if overwritten
 
     class Config:
         from_attributes = True

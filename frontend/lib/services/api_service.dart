@@ -307,4 +307,63 @@ class ApiService {
       throw Exception('Failed to sync doctors');
     }
   }
+
+  // User Management Methods
+  Future<List<User>> getUsers() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/users/'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => User.fromJson(json)).toList();
+    }
+    return [];
+  }
+
+  Future<User?> createUser(User user, String password) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/users/'),
+      headers: _headers,
+      body: jsonEncode({
+        "username": user.username,
+        "password": password,
+        "full_name": user.fullName,
+        "role": user.role,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    }
+    throw Exception("Create User Failed: ${response.body}");
+  }
+
+  Future<User?> updateUser(int id, User user, String? password) async {
+    final body = {
+      "username": user.username,
+      "full_name": user.fullName,
+      "role": user.role,
+    };
+    if (password != null && password.isNotEmpty) {
+      body["password"] = password;
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/users/$id'),
+      headers: _headers,
+      body: jsonEncode(body),
+    );
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    }
+    throw Exception("Update User Failed: ${response.body}");
+  }
+
+  Future<bool> deleteUser(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/users/$id'),
+      headers: _headers,
+    );
+    return response.statusCode == 200;
+  }
 }
