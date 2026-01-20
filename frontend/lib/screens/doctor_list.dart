@@ -72,8 +72,22 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _detailRow("Name", "${doctor.gelarDepan} ${doctor.namaDokter}"),
+            _detailRow(
+              "Name",
+              "${doctor.gelarDepan} ${doctor.firstName ?? '-'} ${doctor.lastName ?? '-'} ${doctor.gelarBelakang ?? ''}",
+            ),
             _detailRow("Polyclinic", doctor.polyName),
+            _detailRow("SIP", doctor.doctorSIP ?? '-'),
+            _detailRow(
+              "Online Fee",
+              doctor.onlineFee != null ? "Rp ${doctor.onlineFee}" : '-',
+            ),
+            _detailRow(
+              "Appt Fee",
+              doctor.appointmentFee != null
+                  ? "Rp ${doctor.appointmentFee}"
+                  : '-',
+            ),
             _detailRow("ID", doctor.medicalFacilityPolyDoctorId.toString()),
           ],
         ),
@@ -188,9 +202,24 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
 
   void _showAddDoctorDialog({Doctor? existingDoctor}) {
     final formKey = GlobalKey<FormState>();
-    String name = existingDoctor?.namaDokter ?? '';
+    // Existing fields
     String title = existingDoctor?.gelarDepan ?? '';
     String poly = existingDoctor?.polyName ?? 'General';
+
+    // Split name or use existing fields
+    String firstName = existingDoctor?.firstName ?? '';
+    String lastName = existingDoctor?.lastName ?? '';
+    if (existingDoctor != null && firstName.isEmpty) {
+      // Fallback split if legacy data
+      var parts = existingDoctor.namaDokter.split(' ');
+      firstName = parts[0];
+      if (parts.length > 1) lastName = parts.sublist(1).join(' ');
+    }
+
+    String gelarBelakang = existingDoctor?.gelarBelakang ?? '';
+    String doctorSIP = existingDoctor?.doctorSIP ?? '';
+    int? onlineFee = existingDoctor?.onlineFee;
+    int? appointmentFee = existingDoctor?.appointmentFee;
 
     bool isEditing = existingDoctor != null;
 
@@ -198,46 +227,122 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(isEditing ? "Edit Doctor" : "Add New Doctor"),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                initialValue: name,
-                decoration: InputDecoration(labelText: "Name (e.g. John Doe)"),
-                validator: (v) => v!.isEmpty ? "Required" : null,
-                onSaved: (v) => name = v!,
+        content: SizedBox(
+          // Limit size for scrolling
+          width: 400,
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: DropdownButtonFormField<String>(
+                          decoration: InputDecoration(labelText: "Title"),
+                          initialValue: title.isNotEmpty ? title : 'Dr.',
+                          items:
+                              ['Dr.', 'Prof.', 'Sp.', 'Ns.', 'Bidan', 'Other']
+                                  .map(
+                                    (t) => DropdownMenuItem(
+                                      value: t,
+                                      child: Text(t),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (v) => title = v!,
+                          onSaved: (v) => title = v!,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: TextFormField(
+                          initialValue: gelarBelakang,
+                          decoration: InputDecoration(
+                            labelText: "Suffix (Gelar Belakang)",
+                          ),
+                          onSaved: (v) => gelarBelakang = v ?? '',
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: firstName,
+                          decoration: InputDecoration(labelText: "First Name"),
+                          validator: (v) => v!.isEmpty ? "Required" : null,
+                          onSaved: (v) => firstName = v!,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: lastName,
+                          decoration: InputDecoration(labelText: "Last Name"),
+                          onSaved: (v) => lastName = v ?? '',
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  TextFormField(
+                    initialValue: doctorSIP,
+                    decoration: InputDecoration(labelText: "SIP Number"),
+                    onSaved: (v) => doctorSIP = v ?? '',
+                  ),
+
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(labelText: "Polyclinic"),
+                    initialValue: poly,
+                    items:
+                        [
+                              'General',
+                              'Dental',
+                              'Pediatric',
+                              'Neurology',
+                              'Cardiology',
+                              'Internal Medicine',
+                              'Surgery',
+                              'Obgyn',
+                            ]
+                            .map(
+                              (p) => DropdownMenuItem(value: p, child: Text(p)),
+                            )
+                            .toList(),
+                    onChanged: (v) => poly = v!,
+                    onSaved: (v) => poly = v!,
+                  ),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: onlineFee?.toString(),
+                          decoration: InputDecoration(labelText: "Online Fee"),
+                          keyboardType: TextInputType.number,
+                          onSaved: (v) => onlineFee = int.tryParse(v ?? ''),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: appointmentFee?.toString(),
+                          decoration: InputDecoration(labelText: "Appt Fee"),
+                          keyboardType: TextInputType.number,
+                          onSaved: (v) =>
+                              appointmentFee = int.tryParse(v ?? ''),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: "Title"),
-                initialValue: title.isNotEmpty ? title : 'Dr.',
-                items: ['Dr.', 'Prof.', 'Sp.', 'Ns.', 'Bidan', 'Other']
-                    .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                    .toList(),
-                onChanged: (v) => title = v!,
-                onSaved: (v) => title = v!,
-              ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: "Polyclinic"),
-                initialValue: poly,
-                items:
-                    [
-                          'General',
-                          'Dental',
-                          'Pediatric',
-                          'Neurology',
-                          'Cardiology',
-                          'Internal Medicine',
-                          'Surgery',
-                          'Obgyn',
-                        ]
-                        .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                        .toList(),
-                onChanged: (v) => poly = v!,
-                onSaved: (v) => poly = v!,
-              ),
-            ],
+            ),
           ),
         ),
         actions: [
@@ -250,14 +355,23 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
               if (formKey.currentState!.validate()) {
                 formKey.currentState!.save();
 
+                String fullName = firstName;
+                if (lastName.isNotEmpty) fullName += " $lastName";
+
                 if (isEditing) {
                   // Update Logic
                   final updatedDoc = Doctor(
                     medicalFacilityPolyDoctorId:
                         existingDoctor.medicalFacilityPolyDoctorId,
-                    namaDokter: name,
+                    namaDokter: fullName,
                     gelarDepan: title,
                     polyName: poly,
+                    firstName: firstName,
+                    lastName: lastName,
+                    gelarBelakang: gelarBelakang,
+                    doctorSIP: doctorSIP,
+                    onlineFee: onlineFee,
+                    appointmentFee: appointmentFee,
                   );
                   final res = await widget.apiService.updateDoctor(
                     existingDoctor.medicalFacilityPolyDoctorId,
@@ -276,9 +390,15 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                   // Create Logic
                   final newDoc = Doctor(
                     medicalFacilityPolyDoctorId: 0,
-                    namaDokter: name,
+                    namaDokter: fullName,
                     gelarDepan: title,
                     polyName: poly,
+                    firstName: firstName,
+                    lastName: lastName,
+                    gelarBelakang: gelarBelakang,
+                    doctorSIP: doctorSIP,
+                    onlineFee: onlineFee,
+                    appointmentFee: appointmentFee,
                   );
                   final res = await widget.apiService.createDoctor(newDoc);
                   if (res != null) {

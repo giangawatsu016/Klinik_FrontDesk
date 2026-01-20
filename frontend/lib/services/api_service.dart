@@ -21,7 +21,7 @@ class ApiService {
   Future<User?> login(String username, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/auth/token'),
+        Uri.parse('$baseUrl/auth/login'),
         headers: {"Content-Type": "application/x-www-form-urlencoded"},
         body: {"username": username, "password": password},
       );
@@ -67,7 +67,7 @@ class ApiService {
 
   Future<List<QueueItem>> getQueue() async {
     final response = await http.get(
-      Uri.parse('$baseUrl/queues/'),
+      Uri.parse('$baseUrl/patients/queue/'),
       headers: _headers,
     );
     if (response.statusCode == 200) {
@@ -111,7 +111,7 @@ class ApiService {
     String? polyclinic,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/queues/'),
+      Uri.parse('$baseUrl/patients/queue/'),
       headers: _headers,
       body: jsonEncode({
         "userId": patientId,
@@ -128,7 +128,7 @@ class ApiService {
 
   Future<List<Doctor>> getDoctors() async {
     final response = await http.get(
-      Uri.parse('$baseUrl/master/doctors'),
+      Uri.parse('$baseUrl/doctors/'),
       headers: _headers,
     );
     if (response.statusCode == 200) {
@@ -152,7 +152,7 @@ class ApiService {
 
   Future<bool> updateQueueStatus(int id, String status) async {
     final response = await http.put(
-      Uri.parse('$baseUrl/queues/$id/status'),
+      Uri.parse('$baseUrl/patients/queue/$id/status'),
       headers: _headers,
       body: jsonEncode({"status": status}),
     );
@@ -210,12 +210,18 @@ class ApiService {
 
   Future<Doctor?> createDoctor(Doctor doctor) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/master/doctors'),
+      Uri.parse('$baseUrl/doctors/'),
       headers: _headers,
       body: jsonEncode({
         "gelarDepan": doctor.gelarDepan,
         "namaDokter": doctor.namaDokter,
         "polyName": doctor.polyName,
+        "firstName": doctor.firstName,
+        "lastName": doctor.lastName,
+        "gelarBelakang": doctor.gelarBelakang,
+        "doctorSIP": doctor.doctorSIP,
+        "onlineFee": doctor.onlineFee,
+        "appointmentFee": doctor.appointmentFee,
         "is_available": true,
       }),
     );
@@ -227,12 +233,18 @@ class ApiService {
 
   Future<Doctor?> updateDoctor(int id, Doctor doctor) async {
     final response = await http.put(
-      Uri.parse('$baseUrl/master/doctors/$id'),
+      Uri.parse('$baseUrl/doctors/$id'),
       headers: _headers,
       body: jsonEncode({
         "gelarDepan": doctor.gelarDepan,
         "namaDokter": doctor.namaDokter,
         "polyName": doctor.polyName,
+        "firstName": doctor.firstName,
+        "lastName": doctor.lastName,
+        "gelarBelakang": doctor.gelarBelakang,
+        "doctorSIP": doctor.doctorSIP,
+        "onlineFee": doctor.onlineFee,
+        "appointmentFee": doctor.appointmentFee,
         "is_available": true,
       }),
     );
@@ -271,13 +283,7 @@ class ApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/medicines/'),
       headers: _headers,
-      body: jsonEncode({
-        "erpnext_item_code": medicine.erpnextItemCode,
-        "name": medicine.name,
-        "stock": medicine.stock,
-        "unit": medicine.unit,
-        "description": medicine.description,
-      }),
+      body: jsonEncode(medicine.toJson()),
     );
     if (response.statusCode == 200) {
       return Medicine.fromJson(jsonDecode(response.body));
@@ -289,13 +295,19 @@ class ApiService {
     final response = await http.put(
       Uri.parse('$baseUrl/medicines/$id'),
       headers: _headers,
-      body: jsonEncode({
-        "erpnext_item_code": medicine.erpnextItemCode,
-        "name": medicine.name,
-        "stock": medicine.stock,
-        "unit": medicine.unit,
-        "description": medicine.description,
-      }),
+      body: jsonEncode(medicine.toJson()),
+    );
+    if (response.statusCode == 200) {
+      return Medicine.fromJson(jsonDecode(response.body));
+    }
+    return null;
+  }
+
+  Future<Medicine?> createConcoction(ConcoctionRequest concoction) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/medicines/concoctions'),
+      headers: _headers,
+      body: jsonEncode(concoction.toJson()),
     );
     if (response.statusCode == 200) {
       return Medicine.fromJson(jsonDecode(response.body));
@@ -318,7 +330,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> syncDoctors() async {
     final response = await http.post(
-      Uri.parse('$baseUrl/master/doctors/sync'),
+      Uri.parse('$baseUrl/doctors/sync'),
       headers: _headers,
     );
 

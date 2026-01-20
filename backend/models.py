@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date, DateTime, ForeignKey, Text, JSON
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, DateTime, Date, Enum, Float, JSON
 from sqlalchemy.orm import relationship
 from .database import Base
 from datetime import datetime
@@ -33,6 +33,15 @@ class DoctorEntity(Base):
     medicalFacilityPolyDoctorId = Column(Integer, primary_key=True, index=True)
     gelarDepan = Column(String(20))
     namaDokter = Column(String(100))
+    
+    # New Fields
+    firstName = Column(String(50), nullable=True)
+    lastName = Column(String(50), nullable=True)
+    gelarBelakang = Column(String(20), nullable=True)
+    doctorSIP = Column(String(50), nullable=True)
+    onlineFee = Column(Integer, nullable=True)
+    appointmentFee = Column(Integer, nullable=True)
+
     polyName = Column(String(50)) # Added for Policlinic Routing
     is_available = Column(Boolean, default=True)
 
@@ -52,6 +61,12 @@ class Patient(Base):
     profession = Column(String(50))
     education = Column(String(20))
     
+    nomorRekamMedis = Column(String(50), nullable=True) # Medical Record Number
+    avatar = Column(String(255), nullable=True) 
+    height = Column(Integer, nullable=True) # cm
+    weight = Column(Integer, nullable=True) # kg
+    address = Column(String(255), nullable=True) # Simple address field
+
     # Address System
     province = Column(String(50))
     city = Column(String(50))
@@ -98,7 +113,35 @@ class Medicine(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     erpnext_item_code = Column(String(100), unique=True, index=True)
-    name = Column(String(200)) # Item Name
-    description = Column(Text, nullable=True)
-    stock = Column(Integer, default=0) # Syncs with actual_qty
+    
+    # Core Fields
+    medicineName = Column(String(200)) # Was name
+    medicineDescription = Column(Text, nullable=True) # Was description
+    medicineLabel = Column(String(100), nullable=True) # New
+    
+    medicinePrice = Column(Integer, default=0) # New (Buy Price)
+    medicineRetailPrice = Column(Integer, default=0) # New (Sell Price)
+    qty = Column(Integer, default=0) # Was stock
+    
     unit = Column(String(50)) # stock_uom
+    
+    # Consumption
+    howToConsume = Column(String(200), nullable=True)
+    notes = Column(Text, nullable=True) # Signa Text
+    signa1 = Column(Integer, nullable=True) # Frequency
+    signa2 = Column(Float, nullable=True) # Qty per dose
+
+    # Relationship for Racikan (Concoction)
+    ingredients = relationship("MedicineConcoction", back_populates="parent_medicine", foreign_keys="[MedicineConcoction.parent_medicine_id]")
+
+
+class MedicineConcoction(Base):
+    __tablename__ = "medicine_concoctions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    parent_medicine_id = Column(Integer, ForeignKey("medicines.id")) # The Racikan
+    child_medicine_id = Column(Integer, ForeignKey("medicines.id")) # The Ingredient
+    qty_needed = Column(Float, default=1.0)
+    
+    parent_medicine = relationship("Medicine", foreign_keys=[parent_medicine_id], back_populates="ingredients")
+    child_medicine = relationship("Medicine", foreign_keys=[child_medicine_id])

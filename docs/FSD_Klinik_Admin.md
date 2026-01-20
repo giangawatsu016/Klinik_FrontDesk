@@ -106,6 +106,27 @@ The system covers:
 
 ---
 
+## 5.3 API Endpoints Structure (Integration Points)
+
+Based on the detailed design, the backend exposes the following key endpoints:
+
+| Domain | Endpoint | Purpose |
+| :--- | :--- | :--- |
+| **Authentication** | `POST /auth/login` | User login (returns JWT Token). |
+| | `POST /auth/register` | Register new user. |
+| **Patients** | `GET /patients/` | List all patients. |
+| | `GET /patients/{id}` | Get patient details. |
+| | `POST /patients/` | Register new patient. |
+| | `GET /patients/search` | Search by Name/ID. |
+| **Queues** | `POST /patients/queue/` | Add patient to queue. |
+| | `GET /patients/queue/` | List current queues. |
+| | `PUT /patients/queue/{id}/status` | Update queue status (Waiting/Completed). |
+| **Doctors** | `GET /doctors/` | List all doctors. |
+| | `POST /doctors/` | Add new doctor. |
+| | `GET /doctors/{id}/schedule` | Get doctor schedule (Placeholder). |
+
+---
+
 ## 6. Security Requirements
 *   **SEC-01**: API Keys for Frappe.
 *   **SEC-02**: RBAC enforcement at API Router level.

@@ -28,13 +28,25 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
 
   void _loadMedicines() async {
     setState(() => _isLoading = true);
-    final meds = await widget.apiService.getMedicines();
-    if (mounted) {
-      setState(() {
-        _medicines = meds;
-        _filteredMedicines = meds;
-        _isLoading = false;
-      });
+    try {
+      final meds = await widget.apiService.getMedicines();
+      if (mounted) {
+        setState(() {
+          _medicines = meds;
+          _filteredMedicines = meds;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading medicines: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error loading medicines: $e")));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -44,7 +56,7 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
       _filteredMedicines = _medicines
           .where(
             (m) =>
-                m.name.toLowerCase().contains(query) ||
+                m.medicineName.toLowerCase().contains(query) ||
                 m.erpnextItemCode.toLowerCase().contains(query),
           )
           .toList();
@@ -84,7 +96,7 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(medicine.name),
+        title: Text(medicine.medicineName),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,44 +106,28 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
-            Text("Description: ${medicine.description ?? '-'}"),
+            Text("Description: ${medicine.medicineDescription ?? '-'}"),
+            if (medicine.medicineLabel != null)
+              Text("Label: ${medicine.medicineLabel}"),
+            Divider(),
+            Text("Price (Retail): Rp ${medicine.medicineRetailPrice}"),
+            Text("Stock: ${medicine.qty} ${medicine.unit}"),
             SizedBox(height: 8),
-            Row(
-              children: [
-                Text("Stock: "),
-                Text(
-                  "${medicine.stock} ${medicine.unit ?? ''}",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: medicine.stock > 0 ? Colors.green : Colors.red,
-                  ),
-                ),
-              ],
-            ),
+            Text("Dosage: ${medicine.howToConsume ?? '-'}"),
+            if (medicine.notes != null) Text("Notes: ${medicine.notes}"),
+            if (medicine.signa1 != null && medicine.signa2 != null)
+              Text("Signa: ${medicine.signa1} x ${medicine.signa2}"),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text("Close"),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _showAddMedicineDialog(existingMedicine: medicine);
+            },
+            child: Text("Edit", style: TextStyle(color: Colors.orange)),
           ),
-          ElevatedButton(
-            onPressed: medicine.stock > 0
-                ? () {
-                    // Placeholder for future logic
-                    Navigator.of(ctx).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("Request sent for ${medicine.name}"),
-                      ),
-                    );
-                  }
-                : null, // Disabled if stock is 0
-            style: ElevatedButton.styleFrom(
-              backgroundColor: medicine.stock > 0 ? Colors.blue : Colors.grey,
-            ),
-            child: Text("Request Medicine"),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text("Close")),
         ],
       ),
     );
@@ -153,7 +149,7 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent, // Inherit gradient
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showMedicineDialog(),
+        onPressed: () => _showAddMedicineDialog(),
         backgroundColor: Colors.blue.shade900,
         child: Icon(Icons.add, color: Colors.white),
       ),
@@ -162,6 +158,20 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: Icon(Icons.science, color: Colors.blue.shade900),
+            tooltip: "Create Racikan",
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => _ConcoctionDialog(
+                  apiService: widget.apiService,
+                  availableMedicines: _medicines,
+                  onSuccess: _loadMedicines,
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: _isSyncing
                 ? SizedBox(
@@ -210,64 +220,39 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
                           margin: EdgeInsets.only(bottom: 8),
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: med.stock > 0
+                              backgroundColor: med.qty > 0
                                   ? Colors.blue.shade100
                                   : Colors.red.shade100,
                               child: Icon(
                                 Icons.medication,
-                                color: med.stock > 0
+                                color: med.qty > 0
                                     ? Colors.blue.shade900
                                     : Colors.red.shade900,
                               ),
                             ),
                             title: Text(
-                              med.name,
+                              med.medicineName,
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            subtitle: Text("Code: ${med.erpnextItemCode}"),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
+                            trailing: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      "${med.stock} ${med.unit ?? ''}",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        color: med.stock > 0
-                                            ? Colors.green
-                                            : Colors.red,
-                                      ),
-                                    ),
-                                    Text(
-                                      med.stock > 0
-                                          ? "Available"
-                                          : "Out of Stock",
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Container(
-                                  margin: EdgeInsets.only(left: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
+                                Text(
+                                  "${med.qty} ${med.unit}",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: med.qty > 0
+                                        ? Colors.green
+                                        : Colors.red,
                                   ),
-                                  child: IconButton(
-                                    icon: Icon(
-                                      Icons.edit,
-                                      size: 20,
-                                      color: Colors.blue.shade800,
-                                    ),
-                                    tooltip: "Add Stock / Edit",
-                                    onPressed: () =>
-                                        _showMedicineDialog(medicine: med),
+                                ),
+                                Text(
+                                  med.qty > 0 ? "Available" : "Out of Stock",
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
                                   ),
                                 ),
                               ],
@@ -284,39 +269,24 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
     );
   }
 
-  void _showMedicineDialog({
-    Medicine? medicine,
-    String? initialName,
-    String? initialUnit,
-    String? initialCode,
-  }) {
+  void _showAddMedicineDialog({Medicine? existingMedicine}) {
     final formKey = GlobalKey<FormState>();
-    bool isEditing = medicine != null;
 
-    String name = medicine?.name ?? initialName ?? '';
-    String description =
-        medicine?.description ??
-        (initialCode != null ? "Imported from KFA (Code: $initialCode)" : '');
-    int stock = medicine?.stock ?? 0;
-    String unit = medicine?.unit ?? initialUnit ?? 'Tablet';
+    // Initial Values
+    String code = existingMedicine?.erpnextItemCode ?? '';
+    String name = existingMedicine?.medicineName ?? '';
+    String description = existingMedicine?.medicineDescription ?? '';
+    String label = existingMedicine?.medicineLabel ?? '';
+    int qty = existingMedicine?.qty ?? 0;
+    String unit = existingMedicine?.unit ?? 'Pcs';
+    int price = existingMedicine?.medicinePrice ?? 0;
+    int retailPrice = existingMedicine?.medicineRetailPrice ?? 0;
+    String howToConsume = existingMedicine?.howToConsume ?? '';
+    String notes = existingMedicine?.notes ?? '';
+    int? signa1 = existingMedicine?.signa1;
+    double? signa2 = existingMedicine?.signa2;
 
-    List<String> validUnits = [
-      "Tablet",
-      "Capsule",
-      "Bottle",
-      "Box",
-      "Pcs",
-      "Strip",
-      "Tube",
-      "Vial",
-      "Ampoule",
-      "Sachet",
-    ];
-
-    // Ensure current unit is in the list to prevent Dropdown assertion error
-    if (!validUnits.contains(unit) && unit.isNotEmpty) {
-      validUnits.add(unit);
-    }
+    bool isEditing = existingMedicine != null;
 
     showDialog(
       context: context,
@@ -324,59 +294,180 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(isEditing ? "Edit Material / Stock" : "Add New Medicine"),
-            if (!isEditing && initialName == null)
+            Text(isEditing ? "Edit Medicine" : "Add New Medicine"),
+            if (!isEditing)
               IconButton(
                 icon: Icon(Icons.cloud_download, color: Colors.blue),
                 tooltip: "Import from SatuSehat KFA",
                 onPressed: () {
                   Navigator.pop(ctx);
                   _showKfaSearchDialog((kfaName, kfaUnit, kfaCode) {
-                    _showMedicineDialog(
-                      initialName: kfaName,
-                      initialUnit: kfaUnit,
-                      initialCode: kfaCode,
+                    _showAddMedicineDialog(
+                      existingMedicine: Medicine(
+                        id: 0,
+                        erpnextItemCode: kfaCode,
+                        medicineName: kfaName,
+                        medicineDescription: null,
+                        medicineLabel: null,
+                        qty: 0,
+                        unit: kfaUnit,
+                        medicinePrice: 0,
+                        medicineRetailPrice: 0,
+                      ),
                     );
                   });
                 },
               ),
           ],
         ),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                initialValue: name,
-                decoration: InputDecoration(labelText: "Name"),
-                validator: (v) => v!.isEmpty ? "Required" : null,
-                onSaved: (v) => name = v!,
+        content: SizedBox(
+          width: 500,
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    initialValue: code,
+                    decoration: InputDecoration(
+                      labelText: "Item Code (Unique)",
+                    ),
+                    validator: (v) => v!.isEmpty ? "Required" : null,
+                    onSaved: (v) => code = v!,
+                  ),
+                  TextFormField(
+                    initialValue: name,
+                    decoration: InputDecoration(labelText: "Medicine Name"),
+                    validator: (v) => v!.isEmpty ? "Required" : null,
+                    onSaved: (v) => name = v!,
+                  ),
+                  TextFormField(
+                    initialValue: description,
+                    decoration: InputDecoration(labelText: "Description"),
+                    maxLines: 2,
+                    onSaved: (v) => description = v ?? '',
+                  ),
+                  TextFormField(
+                    initialValue: label,
+                    decoration: InputDecoration(
+                      labelText: "Label (e.g. Generic)",
+                    ),
+                    onSaved: (v) => label = v ?? '',
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: retailPrice.toString(),
+                          decoration: InputDecoration(
+                            labelText: "Retail Price",
+                          ),
+                          keyboardType: TextInputType.number,
+                          onSaved: (v) =>
+                              retailPrice = int.tryParse(v ?? '0') ?? 0,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: price.toString(),
+                          decoration: InputDecoration(labelText: "Buy Price"),
+                          keyboardType: TextInputType.number,
+                          onSaved: (v) => price = int.tryParse(v ?? '0') ?? 0,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: TextFormField(
+                          initialValue: qty.toString(),
+                          decoration: InputDecoration(labelText: "Stock Qty"),
+                          keyboardType: TextInputType.number,
+                          validator: (v) => v!.isEmpty ? "Required" : null,
+                          onSaved: (v) => qty = int.tryParse(v!) ?? 0,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        flex: 1,
+                        child: DropdownButtonFormField<String>(
+                          decoration: InputDecoration(labelText: "Unit"),
+                          initialValue:
+                              [
+                                'Pcs',
+                                'Box',
+                                'Bottle',
+                                'Strip',
+                                'Tablet',
+                                'Capsule',
+                              ].contains(unit)
+                              ? unit
+                              : null,
+                          items:
+                              [
+                                    'Pcs',
+                                    'Box',
+                                    'Bottle',
+                                    'Strip',
+                                    'Tablet',
+                                    'Capsule',
+                                  ]
+                                  .map(
+                                    (u) => DropdownMenuItem(
+                                      value: u,
+                                      child: Text(u),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (v) => unit = v!,
+                          onSaved: (v) => unit = v!,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Divider(),
+                  Text("Dosage Info"),
+                  TextFormField(
+                    initialValue: howToConsume,
+                    decoration: InputDecoration(labelText: "How to Consume"),
+                    onSaved: (v) => howToConsume = v ?? '',
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: signa1?.toString(),
+                          decoration: InputDecoration(labelText: "Freq (x)"),
+                          keyboardType: TextInputType.number,
+                          onSaved: (v) => signa1 = int.tryParse(v ?? ''),
+                        ),
+                      ),
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: signa2?.toString(),
+                          decoration: InputDecoration(labelText: "Qty/Dose"),
+                          keyboardType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onSaved: (v) => signa2 = double.tryParse(v ?? ''),
+                        ),
+                      ),
+                    ],
+                  ),
+                  TextFormField(
+                    initialValue: notes,
+                    decoration: InputDecoration(
+                      labelText: "Notes (Signa Text)",
+                    ),
+                    onSaved: (v) => notes = v ?? '',
+                  ),
+                ],
               ),
-              TextFormField(
-                initialValue: description,
-                decoration: InputDecoration(labelText: "Description"),
-                onSaved: (v) => description = v ?? '',
-              ),
-              TextFormField(
-                decoration: InputDecoration(labelText: "Stock"),
-                keyboardType: TextInputType.number,
-                initialValue: stock.toString(),
-                validator: (v) => v == null || int.tryParse(v) == null
-                    ? "Invalid Number"
-                    : null,
-                onSaved: (v) => stock = int.parse(v!),
-              ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: "Unit"),
-                initialValue: unit,
-                items: validUnits
-                    .map((u) => DropdownMenuItem(value: u, child: Text(u)))
-                    .toList(),
-                onChanged: (v) => unit = v!,
-                onSaved: (v) => unit = v!,
-              ),
-            ],
+            ),
           ),
         ),
         actions: [
@@ -388,52 +479,58 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 formKey.currentState!.save();
-                Medicine? res;
+
+                final medicineData = Medicine(
+                  id: isEditing ? existingMedicine.id : 0,
+                  erpnextItemCode: code,
+                  medicineName: name,
+                  medicineDescription: description,
+                  medicineLabel: label,
+                  medicinePrice: price,
+                  medicineRetailPrice: retailPrice,
+                  qty: qty,
+                  unit: unit,
+                  howToConsume: howToConsume,
+                  notes: notes,
+                  signa1: signa1,
+                  signa2: signa2,
+                );
+
                 if (isEditing) {
-                  final updatedMed = Medicine(
-                    id: medicine.id,
-                    erpnextItemCode: medicine.erpnextItemCode,
-                    name: name,
-                    description: description,
-                    stock: stock,
-                    unit: unit,
+                  final res = await widget.apiService.updateMedicine(
+                    existingMedicine.id,
+                    medicineData,
                   );
-                  res = await widget.apiService.updateMedicine(
-                    medicine.id,
-                    updatedMed,
-                  );
+                  if (res != null) {
+                    if (ctx.mounted) {
+                      Navigator.pop(ctx);
+                      if (mounted) {
+                        _loadMedicines();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Medicine Updated")),
+                        );
+                      }
+                    }
+                  }
                 } else {
-                  final newMed = Medicine(
-                    id: 0,
-                    erpnextItemCode: initialCode ?? "",
-                    name: name,
-                    description: description,
-                    stock: stock,
-                    unit: unit,
+                  final res = await widget.apiService.createMedicine(
+                    medicineData,
                   );
-                  res = await widget.apiService.createMedicine(newMed);
-                }
-
-                if (!ctx.mounted) return;
-
-                if (res != null) {
-                  Navigator.pop(ctx);
-                  if (mounted) {
-                    _loadMedicines(); // Reload list
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          isEditing
-                              ? "Medicine Updated"
-                              : "Medicine Added Successfully",
-                        ),
-                      ),
-                    );
+                  if (res != null) {
+                    if (ctx.mounted) {
+                      Navigator.pop(ctx);
+                      if (mounted) {
+                        _loadMedicines();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Medicine Added")),
+                        );
+                      }
+                    }
                   }
                 }
               }
             },
-            child: Text(isEditing ? "Save" : "Add"),
+            child: Text(isEditing ? "Save Changes" : "Add"),
           ),
         ],
       ),
@@ -514,11 +611,14 @@ class _KfaSearchDialogState extends State<_KfaSearchDialog> {
         final newMed = Medicine(
           id: 0,
           erpnextItemCode: item['item_code'] ?? '',
-          name: item['name'] ?? 'Unknown',
-          description:
+          medicineName: item['name'] ?? 'Unknown',
+          medicineDescription:
               "${item['manufacturer'] ?? ''} - ${item['description'] ?? ''}",
-          stock: 0,
+          qty: 0,
           unit: item['unit'] ?? 'Unit',
+          medicineLabel: null,
+          medicinePrice: 0,
+          medicineRetailPrice: 0,
         );
         final res = await widget.apiService.createMedicine(newMed);
         if (res != null) successCount++;
@@ -571,8 +671,11 @@ class _KfaSearchDialogState extends State<_KfaSearchDialog> {
                 : Container(
                     height: 300,
                     decoration: BoxDecoration(
+                      color: Colors.blue.withAlpha(
+                        (255 * 0.1).round(),
+                      ), // Changed from withOpacity
                       border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(8), // Changed from 4
                     ),
                     child: _results.isEmpty
                         ? Center(child: Text("No results"))
@@ -611,13 +714,252 @@ class _KfaSearchDialogState extends State<_KfaSearchDialog> {
       actions: [
         if (_results.isNotEmpty)
           TextButton(
-            onPressed: _importAll,
-            child: Text("Import All (${_results.length})"),
+            onPressed: () {
+              _importAll();
+            },
+            child: Text("Import All"),
           ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text("Close"),
         ),
+      ],
+    );
+  }
+}
+
+class _ConcoctionDialog extends StatefulWidget {
+  final ApiService apiService;
+  final List<Medicine> availableMedicines;
+  final VoidCallback onSuccess;
+
+  const _ConcoctionDialog({
+    required this.apiService,
+    required this.availableMedicines,
+    required this.onSuccess,
+  });
+
+  @override
+  State<_ConcoctionDialog> createState() => _ConcoctionDialogState();
+}
+
+class _ConcoctionDialogState extends State<_ConcoctionDialog> {
+  final _formKey = GlobalKey<FormState>();
+  String _name = "";
+  int _totalQty = 1;
+  int _serviceFee = 0;
+  String _unit = "Pcs";
+  String _desc = "";
+
+  final List<ConcoctionItemRequest> _items = [];
+
+  void _addItem() {
+    // Show dialog to pick medicine and qty
+    Medicine? selected;
+    if (widget.availableMedicines.isNotEmpty) {
+      selected = widget.availableMedicines.first;
+    }
+    double qty = 1;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text("Add Ingredient"),
+          content: StatefulBuilder(
+            builder: (context, setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InputDecorator(
+                    decoration: InputDecoration(labelText: "Select Medicine"),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<Medicine>(
+                        isExpanded: true,
+                        value: selected,
+                        items: widget.availableMedicines.map((m) {
+                          return DropdownMenuItem(
+                            value: m,
+                            child: Text(
+                              m.medicineName.length > 30
+                                  ? "${m.medicineName.substring(0, 27)}..."
+                                  : m.medicineName,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (v) => setState(() => selected = v),
+                      ),
+                    ),
+                  ),
+                  TextFormField(
+                    initialValue: "1",
+                    decoration: InputDecoration(labelText: "Qty Needed"),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    onChanged: (v) => qty = double.tryParse(v) ?? 0,
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (selected != null && qty > 0) {
+                  // Use outer setState to update the main dialog
+                  setState(() {
+                    _items.add(
+                      ConcoctionItemRequest(
+                        childMedicineId: selected!.id,
+                        qty: qty,
+                        name: selected!.medicineName,
+                      ),
+                    );
+                  });
+                  Navigator.pop(ctx);
+                }
+              },
+              child: Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _save() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      if (_items.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please add at least one ingredient")),
+        );
+        return;
+      }
+
+      final req = ConcoctionRequest(
+        medicineName: _name,
+        items: _items,
+        serviceFee: _serviceFee,
+        totalQty: _totalQty,
+        unit: _unit,
+        description: _desc,
+      );
+
+      final res = await widget.apiService.createConcoction(req);
+      if (res != null && mounted) {
+        widget.onSuccess();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Racikan Created!")));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("Create Racikan (Concoction)"),
+      content: SizedBox(
+        width: 600,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  decoration: InputDecoration(labelText: "Racikan Name"),
+                  validator: (v) => v!.isEmpty ? "Required" : null,
+                  onSaved: (v) => _name = v!,
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: "1",
+                        decoration: InputDecoration(
+                          labelText: "Total Result Qty",
+                        ),
+                        keyboardType: TextInputType.number,
+                        onSaved: (v) => _totalQty = int.tryParse(v!) ?? 1,
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: "0",
+                        decoration: InputDecoration(
+                          labelText: "Service Fee (Rp)",
+                        ),
+                        keyboardType: TextInputType.number,
+                        onSaved: (v) => _serviceFee = int.tryParse(v!) ?? 0,
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: "Pcs",
+                        decoration: InputDecoration(labelText: "Unit"),
+                        onSaved: (v) => _unit = v ?? 'Pcs',
+                      ),
+                    ),
+                  ],
+                ),
+                TextFormField(
+                  decoration: InputDecoration(labelText: "Description / Notes"),
+                  onSaved: (v) => _desc = v ?? '',
+                ),
+                Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Ingredients:",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.add_circle),
+                      onPressed: _addItem,
+                    ),
+                  ],
+                ),
+                if (_items.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "No ingredients added.",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ..._items.map(
+                  (item) => ListTile(
+                    title: Text(item.name ?? "Item"),
+                    subtitle: Text("Qty: ${item.qty}"),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => setState(() => _items.remove(item)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text("Cancel"),
+        ),
+        ElevatedButton(onPressed: _save, child: Text("Create Racikan")),
       ],
     );
   }

@@ -58,6 +58,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   String postalCode = '';
   String addressDetails = '';
 
+  // New Fields Input
+  String nomorRekamMedis = '';
+  String simpleAddress = '';
+  int? height;
+  int? weight;
+
   int issuerId = 1; // 1=General, 2=BPJS, 3=Insurance
   String? insuranceName;
   String noAssuransi = '';
@@ -150,7 +156,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     rt = p.rt;
     rw = p.rw;
     postalCode = p.postalCode;
+    postalCode = p.postalCode;
     addressDetails = p.addressDetails ?? '';
+
+    // New Fields
+    nomorRekamMedis = p.nomorRekamMedis ?? '';
+    simpleAddress = p.address ?? '';
+    height = p.height;
+    weight = p.weight;
 
     issuerId = p.issuerId;
     insuranceName = p.insuranceName;
@@ -317,6 +330,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         noAssuransi: noAssuransi,
         maritalStatusId: maritalStatusId,
         frappeId: widget.patientToEdit?.frappeId,
+        // New Fields
+        nomorRekamMedis: nomorRekamMedis,
+        address: simpleAddress,
+        height: height,
+        weight: weight,
       );
 
       try {
@@ -795,6 +813,51 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               validator: (v) => v!.isEmpty ? 'Required' : null,
             ),
             _buildDatePicker(),
+            SizedBox(height: 16),
+            _buildSectionTitle("Medical & Profiling"),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    initialValue: nomorRekamMedis,
+                    decoration: InputDecoration(
+                      labelText: 'Medical Record No.',
+                    ),
+                    onSaved: (v) => nomorRekamMedis = v ?? '',
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    initialValue: height?.toString(),
+                    decoration: InputDecoration(labelText: 'Height (cm)'),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onSaved: (v) => height = int.tryParse(v ?? ''),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    initialValue: weight?.toString(),
+                    decoration: InputDecoration(labelText: 'Weight (kg)'),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onSaved: (v) => weight = int.tryParse(v ?? ''),
+                  ),
+                ),
+              ],
+            ),
+            TextFormField(
+              initialValue: simpleAddress,
+              decoration: InputDecoration(labelText: 'Full Address (Simple)'),
+              onSaved: (v) => simpleAddress = v ?? '',
+              maxLines: 2,
+            ),
+
             Row(
               children: [
                 Expanded(

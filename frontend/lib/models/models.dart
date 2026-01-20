@@ -63,6 +63,11 @@ class Patient {
   final int maritalStatusId;
   final String? frappeId;
   final String? ihsNumber;
+  final String? nomorRekamMedis;
+  final String? avatar;
+  final int? height;
+  final int? weight;
+  final String? address;
 
   Patient({
     this.id,
@@ -89,6 +94,11 @@ class Patient {
     required this.maritalStatusId,
     this.frappeId,
     this.ihsNumber,
+    this.nomorRekamMedis,
+    this.avatar,
+    this.height,
+    this.weight,
+    this.address,
   });
 
   Map<String, dynamic> toJson() {
@@ -116,6 +126,11 @@ class Patient {
       'maritalStatusId': maritalStatusId,
       'frappe_id': frappeId,
       'ihs_number': ihsNumber,
+      'nomorRekamMedis': nomorRekamMedis,
+      'avatar': avatar,
+      'height': height,
+      'weight': weight,
+      'address': address,
     };
   }
 
@@ -147,6 +162,11 @@ class Patient {
       noAssuransi: json['noAssuransi'],
       frappeId: json['frappe_id'],
       ihsNumber: json['ihs_number'],
+      nomorRekamMedis: json['nomorRekamMedis'],
+      avatar: json['avatar'],
+      height: json['height'],
+      weight: json['weight'],
+      address: json['address'],
     );
   }
 }
@@ -197,12 +217,24 @@ class Doctor {
   final String namaDokter;
   final String polyName;
   final String gelarDepan;
+  final String? firstName;
+  final String? lastName;
+  final String? gelarBelakang;
+  final String? doctorSIP;
+  final int? onlineFee;
+  final int? appointmentFee;
 
   Doctor({
     required this.medicalFacilityPolyDoctorId,
     required this.namaDokter,
     required this.polyName,
     required this.gelarDepan,
+    this.firstName,
+    this.lastName,
+    this.gelarBelakang,
+    this.doctorSIP,
+    this.onlineFee,
+    this.appointmentFee,
   });
 
   factory Doctor.fromJson(Map<String, dynamic> json) {
@@ -211,6 +243,12 @@ class Doctor {
       namaDokter: json['namaDokter'],
       polyName: json['polyName'],
       gelarDepan: json['gelarDepan'] ?? '',
+      firstName: json['firstName'],
+      lastName: json['lastName'],
+      gelarBelakang: json['gelarBelakang'],
+      doctorSIP: json['doctorSIP'],
+      onlineFee: json['onlineFee'],
+      appointmentFee: json['appointmentFee'],
     );
   }
 }
@@ -218,28 +256,114 @@ class Doctor {
 class Medicine {
   final int id;
   final String erpnextItemCode;
-  final String name;
-  final String? description;
-  final int stock;
-  final String? unit;
+  final String medicineName;
+  final String? medicineDescription;
+  final String? medicineLabel;
+  final int medicinePrice;
+  final int medicineRetailPrice;
+  final int qty;
+  final String unit;
+  final String? howToConsume;
+  final String? notes; // Signa Text
+  final int? signa1;
+  final double? signa2;
 
   Medicine({
     required this.id,
     required this.erpnextItemCode,
-    required this.name,
-    this.description,
-    required this.stock,
-    this.unit,
+    required this.medicineName,
+    this.medicineDescription,
+    this.medicineLabel,
+    this.medicinePrice = 0,
+    this.medicineRetailPrice = 0,
+    required this.qty,
+    required this.unit,
+    this.howToConsume,
+    this.notes,
+    this.signa1,
+    this.signa2,
   });
 
   factory Medicine.fromJson(Map<String, dynamic> json) {
     return Medicine(
       id: json['id'],
-      erpnextItemCode: json['erpnext_item_code'],
-      name: json['name'],
-      description: json['description'],
-      stock: json['stock'] ?? 0,
-      unit: json['unit'],
+      erpnextItemCode:
+          json['erpnextItemCode'] ?? json['erpnext_item_code'] ?? '',
+      medicineName: json['medicineName'],
+      medicineDescription: json['medicineDescription'],
+      medicineLabel: json['medicineLabel'],
+      medicinePrice: json['medicinePrice'] ?? 0,
+      medicineRetailPrice: json['medicineRetailPrice'] ?? 0,
+      qty: json['qty'] ?? 0,
+      unit: json['unit'] ?? 'Unit',
+      howToConsume: json['howToConsume'],
+      notes: json['notes'],
+      signa1: json['signa1'],
+      signa2: json['signa2'] != null
+          ? (json['signa2'] as num).toDouble()
+          : null,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'erpnextItemCode': erpnextItemCode,
+      'medicineName': medicineName,
+      'medicineDescription': medicineDescription,
+      'medicineLabel': medicineLabel,
+      'medicinePrice': medicinePrice,
+      'medicineRetailPrice': medicineRetailPrice,
+      'qty': qty,
+      'unit': unit,
+      'howToConsume': howToConsume,
+      'notes': notes,
+      'signa1': signa1,
+      'signa2': signa2,
+    };
+  }
+}
+
+class ConcoctionItemRequest {
+  final int childMedicineId;
+  final double qty;
+  final String? name; // For UI display only
+
+  ConcoctionItemRequest({
+    required this.childMedicineId,
+    required this.qty,
+    this.name,
+  });
+
+  Map<String, dynamic> toJson() => {
+    "child_medicine_id": childMedicineId,
+    "qty": qty,
+  };
+}
+
+class ConcoctionRequest {
+  final String medicineName;
+  final List<ConcoctionItemRequest> items;
+  final int serviceFee;
+  final int totalQty;
+  final String unit;
+  final String? description;
+
+  ConcoctionRequest({
+    required this.medicineName,
+    required this.items,
+    this.serviceFee = 0,
+    required this.totalQty,
+    this.unit = "Pcs",
+    this.description,
+  });
+
+  Map<String, dynamic> toJson() => {
+    "medicineName": medicineName,
+    "items": items.map((x) => x.toJson()).toList(),
+    "serviceFee": serviceFee,
+    "totalQty": totalQty,
+    "unit": unit,
+    "description": description,
+  };
 }

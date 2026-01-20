@@ -57,9 +57,23 @@ class DoctorBase(BaseModel):
     namaDokter: str
     polyName: str
     is_available: bool
+    
+    # New Fields
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    gelarBelakang: Optional[str] = None
+    doctorSIP: Optional[str] = None
+    onlineFee: Optional[int] = None
+    appointmentFee: Optional[int] = None
 
 class Doctor(DoctorBase):
     medicalFacilityPolyDoctorId: int
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    gelarBelakang: Optional[str] = None
+    doctorSIP: Optional[str] = None
+    onlineFee: Optional[int] = None
+    appointmentFee: Optional[int] = None
     class Config:
         from_attributes = True
 
@@ -82,6 +96,11 @@ class PatientBase(BaseModel):
     rw: str
     postalCode: str
     address_details: Optional[str] = None
+    address: Optional[str] = None
+    nomorRekamMedis: Optional[str] = None
+    avatar: Optional[str] = None
+    height: Optional[int] = None
+    weight: Optional[int] = None
     address_details: Optional[str] = None
     issuerId: int
     insuranceName: Optional[str] = None
@@ -127,16 +146,37 @@ class PatientQueue(QueueBase):
 
 # Medicine Schemas
 class MedicineBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-    stock: int
-    unit: Optional[str] = "Unit"
+    erpnextItemCode: str
+    medicineName: str
+    medicineDescription: Optional[str] = None
+    medicineLabel: Optional[str] = None
+    medicinePrice: Optional[int] = 0
+    medicineRetailPrice: Optional[int] = 0
+    qty: int = 0
+    unit: Optional[str] = None
+    howToConsume: Optional[str] = None
+    notes: Optional[str] = None # Signa Text
+    signa1: Optional[int] = None
+    signa2: Optional[float] = None
 
 class MedicineCreate(MedicineBase):
-    erpnext_item_code: Optional[str] = None
+    pass
 
 class Medicine(MedicineBase):
     id: int
     erpnext_item_code: str
     class Config:
         from_attributes = True
+
+# Concoction Schemas
+class ConcoctionItemCreate(BaseModel):
+    child_medicine_id: int
+    qty: float
+
+class ConcoctionCreate(BaseModel):
+    medicineName: str
+    items: List[ConcoctionItemCreate]
+    serviceFee: Optional[int] = 0
+    totalQty: int
+    unit: str = "Pcs"
+    description: Optional[str] = None

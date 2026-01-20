@@ -6,7 +6,7 @@ from .. import models, schemas, database, dependencies
 from ..services.frappe_service import frappe_client
 
 router = APIRouter(
-    prefix="/queues",
+    prefix="/patients/queue",
     tags=["queues"]
 )
 

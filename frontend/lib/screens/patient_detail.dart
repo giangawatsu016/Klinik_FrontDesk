@@ -69,6 +69,13 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             _detailRow("Phone", widget.patient.phone),
             _detailRow("Gender", widget.patient.gender),
             _detailRow("Birthday", widget.patient.birthday),
+            _detailRow("Birthday", widget.patient.birthday),
+            _detailRow(
+              "Medical Record No",
+              widget.patient.nomorRekamMedis ?? '-',
+            ),
+            _detailRow("Height", "${widget.patient.height ?? '-'} cm"),
+            _detailRow("Weight", "${widget.patient.weight ?? '-'} kg"),
             if (widget.patient.ihsNumber != null)
               _detailRow("IHS Number (SatuSehat)", widget.patient.ihsNumber!),
 
@@ -76,7 +83,8 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             _sectionHeader("Address"),
             _detailRow(
               "Full Address",
-              "${widget.patient.addressDetails ?? ''}, ${widget.patient.subdistrict}, ${widget.patient.city}",
+              widget.patient.address ??
+                  "${widget.patient.addressDetails ?? ''}, ${widget.patient.subdistrict}, ${widget.patient.city}",
             ),
 
             SizedBox(height: 16),

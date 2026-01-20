@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from .routers import auth, patients, queue, master_data, medicines, users, integration
+from .routers import auth, patients, queue, master_data, medicines, users, integration, doctors
 import os
 from dotenv import load_dotenv
 from slowapi import _rate_limit_exceeded_handler
@@ -42,6 +42,7 @@ app.include_router(master_data.router)
 app.include_router(medicines.router)
 app.include_router(users.router)
 app.include_router(integration.router)
+app.include_router(doctors.router)
 
 @app.get("/")
 def read_root():
