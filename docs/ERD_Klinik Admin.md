@@ -1,4 +1,5 @@
 # Entity Relationship Diagram (ERD) - Klinik Admin
+**Version:** 2.3 (Matches `backend/models.py`)
 
 ```mermaid
 erDiagram
@@ -32,35 +33,61 @@ erDiagram
         int medicalFacilityPolyDoctorId PK
         string gelarDepan
         string namaDokter
+        string gelarBelakang
+        string firstName
+        string lastName
         string polyName
+        string identityCard "NIK - Unique"
+        string ihs_practitioner_number "SatuSehat ID"
+        string doctorSIP
+        int onlineFee
+        int appointmentFee
         boolean is_available
     }
 
     %% Core: Medicine
     Medicine {
         int id PK
-        string erpnext_item_code "Unique - Link to ERPNext Item OR KFA Code"
-        string name
-        string description
-        int stock "Mapped from actual_qty"
+        string erpnext_item_code "Unique - Link to ERPNext Item"
+        string medicineName
+        string medicineDescription
+        string medicineLabel
+        int medicinePrice "Buy Price"
+        int medicineRetailPrice "Sell Price"
+        int qty "Stock"
         string unit "uom"
+        string howToConsume
+        string notes
+        int signa1
+        float signa2
+    }
+
+    %% Core: Medicine Concoction (Racikan)
+    MedicineConcoction {
+        int id PK
+        int parent_medicine_id FK "The Racikan"
+        int child_medicine_id FK "The Ingredient"
+        float qty_needed
     }
 
     %% Core: Patient
     Patient {
         int id PK
         string identityCard "NIK - Unique"
-        string frappe_id "ERPNext Link - Nullable"
-        string ihs_number "Satu Sehat ID - Nullable"
+        string frappe_id "ERPNext Customer Link"
+        string ihs_number "Satu Sehat ID"
         string firstName
-        string lastName "Nullable"
-        string phone "Unique (14 digits)"
-        date birthday
+        string lastName
+        string phone "Unique"
         string gender
+        date birthday
         string religion
         string profession
         string education
-        string address_details
+        string nomorRekamMedis
+        int height "cm"
+        int weight "kg"
+        string address
         string province
         string city
         string district
@@ -70,22 +97,22 @@ erDiagram
         string rw
         int maritalStatusId FK
         int issuerId FK
-        string insuranceName "Nullable"
-        string noAssuransi "Nullable"
+        string insuranceName
+        string noAssuransi
     }
 
     %% Core: Queue
     PatientQueue {
         int id PK
-        string numberQueue "e.g. D-001"
+        string numberQueue "e.g. P-001"
         datetime appointmentTime
         string status "Waiting, Completed"
         boolean isPriority
         boolean isChecked
         string queueType "Doctor or Polyclinic"
-        string polyclinic "Nullable"
+        string polyclinic
         int userId FK "Refers to Patient"
-        int medicalFacilityPolyDoctorId FK "Nullable"
+        int medicalFacilityPolyDoctorId FK
     }
 
     %% Relationships
@@ -93,5 +120,7 @@ erDiagram
     Patient }|..|| Issuer : "uses payment"
     Patient ||--o{ PatientQueue : "requests"
     DoctorEntity ||--o{ PatientQueue : "assigned to"
+    Medicine ||--o{ MedicineConcoction : "composed of"
+    Medicine ||--o{ MedicineConcoction : "is ingredient in"
 
 ```

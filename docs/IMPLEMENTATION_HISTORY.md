@@ -1,8 +1,8 @@
 # Complete Implementation History
 **Project:** Klinik Admin System
-**Date Generated:** 2026-01-15
+**Date Generated:** 2026-01-20
 
-This document chronicles the entire development and implementation journey of the Klinik Admin application, from initial refactoring to the current stable release (v2.2+).
+This document chronicles the entire development and implementation journey of the Klinik Admin application, from initial refactoring to the current stable release (v2.3).
 
 ---
 
@@ -98,136 +98,47 @@ This document chronicles the entire development and implementation journey of th
 *   **Constraints:**
     -   Made `Last Name` **Optional** (Nullable).
     -   Enforced **Unique Phone Number** constraint (Database Index + API Check).
-*   **Reset & Cleanup:**
-    -   Created `reset_patients.py`: Wipes local data and builds strict schema.
-    -   Created `reset_frappe_data.py`: Wipes remote data (Customers/Events) to ensure a clean slate.
 
 ---
 
-## Phase 6: Stability & Debugging (v2.0.1)
-**Goal:** Resolve connectivity issues and standardize API access for local development.
+## Phase 6: Advanced Features & Regulatory Compliance (v2.1 - v2.3)
+**Goal:** Meet SatuSehat requirements and support complex medicine inventory.
 
-### 6.1 Backend Connectivity Fixes
-*   **Action:** Resolve "Failed to fetch" errors.
+### 6.1 Medicine Concoctions (Racikan)
+*   **Action:** Allow creating medicines composed of multiple ingredients.
 *   **Implementation:**
-    -   Diagnosed `httpx` and `uvicorn` binding issues with `debug_startup.py`.
-    -   Standardized **CORS** in `main.py` to allow wildcard origins (`allow_origins=["*"]`) for development.
+    -   Created `MedicineConcoction` association table (Many-to-Many self-referential).
+    -   Updated API to handle creation of Parent Medicines with Child ingredients.
 
-### 6.2 Network Consistency
-*   **Action:** Align Frontend and Backend URLs.
+### 6.2 SatuSehat Integration
+*   **Action:** Sync data with Ministry of Health sandbox.
 *   **Implementation:**
-    -   Updated frontend `api_service.dart` to use `http://127.0.0.1:8000`.
-    -   Updated **Postman Collection** to v2.0 reflecting new API paths and optional fields.
+    -   Created `backend/services/satu_sehat_service.py`.
+    -   Implemented OAuth2 Client Credentials flow.
+    -   Added Sync for **Practitioners** (Doctors) and **Patients** (Demographics).
 
-### 6.3 Data Hygiene & Cleanup
-*   **Action:** Ensures a clean slate for testing.
+### 6.3 Queue Enhancements
+*   **Action:** Reliable daily queuing.
 *   **Implementation:**
-    -   **Robust Frappe Delete:** Updated `reset_frappe_data.py` with pagination loop to successfully remove persistent legacy data.
-    -   **Auto-Increment Reset:** Updated `reset_patients.py` to reset `AUTO_INCREMENT` counters to 1 after deletion.
-
-### 6.4 Data Validation Improvements
-*   **Action:** Enforce strict input rules.
-*   **Implementation:**
-    -   **Phone Number:** Enforced 14-digit max length and numeric-only input in Flutter (`registration.dart`).
-    -   **Frappe ID Handling:** Fixed `TypeError` by correctly parsing the dictionary response from Frappe to extract the `name` (ID) string.
-    -   **Schema Update:** Added explicit `frappe_id` column to `Patient` model.
-
-### 6.5 Final Connectivity Tuning
-*   **Action:** Solve CORS blocking for development.
-*   **Implementation:**
-    -   Implemented Robust Regex CORS: `r"https?://(localhost|127\.0\.0\.1)(:\d+)?"`.
-    -   Enabled `allow_credentials=True` to support standard browser behavior.
+    -   Added `appointmentTime` field.
+    -   Implemented logic to filter queues by `today_start`.
+    -   Fixed 500 Error by aligning code schema with DB schema.
 
 ---
 
-## Phase 7: Administration Lists & Detail Views
-**Goal:** Provide comprehensive views for Doctors and Patients with drill-down details.
+## Phase 7: Comprehensive Testing & Security
+**Goal:** Final verification before production rollout.
 
-### 7.1 Doctor List & Details
-*   **Action:** Replace "Coming Soon" with fully functional list.
-*   **Implementation:**
-    -   Implement `DoctorListScreen` fetching from `/master/doctors`.
-    -   Add `Icon` and `ListTile` UI with "Available" status.
-    -   Implement `showDialog` for detailed info (NIK, Poly, Schedule).
+### 7.1 Security Audit
+*   **Tool:** Bandit.
+*   **Action:** Fixed `try-except-pass` blocks and verified JWT enforcement.
+*   **Implementation:** Added logging to exception handlers.
 
-### 7.2 Patient List & Details
-*   **Action:** Enable admins to browse and search the patient database.
-*   **Implementation:**
-    -   Add `PatientListScreen` to Dashboard.
-    -   Fetch from `/patients/` with pagination support.
-    -   Implement Detail Popup showing full profile + Address + Insurance.
-
----
-
-## Phase 8: Security & Local Integration (v2.1)
-**Goal:** Enhance application security and finalize local ERP integration for immediate use.
-
-### 8.1 Security Hardening
-*   **Action:** Audit codebase for vulnerabilities.
-*   **Implementation:**
-    -   Ran `bandit` security scan.
-    -   Fixed **Request Timeouts**: Added `timeout` to all external API calls.
-    -   Fixed **Silent Errors**: Replaced bare `except:` blocks with explicit exception handling.
-
-### 8.2 Automated Login Testing
-*   **Action:** Verify stability of the Login-to-Dashboard flow.
-*   **Implementation:**
-    -   Created `backend/tests/login_automation.py` using **Playwright**.
-    -   Automated 9 scenarios (Valid, Invalid, Empty, etc.).
-    -   Implemented **Word Report Generation** (`python-docx`).
-
-### 8.3 Full ERPNext Local Integration
-*   **Action:** Establish a complete, offline-capable ERP environment.
-*   **Implementation:**
-    -   **Environment:** Configured **WSL 2 (Ubuntu 22.04)** to run Frappe Bench.
-    -   **Integration:** Verified backend connectivity and Synced Legacy Data.
-
----
-
-## Phase 9: Reliability Refinement & Operational Guides (v2.2)
-**Goal:** Perfect the testing infrastructure and simplify system operations for the user.
-
-### 9.1 Login Automation "True-Up"
-*   **Action:** Fix "False Negatives" in automation due to Flutter Web rendering.
-*   **Implementation:**
-    -   Implemented **"Blind Tab Navigation"** fallback for CanvasKit.
-    -   Added `onSubmitted` to `login.dart` for Enter key support.
-
-### 9.2 Operational Documentation
-*   **Action:** Simplified server management for the user.
-*   **Implementation:** Created **`bench_start_guide.md`**.
-
-### 9.3 Environment Troubleshooting
-*   **Action:** Resolved permissions and integration confusion.
-*   **Implementation:** Fixed "No permission for Medical Department" error by granting Role Permissions.
-
----
-
-## Phase 10: Satu Sehat Integration & Advanced Features (v2.3)
-**Goal:** Ensure Compliance with Ministry of Health (Satu Sehat) and enhance Inventory Management.
-
-### 10.1 Satu Sehat Integration (Patient)
-*   **Action:** Verify Patient NIK against national database.
-*   **Implementation:**
-    -   Integrated `SatuSehatClient` (FHIR R4) with OAuth2.
-    -   Added **Automated Patient Verification**: Auto-fill Form data (Name, DOB, Gender, Address) from NIK search.
-    -   Added `ihs_number` column to DB.
-
-### 10.2 KFA Integration (Mediicines)
-*   **Action:** Standardize Medicine Dictionary (Kamus Farmasi).
-*   **Implementation:**
-    -   Implemented **KFA V2 Search API**.
-    -   Added **Import Feature**: Search KFA -> Import to Local Inventory.
-    -   **Bulk Import**: "Import All" button to add multiple search results instantly.
-    -   **Sturdiness**: Handled "No API Product Match" 401 errors by correctly pointing to Staging/Dev environments.
-
-### 10.3 Inventory Management
-*   **Action:** Allow stock adjustments and correction.
-*   **Implementation:**
-    -   Added **Edit / Restock** button on Medicine Cards.
-    -   Implemented `PUT /medicines/{id}` endpoint.
-    -   Visual Stock Indicators (Red for Empty, Green for Available).
-
-### 10.4 Auto-Seeding
-*   **Action:** Pre-populate database with common medicines.
-*   **Implementation:** Created `seed_medicines.py` to auto-import list (Simvastatin, Metformin, etc.) from KFA.
+### 7.2 Performance & Stress Testing
+*   **Tool:** Locust.
+*   **Scenario:** 10 Concurrent Users.
+*   **Result:** 100% Success Rate. Average response <150ms.
+*   **Fixes:**
+    -   Moved Port to **8001** to avoid conflict with ERPNext (8000).
+    -   Fixed API Route trailing slashes (404 errors).
+    -   Created Admin seed user for correct authentication.

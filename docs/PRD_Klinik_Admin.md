@@ -1,101 +1,57 @@
-# Product Requirements Document (PRD)
-**Project Name:** Klinik Admin System (Desktop App)
-**Version:** 2.2
-**Status:** Live / Maintenance
-**Last Updated:** 2026-01-15
+# PRODUCT REQUIREMENTS DOCUMENT (PRD)
+**Project Name:** Klinik Admin System
+**Date:** 2026-01-20
+**Version:** 2.3
 
-## 1. Product Overview
-### 1.1 Vision
-To provide a modern, efficient, and user-friendly desktop application for clinic front-desk operations, creating a seamless experience for patient registration and queue management while integrating with enterprise backend systems (ERPNext).
+---
 
-### 1.2 Objective
-*   Streamline the patient registration process (New & Existing).
-*   Manage daily patient queues for General Practitioners and Polyclinics.
-*   Provide real-time dashboard analytics for clinic traffic.
-*   **Secure the system with Role-Based Access Control (RBAC).**
-*   **Ensure data synchronization with the central ERP system (Frappe/ERPNext) for Patients, Doctors, Medicines, and Users.**
+## 1. Executive Summary
+The Klinik Admin System is designed to modernize clinic operations by providing a unified interface for patient management, medical records, and inventory. Version 2.3 specifically upgrades the system to meet Indonesian Health Ministry regulations (**SatuSehat**) and integrates with **ERPNext** for back-office accounting, while introducing advanced features like **Medicine Concoctions**.
 
-### 1.3 Scope
-*   **Platform:** Windows Desktop (Flutter-based).
-*   **Primary Users:** Receptionists / Front Desk Staff, Administrators, Super Admins.
-*   **Key Modules:** Authentication, User Management, Patient Registration, Queue Management, Master Data (Doctors, Medicines), ERPNext Integration.
+## 2. Problem Statement
+*   **Regulatory Compliance:** Clinics are mandated to sync patient and practitioner data with the SatuSehat national platform.
+*   **Complex Prescriptions:** Basic inventory systems cannot handle "Racikan" (Concoctions) where one sold item reduces stock of multiple raw ingredients.
+*   **Data Silos:** Patient data often exists locally but not in the central HQ ERP.
 
-## 2. Target Audience & Personas
-*   **Receptionist (Staff):** Needs a fast, keyboard-friendly interface to input patient data quickly and check medicine stock.
-*   **Administrator:** Needs to manage staff accounts, doctor schedules, and view overall clinic performance.
-*   **Super Admin:** Full system control, including managing Administrators and configurations.
+## 3. Product Goals
+1.  **Compliance:** Achieve seamless synchronization with SatuSehat (Sandbox/Prod).
+2.  **Integration:** Ensure real-time or background consistency between Local Admin and ERPNext.
+3.  **Efficiency:** Reduce check-in time via NIK search and autofill.
+4.  **Accuracy:** Automate stock deduction for compound medicines (Racikan).
 
-## 3. Key Features & Requirements
+## 4. Key Features & Requirements
 
-### 3.1 Authentication & Security
-*   **Login System:** Secure login with username/password.
-*   **Role-Based Access Control (RBAC):**
-    *   **Super Admin:** Full Access. Can manage Admins and Staff.
-    *   **Administrator:** Can manage Staff and Master Data (Doctors, Medicines). Access to Reports.
-    *   **Staff:** Restricted to Patient Registration, Queue, and Dashboard (Queue Monitor).
-*   **Logout Mechanism:** Dedicated logout button in the sidebar.
+### 4.1 SatuSehat Integration
+*   **Authentication:** Auto-renew OAuth2 tokens.
+*   **Practitioner Sync:** Map local Doctors to `Practitioner` resources using IHS IDs.
+*   **Patient Sync:** Map local Patients to `Patient` resources. Store `ihs_number`.
+*   **Location Sync:** Map Clinic Location ID.
 
-### 3.2 User Management (New)
-*   **CRUD Operations:** Create, Read, Update, Delete system users.
-*   **Role Assignment:** Assign roles (superadmin, admin, staff) during creation.
-*   **Permission Enforcement:** UI hides actions based on the logged-in user's role.
-*   **ERPNext User Sync:** Automatically create/update "System User" in ERPNext when a user is managed locally (requires Email).
+### 4.2 ERPNext Integration
+*   **Two-Way Sync:** Users, Patients, Medicines.
+*   **Queue-to-Event:** Queues appear on the ERPNext Calendar.
 
-### 3.3 Patient Management
-*   **New Patient Registration:**
-    *   Capture detailed personal info (Name, NIK, Phone, Birthday, Gender).
-    *   **Indonesian Address System:** Full hierarchy support (emsifa API).
-*   **Validation:** 14-digit Phone, 16-digit NIK.
-*   **Edit Capabilities:** Update patient details with two-way sync to ERPNext.
+### 4.3 Advanced Inventory (Concoctions)
+*   **Definition:** Ability to define a "Parent" medicine (e.g., "Racikan Batuk Anak") composed of "Child" medicines (e.g., Paracetamol, CTM).
+*   **Pricing:** Auto-calculation based on ingredient COGS + Service Fee.
+*   **Dispensing:** (Future) Deducting child stock when parent is dispensed.
 
-### 3.4 Queue Management
-*   **Assignment:** Assign to Doctor/Poly with Priority status.
-*   **Auto-Numbering:** D-XXX (Doctor), P-XXX (Poly). Daily Reset.
-*   **Daily Cleanup:** Auto-delete old queue records.
-*   **ERPNext Sync:** Push queue entry to `Event` Doctype.
-*   **TTS:** Audio announcements for queue calling.
+### 4.4 Queue Management
+*   **Daily Reset:** Auto-archive old queues at midnight to ensure clean slate.
+*   **Priority Handling:** Distinct numbering (P-xxx vs AP-xxx) for Priority patients.
 
-### 3.5 Master Data Management
-*   **Doctors:** View/Add/Edit with sync to `Healthcare Practitioner`.
-*   **Medicines:** View/Add/Edit with sync to ERPNext `Item` (Stock Levels).
+### 4.5 Security
+*   **Authentication:** JWT-based access.
+*   **Port Config:** Non-standard ports (8001) to avoid conflicts.
+*   **Audit:** Regular scanning for common vulnerabilities (Bandit).
 
-### 3.6 Dashboard & Analytics
-*   **Role-Specific Views:**
-    *   Staff: Queue Monitor, Registration.
-    *   Admin/Super Admin: User Management, Master Data Lists.
-*   **Stats:** Real-time patient counts.
+## 5. Metrics for Success
+*   **Sync Rate:** 99% of new patients successfully synced to ERPNext.
+*   **System Uptime:** 99.9% during clinic hours.
+*   **Load Capacity:** Support 10+ concurrent users with <200ms API latency.
 
-### 3.7 Integrations
-*   **ERPNext / Frappe (Two-Way Sync):**
-    *   `User` (Local) <-> `User` (Remote)
-    *   `Patient` (Local) <-> `Customer` (Remote)
-    *   `Doctor` (Local) <-> `Healthcare Practitioner` (Remote)
-    *   `Medicine` (Local) <-> `Item` (Remote)
-    *   `Queue` (Local) -> `Event` (Remote)
-*   **Satu Sehat (Ministry of Health):**
-    *   **Patient Verification:** Auto-fill data from NIK via FHIR API.
-    *   **KFA Integration:** Search and Import standard medicine data (Kamus Farmasi).
-
-### 3.8 Medicine Inventory Features
-*   **Stock Management:** Adjust stock levels locally.
-*   **Bulk Import:** Seeding or bulk-add from KFA.
-
-## 4. User Experience (UX) Requirements
-*   **Glassmorphism Design:** Modern UI with translucent/blur effects.
-*   **Responsive Layout:** Sidebar navigation adaptable to roles.
-*   **Efficiency:** Keyboard support (Enter to Submit), optimized forms.
-
-## 5. Non-Functional Requirements
-*   **Performance:** Caching for address data, DB pooling.
-*   **Reliability:** Resilient integration (failsafe if ERPDown).
-*   **Compatibility:** Windows 10/11.
-
-## 6. Success Metrics
-*   **Registration Time:** Under 2 minutes.
-*   **Queue Accuracy:** Zero duplicates.
-*   **Sync Accuracy:** 100% data match for Patients and Users between systems.
-
-## 7. Quality Assurance
-*   **Automated Testing:** Playwright suites for Login.
-*   **Regression Testing:** Regular verification of Sync flows.
-
+## 6. Roadmap
+*   **v2.1:** Core Patient & Queue (Completed).
+*   **v2.2:** ERPNext Sync (Completed).
+*   **v2.3:** SatuSehat & Concoctions (Completed).
+*   **v2.4:** E-Prescribing & Clinical Notes (Next).
