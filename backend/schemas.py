@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional, Any
 from datetime import date, datetime
 
@@ -63,6 +63,8 @@ class DoctorBase(BaseModel):
     lastName: Optional[str] = None
     gelarBelakang: Optional[str] = None
     doctorSIP: Optional[str] = None
+    identityCard: Optional[str] = None # NIK
+    ihs_practitioner_number: Optional[str] = None
     onlineFee: Optional[int] = None
     appointmentFee: Optional[int] = None
 
@@ -106,6 +108,8 @@ class PatientBase(BaseModel):
     insuranceName: Optional[str] = None
     noAssuransi: Optional[str] = None
     maritalStatusId: int
+    ihs_number: Optional[str] = None
+    frappe_id: Optional[str] = None
 
 class PatientCreate(PatientBase):
     pass
@@ -146,7 +150,7 @@ class PatientQueue(QueueBase):
 
 # Medicine Schemas
 class MedicineBase(BaseModel):
-    erpnextItemCode: str
+    erpnextItemCode: str = Field(validation_alias="erpnext_item_code")
     medicineName: str
     medicineDescription: Optional[str] = None
     medicineLabel: Optional[str] = None

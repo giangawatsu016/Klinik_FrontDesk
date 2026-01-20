@@ -69,7 +69,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             _detailRow("Phone", widget.patient.phone),
             _detailRow("Gender", widget.patient.gender),
             _detailRow("Birthday", widget.patient.birthday),
-            _detailRow("Birthday", widget.patient.birthday),
+
             _detailRow(
               "Medical Record No",
               widget.patient.nomorRekamMedis ?? '-',

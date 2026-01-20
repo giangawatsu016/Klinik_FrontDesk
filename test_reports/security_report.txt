@@ -1,2 +1,0 @@
-PASS: Swagger UI is hidden/protected.
-FAIL: /patients/ endpoint returned 404 without auth!

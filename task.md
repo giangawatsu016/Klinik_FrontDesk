@@ -22,7 +22,21 @@
 
 ## 4. Feature Enhancements
 - [x] Daily Queue Cleanup (Filter & Lazy Reset)
+- [x] Implement Medicine Concoctions (Racikan) Feature
+- [x] Integrate Kafka (KRaft Mode setup)
+- [x] Refactor Table Names (*core suffix) & Migrate Data
+- [x] Seed Patient Vitals (Height/Weight)
+- [x] Update Dependencies (flutter_tts ^4.2.5)
+- [x] Implement General Payment Sub-methods (Cash, QRIS, etc.)
+- [x] Sync Patients to SatuSehat (Sandbox)
+- [x] Sync Doctors to SatuSehat (Practitioner)
 
 ## 5. Documentation
 - [x] Update Implementation History
 - [x] Update Vulnerability Report
+
+## 6. Comprehensive Testing
+- [x] Security & Vulnerability Test (Bandit)
+- [x] Performance & Stress Test (Locust)
+- [x] Fix Identified Issues (Routes, 500 Error, Auth, Port Conflict)
+- [x] Generate Test Reports

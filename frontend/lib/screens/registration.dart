@@ -69,6 +69,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   String noAssuransi = '';
   int maritalStatusId = 1; // 1=Single, 2=Married, 3=Divorced, 4=Widowed
 
+  // Payment Sub-methods
+  String? _paymentSubMethod;
+  final TextEditingController _paymentAmountCtrl = TextEditingController();
+  final TextEditingController _paymentReceiptCtrl = TextEditingController();
+  final TextEditingController _paymentDetailsCtrl = TextEditingController();
+
   // Doctor Selection
   List<Doctor> doctors = [];
   Doctor? selectedDoctor;
@@ -411,6 +417,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       // Update Patient Payment Info (Sync logic)
       try {
+        // Capture General Payment Details
+        if (issuerId == 1 && _paymentSubMethod != null) {
+          insuranceName = "Payment: $_paymentSubMethod";
+          if (_paymentSubMethod == 'Cash') {
+            insuranceName = "$insuranceName - ${_paymentAmountCtrl.text}";
+          } else if (_paymentSubMethod == 'Debit' ||
+              _paymentSubMethod == 'CreditCard') {
+            insuranceName = "$insuranceName - Ref: ${_paymentReceiptCtrl.text}";
+          } else if (_paymentSubMethod == 'Transfer') {
+            insuranceName = "$insuranceName - ${_paymentDetailsCtrl.text}";
+          }
+          // For QRIS, just the method name is enough or confirmed status
+        }
+
         final updatedPatient = Patient(
           id: _verifiedPatient!.id,
           firstName: _verifiedPatient!.firstName,
@@ -851,12 +871,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
               ],
             ),
-            TextFormField(
-              initialValue: simpleAddress,
-              decoration: InputDecoration(labelText: 'Full Address (Simple)'),
-              onSaved: (v) => simpleAddress = v ?? '',
-              maxLines: 2,
-            ),
 
             Row(
               children: [
@@ -1166,170 +1180,264 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       key: _doctorFormKey,
       child: Column(
         children: [
-          if (_verifiedPatient != null)
-            Card(
-              color: Colors.green.shade50,
-              child: ListTile(
-                title: Text(
-                  "Patient: ${_verifiedPatient!.firstName} ${_verifiedPatient!.lastName}",
-                ),
-                subtitle: Text("ID: ${_verifiedPatient!.identityCard}"),
-                leading: Icon(Icons.check_circle, color: Colors.green),
-              ),
-            ),
-          SizedBox(height: 20),
-
-          // Toggle Type
-          Row(
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () => setState(() => _isPolyclinic = false),
-                  child: Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: !_isPolyclinic ? Colors.blue : Colors.grey[200],
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        bottomLeft: Radius.circular(8),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_verifiedPatient != null)
+                    Card(
+                      color: Colors.green.shade50,
+                      child: ListTile(
+                        title: Text(
+                          "Patient: ${_verifiedPatient!.firstName} ${_verifiedPatient!.lastName}",
+                        ),
+                        subtitle: Text("ID: ${_verifiedPatient!.identityCard}"),
+                        leading: Icon(Icons.check_circle, color: Colors.green),
                       ),
                     ),
-                    child: Center(
-                      child: Text(
-                        "Select Doctor",
-                        style: TextStyle(
-                          color: !_isPolyclinic ? Colors.white : Colors.black,
+                  SizedBox(height: 20),
+
+                  // Toggle Type
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => setState(() => _isPolyclinic = false),
+                          child: Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: !_isPolyclinic
+                                  ? Colors.blue
+                                  : Colors.grey[200],
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(8),
+                                bottomLeft: Radius.circular(8),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                "Select Doctor",
+                                style: TextStyle(
+                                  color: !_isPolyclinic
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: InkWell(
-                  onTap: () => setState(() => _isPolyclinic = true),
-                  child: Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _isPolyclinic ? Colors.blue : Colors.grey[200],
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(8),
-                        bottomRight: Radius.circular(8),
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "Go to Polyclinic",
-                        style: TextStyle(
-                          color: _isPolyclinic ? Colors.white : Colors.black,
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => setState(() => _isPolyclinic = true),
+                          child: Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _isPolyclinic
+                                  ? Colors.blue
+                                  : Colors.grey[200],
+                              borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(8),
+                                bottomRight: Radius.circular(8),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                "Go to Polyclinic",
+                                style: TextStyle(
+                                  color: _isPolyclinic
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20),
+                  SizedBox(height: 20),
 
-          if (!_isPolyclinic)
-            DropdownButtonFormField<Doctor>(
-              decoration: InputDecoration(
-                labelText: 'Select Doctor',
-                border: OutlineInputBorder(),
-              ),
-              // ignore: deprecated_member_use
-              value: selectedDoctor,
-              items: doctors
-                  .map(
-                    (d) => DropdownMenuItem(
-                      value: d,
-                      child: Text(
-                        "${d.gelarDepan} ${d.namaDokter} (${d.polyName})",
+                  if (!_isPolyclinic)
+                    DropdownButtonFormField<Doctor>(
+                      decoration: InputDecoration(
+                        labelText: 'Select Doctor',
+                        border: OutlineInputBorder(),
+                      ),
+                      // ignore: deprecated_member_use
+                      value: selectedDoctor,
+                      items: doctors
+                          .map(
+                            (d) => DropdownMenuItem(
+                              value: d,
+                              child: Text(
+                                "${d.gelarDepan} ${d.namaDokter} (${d.polyName})",
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() => selectedDoctor = v),
+                      validator: (v) =>
+                          v == null ? 'Please select a Doctor' : null,
+                    )
+                  else
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        labelText: 'Select Polyclinic',
+                        border: OutlineInputBorder(),
+                      ),
+                      // ignore: deprecated_member_use
+                      value: _selectedPolyclinic,
+                      items: polyclinics
+                          .map(
+                            (p) => DropdownMenuItem(value: p, child: Text(p)),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() => _selectedPolyclinic = v),
+                      validator: (v) =>
+                          v == null ? 'Please select a Polyclinic' : null,
+                    ),
+
+                  SizedBox(height: 20),
+                  _buildSectionTitle("Pembayaran"),
+                  DropdownButtonFormField<int>(
+                    // ignore: deprecated_member_use
+                    value: issuerId,
+                    decoration: InputDecoration(labelText: 'Metode Pembayaran'),
+                    items: issuers.entries
+                        .map(
+                          (e) => DropdownMenuItem(
+                            value: e.key,
+                            child: Text(e.value),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) {
+                      setState(() {
+                        issuerId = v!;
+                        insuranceName = null;
+                      });
+                    },
+                    onSaved: (v) => issuerId = v!,
+                  ),
+                  if (issuerId == 1) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: DropdownButtonFormField<String>(
+                        key: ValueKey("pay_$_paymentSubMethod"),
+                        initialValue: _paymentSubMethod,
+                        decoration: InputDecoration(
+                          labelText: 'Payment Method',
+                        ),
+                        items:
+                            ['Cash', 'QRIS', 'Debit', 'Transfer', 'CreditCard']
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(e),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (v) => setState(() {
+                          _paymentSubMethod = v;
+                          // Clear fields on change
+                          _paymentAmountCtrl.clear();
+                          _paymentReceiptCtrl.clear();
+                          _paymentDetailsCtrl.clear();
+                        }),
+                        validator: (v) =>
+                            v == null ? 'Select Payment Method' : null,
                       ),
                     ),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => selectedDoctor = v),
-              validator: (v) => v == null ? 'Please select a Doctor' : null,
-            )
-          else
-            DropdownButtonFormField<String>(
-              decoration: InputDecoration(
-                labelText: 'Select Polyclinic',
-                border: OutlineInputBorder(),
-              ),
-              // ignore: deprecated_member_use
-              value: _selectedPolyclinic,
-              items: polyclinics
-                  .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                  .toList(),
-              onChanged: (v) => setState(() => _selectedPolyclinic = v),
-              validator: (v) => v == null ? 'Please select a Polyclinic' : null,
-            ),
+                    if (_paymentSubMethod == 'Cash')
+                      TextFormField(
+                        controller: _paymentAmountCtrl,
+                        decoration: InputDecoration(labelText: 'Enter Amount'),
+                        keyboardType: TextInputType.number,
+                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      ),
+                    if (_paymentSubMethod == 'QRIS')
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.qr_code, color: Colors.blue),
+                        title: Text("Scan & Verify"),
+                        subtitle: Text("Ensure payment success on device"),
+                      ),
+                    if (_paymentSubMethod == 'Debit' ||
+                        _paymentSubMethod == 'CreditCard')
+                      TextFormField(
+                        controller: _paymentReceiptCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'Enter Receipt / Ref #',
+                        ),
+                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      ),
+                    if (_paymentSubMethod == 'Transfer')
+                      TextFormField(
+                        controller: _paymentDetailsCtrl,
+                        decoration: InputDecoration(labelText: 'Enter Details'),
+                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      ),
+                  ],
+                  if (issuerId == 2) // BPJS
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: DropdownButtonFormField<String>(
+                        initialValue: insuranceName,
+                        decoration: InputDecoration(labelText: 'BPJS Type'),
+                        items: ['BPJS Kesehatan', 'BPJS Ketenagakerjaan']
+                            .map(
+                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() => insuranceName = v),
+                        onSaved: (v) => insuranceName = v,
+                        validator: (v) =>
+                            v == null ? 'Please select BPJS Type' : null,
+                      ),
+                    ),
+                  if (issuerId == 3) // Insurance
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: DropdownButtonFormField<String>(
+                        initialValue: insuranceName,
+                        decoration: InputDecoration(
+                          labelText: 'Insurance Provider',
+                        ),
+                        items: ['Allianz', 'Prudential', 'Manulife']
+                            .map(
+                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() => insuranceName = v),
+                        onSaved: (v) => insuranceName = v,
+                        validator: (v) =>
+                            v == null ? 'Please select Provider' : null,
+                      ),
+                    ),
+                  if (issuerId != 1)
+                    TextFormField(
+                      initialValue: noAssuransi,
+                      decoration: InputDecoration(
+                        labelText: 'Insurance Number',
+                      ),
+                      onChanged: (v) => noAssuransi = v,
+                      onSaved: (v) => noAssuransi = v!,
+                      validator: (v) =>
+                          v!.isEmpty ? 'Required for Insurance' : null,
+                    ),
 
-          SizedBox(height: 20),
-          _buildSectionTitle("Pembayaran"),
-          DropdownButtonFormField<int>(
-            // ignore: deprecated_member_use
-            value: issuerId,
-            decoration: InputDecoration(labelText: 'Metode Pembayaran'),
-            items: issuers.entries
-                .map(
-                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                )
-                .toList(),
-            onChanged: (v) {
-              setState(() {
-                issuerId = v!;
-                insuranceName = null;
-              });
-            },
-            onSaved: (v) => issuerId = v!,
-          ),
-          if (issuerId == 2) // BPJS
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: DropdownButtonFormField<String>(
-                initialValue: insuranceName,
-                decoration: InputDecoration(labelText: 'BPJS Type'),
-                items: ['BPJS Kesehatan', 'BPJS Ketenagakerjaan']
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (v) => setState(() => insuranceName = v),
-                onSaved: (v) => insuranceName = v,
-                validator: (v) => v == null ? 'Please select BPJS Type' : null,
+                  CheckboxListTile(
+                    title: Text("Priority Patient"),
+                    value: isPriority,
+                    onChanged: (v) => setState(() => isPriority = v!),
+                  ),
+                ],
               ),
             ),
-          if (issuerId == 3) // Insurance
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: DropdownButtonFormField<String>(
-                initialValue: insuranceName,
-                decoration: InputDecoration(labelText: 'Insurance Provider'),
-                items: ['Allianz', 'Prudential', 'Manulife']
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (v) => setState(() => insuranceName = v),
-                onSaved: (v) => insuranceName = v,
-                validator: (v) => v == null ? 'Please select Provider' : null,
-              ),
-            ),
-          if (issuerId != 1)
-            TextFormField(
-              initialValue: noAssuransi,
-              decoration: InputDecoration(labelText: 'Insurance Number'),
-              onChanged: (v) => noAssuransi = v,
-              onSaved: (v) => noAssuransi = v!,
-              validator: (v) => v!.isEmpty ? 'Required for Insurance' : null,
-            ),
-
-          CheckboxListTile(
-            title: Text("Priority Patient"),
-            value: isPriority,
-            onChanged: (v) => setState(() => isPriority = v!),
           ),
-          Spacer(),
+          SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

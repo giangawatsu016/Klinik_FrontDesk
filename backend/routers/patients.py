@@ -10,7 +10,7 @@ router = APIRouter(
     tags=["patients"]
 )
 
-@router.post("/", response_model=schemas.Patient)
+@router.post("", response_model=schemas.Patient)
 def create_patient(patient: schemas.PatientCreate, background_tasks: BackgroundTasks, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
     # Check if existing by ID Card
     if db.query(models.Patient).filter(models.Patient.identityCard == patient.identityCard).first():
@@ -82,8 +82,8 @@ def update_patient(patient_id: int, patient_update: schemas.PatientCreate, db: S
             
     return db_patient
 
-@router.get("/", response_model=List[schemas.Patient])
-def get_patients(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
+@router.get("", response_model=List[schemas.Patient])
+def get_patients(skip: int = 0, limit: int = 100, search: str = None, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
     return db.query(models.Patient).order_by(models.Patient.firstName.asc()).offset(skip).limit(limit).all()
 
 @router.get("/search", response_model=List[schemas.Patient])

@@ -56,6 +56,144 @@ class SatuSehatClient:
             print(f"SatuSehat Connection Error: {e}")
             return None
 
+    def post_patient(self, patient_data: dict):
+        """
+        Sync patient to SatuSehat.
+        Currently implements "Link by NIK" strategy.
+        Returns IHS Number if found/linked.
+        """
+        nik = patient_data.get("identityCard")
+        if not nik:
+            print("No NIK provided for SatuSehat sync")
+            return None
+            
+        # Try to find by NIK
+        result = self.search_patient_by_nik(nik)
+        if result and result.get("ihs_number"):
+            return result.get("ihs_number")
+
+        # Try to find by Demographics (Name, Birthdate, Gender) if NIK lookup fails
+        # This handles cases where NIK might be different or not indexed, but patient exists
+        print(f"NIK {nik} not found. Searching by Demographics...")
+        demo_result = self.search_patient_by_demographics(
+            patient_data.get("firstName", "") + " " + patient_data.get("lastName", ""),
+            patient_data.get("birthday", "2000-01-01"),
+            patient_data.get("gender", "unknown")
+        )
+        if demo_result and demo_result.get("ihs_number"):
+            print(f"Found existing patient by demographics. IHS: {demo_result.get('ihs_number')}")
+            return demo_result.get("ihs_number")
+            
+        print(f"Patient not found. Attempting to create new Patient in SatuSehat...")
+        return self._create_new_patient_on_satusehat(patient_data)
+
+    def search_patient_by_demographics(self, name: str, birthdate: str, gender: str):
+        """
+        Search by Name, Birthdate, and Gender
+        GET /Patient?name={name}&birthdate={date}&gender={gender}
+        """
+        token = self.get_access_token()
+        if not token: return None
+
+        url = f"{self.base_url}/Patient"
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Ensure gender is lowercase for FHIR
+        gender = gender.lower()
+        if gender not in ['male', 'female', 'other', 'unknown']:
+             gender = 'unknown'
+
+        params = {
+            "name": name,
+            "birthdate": birthdate,
+            "gender": gender
+        }
+
+        try:
+            print(f"Searching SatuSehat by Demographics: {params}")
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            if response.status_code == 200:
+                bundle = response.json()
+                if bundle.get("total", 0) > 0 and bundle.get("entry"):
+                    entry = bundle["entry"][0]["resource"]
+                    return self._parse_patient_resource(entry)
+            return None
+        except Exception as e:
+            print(f"SatuSehat Demographic Search Error: {e}")
+            return None
+
+    def _create_new_patient_on_satusehat(self, patient_data: dict):
+        token = self.get_access_token()
+        if not token: return None
+        
+        url = f"{self.base_url}/Patient"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Map Gender
+        gender = patient_data.get("gender", "unknown").lower()
+        if gender not in ["male", "female", "other", "unknown"]:
+            gender = "unknown"
+            
+        payload = {
+            "resourceType": "Patient",
+            "active": True,
+            "identifier": [
+                {
+                    "use": "official",
+                    "system": "https://fhir.kemkes.go.id/id/nik",
+                    "value": patient_data.get("identityCard")
+                }
+            ],
+            "name": [
+                {
+                    "use": "official",
+                    "text": patient_data.get("firstName", "") + " " + patient_data.get("lastName", "") 
+                }
+            ],
+            "gender": gender,
+            "birthDate": patient_data.get("birthday", "2000-01-01"),
+            "multipleBirthBoolean": False,
+            "address": [
+                {
+                    "use": "home",
+                    "line": [patient_data.get("address", "Jl. Sandbox Trial No. 1")],
+                    "city": patient_data.get("city", "Jakarta"),
+                    "postalCode": patient_data.get("postalCode", "10110"),
+                    "country": "ID",
+                    "extension": [
+                        {
+                            "url": "https://fhir.kemkes.go.id/r4/StructureDefinition/administrativeCode",
+                            "extension": [
+                                {"url": "province", "valueCode": "31"},
+                                {"url": "city", "valueCode": "3171"},
+                                {"url": "district", "valueCode": "317101"},
+                                {"url": "village", "valueCode": "3171011001"},
+                                {"url": "rt", "valueCode": "001"},
+                                {"url": "rw", "valueCode": "002"}
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=15)
+            if response.status_code in [200, 201]:
+                data = response.json()
+                ihs = data.get("id")
+                print(f"Successfully Created Patient. IHS: {ihs}")
+                return ihs
+            else:
+                print(f"Failed to create patient ({response.status_code}): {response.text}")
+                return None
+        except Exception as e:
+            print(f"Create Patient Request Error: {e}")
+            return None
+
     def search_patient_by_nik(self, nik: str):
         """
         Search patient by NIK using FHIR Endpoint.
@@ -289,5 +427,104 @@ class SatuSehatClient:
             if codings:
                 return codings[0].get("display", "")
         return ""
+
+    def search_practitioner_by_nik(self, nik: str):
+        """
+        Search practitioner by NIK using FHIR Endpoint.
+        GET /Practitioner?identifier=https://fhir.kemkes.go.id/id/nik|[NIK]
+        """
+        token = self.get_access_token()
+        if not token:
+            raise Exception("Failed to get Access Token")
+
+        url = f"{self.base_url}/Practitioner"
+        headers = {
+            "Authorization": f"Bearer {token}"
+        }
+        params = {
+            "identifier": f"https://fhir.kemkes.go.id/id/nik|{nik}"
+        }
+
+        try:
+            print(f"Searching SatuSehat Practitioner for NIK: {nik}")
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            if response.status_code == 200:
+                bundle = response.json()
+                if bundle.get("total", 0) > 0 and bundle.get("entry"):
+                    entry = bundle["entry"][0]["resource"]
+                    return {
+                        "ihs_number": entry.get("id"),
+                        "name": entry.get("name", [{}])[0].get("text", "Unknown"),
+                        "active": entry.get("active", False)
+                    }
+                else:
+                    print("No practitioner found with that NIK")
+                    return None
+            else:
+                print(f"SatuSehat Practitioner Search Error ({response.status_code}): {response.text}")
+                return None
+        except Exception as e:
+            print(f"SatuSehat Request Error: {e}")
+            return None
+
+    def create_practitioner_on_satusehat(self, doctor_data: dict):
+        """
+        Create a new Practitioner in SatuSehat
+        POST /Practitioner
+        """
+        token = self.get_access_token()
+        if not token: return None
+        
+        url = f"{self.base_url}/Practitioner"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        
+        name_text = doctor_data.get("namaDokter", "Unknown")
+        
+        # Simple Gender Guessing for Dummy Data (Optional, default unknown)
+        gender = "unknown"
+        if "siti" in name_text.lower() or "dewi" in name_text.lower() or "putri" in name_text.lower():
+            gender = "female"
+        elif "budi" in name_text.lower() or "andi" in name_text.lower() or "joko" in name_text.lower():
+            gender = "male"
+
+        payload = {
+            "resourceType": "Practitioner",
+            "active": True,
+            "identifier": [
+                {
+                    "use": "official",
+                    "system": "https://fhir.kemkes.go.id/id/nik",
+                    "value": doctor_data.get("identityCard")
+                }
+            ],
+            "name": [
+                {
+                    "use": "official",
+                    "text": name_text,
+                    "family": doctor_data.get("lastName", ""),
+                    "given": [doctor_data.get("firstName", "")]
+                }
+            ],
+            "gender": gender,
+            "birthDate": "1990-01-01" # Dummy birthdate mandated
+        }
+        
+        try:
+            print(f"Creating Practitioner: {name_text}...")
+            response = requests.post(url, headers=headers, json=payload, timeout=15)
+            if response.status_code in [200, 201]:
+                data = response.json()
+                ihs = data.get("id")
+                print(f"Successfully Created Practitioner. IHS: {ihs}")
+                return ihs
+            else:
+                print(f"Failed to create practitioner ({response.status_code}): {response.text}")
+                return None
+        except Exception as e:
+            print(f"Create Practitioner Request Error: {e}")
+            return None
 
 satu_sehat_client = SatuSehatClient()

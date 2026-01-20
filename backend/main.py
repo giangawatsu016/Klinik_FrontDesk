@@ -38,6 +38,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(patients.router)
+app.include_router(queue.router)
 app.include_router(master_data.router)
 app.include_router(medicines.router)
 app.include_router(users.router)

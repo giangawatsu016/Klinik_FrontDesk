@@ -4,10 +4,24 @@ import os
 # Add the parent directory to sys.path to resolve 'backend' modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy.orm import Session
-from database import SessionLocal, engine
-from models import User, Base
-from auth_utils import get_password_hash
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+from backend.models import User, Base
+from backend.auth_utils import get_password_hash
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Database setup
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASS = os.getenv("DB_PASSWORD", "")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_NAME = os.getenv("DB_NAME", "klinik_admin")
+
+DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def create_users():
     db = SessionLocal()

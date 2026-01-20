@@ -28,7 +28,7 @@ class Issuer(Base):
     nama = Column(JSON) # Storing sub-issuers as JSON array as implied by nama[]
 
 class DoctorEntity(Base):
-    __tablename__ = "doctorentity"
+    __tablename__ = "doctorcore"
     
     medicalFacilityPolyDoctorId = Column(Integer, primary_key=True, index=True)
     gelarDepan = Column(String(20))
@@ -39,6 +39,8 @@ class DoctorEntity(Base):
     lastName = Column(String(50), nullable=True)
     gelarBelakang = Column(String(20), nullable=True)
     doctorSIP = Column(String(50), nullable=True)
+    identityCard = Column(String(20), unique=True, index=True) # NIK for SatuSehat
+    ihs_practitioner_number = Column(String(100), nullable=True) # SatuSehat ID
     onlineFee = Column(Integer, nullable=True)
     appointmentFee = Column(Integer, nullable=True)
 
@@ -46,7 +48,7 @@ class DoctorEntity(Base):
     is_available = Column(Boolean, default=True)
 
 class Patient(Base):
-    __tablename__ = "patient"
+    __tablename__ = "patientcore"
     
     id = Column(Integer, primary_key=True, index=True)
     firstName = Column(String(100))
@@ -95,13 +97,13 @@ class PatientQueue(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     numberQueue = Column(String(20))
-    userId = Column(Integer, ForeignKey("patient.id")) # Refers to patient
+    userId = Column(Integer, ForeignKey("patientcore.id")) # Refers to patient
     appointmentTime = Column(DateTime, default=datetime.utcnow)
     status = Column(String(20), default="Waiting") # Waiting, In Consultation, Completed
     isPriority = Column(Boolean, default=False)
     isChecked = Column(Boolean, default=False)
     
-    medicalFacilityPolyDoctorId = Column(Integer, ForeignKey("doctorentity.medicalFacilityPolyDoctorId"), nullable=True)
+    medicalFacilityPolyDoctorId = Column(Integer, ForeignKey("doctorcore.medicalFacilityPolyDoctorId"), nullable=True)
     queueType = Column(String(20), default="Doctor") # Doctor or Polyclinic
     polyclinic = Column(String(50), nullable=True) # e.g. General, Dental
     
@@ -109,7 +111,7 @@ class PatientQueue(Base):
     doctor = relationship("DoctorEntity")
 
 class Medicine(Base):
-    __tablename__ = "medicines"
+    __tablename__ = "medicinecore"
     
     id = Column(Integer, primary_key=True, index=True)
     erpnext_item_code = Column(String(100), unique=True, index=True)
@@ -139,8 +141,8 @@ class MedicineConcoction(Base):
     __tablename__ = "medicine_concoctions"
     
     id = Column(Integer, primary_key=True, index=True)
-    parent_medicine_id = Column(Integer, ForeignKey("medicines.id")) # The Racikan
-    child_medicine_id = Column(Integer, ForeignKey("medicines.id")) # The Ingredient
+    parent_medicine_id = Column(Integer, ForeignKey("medicinecore.id")) # The Racikan
+    child_medicine_id = Column(Integer, ForeignKey("medicinecore.id")) # The Ingredient
     qty_needed = Column(Float, default=1.0)
     
     parent_medicine = relationship("Medicine", foreign_keys=[parent_medicine_id], back_populates="ingredients")

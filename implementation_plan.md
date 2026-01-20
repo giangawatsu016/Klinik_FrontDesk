@@ -1,34 +1,32 @@
-# Implementation Plan - Satu Sehat Integration
+# Implementation Plan - General Payment Methods
+# Implementation- [x] Implement General Payment Sub-methods (Cash, QRIS, etc.)
+- [x] Sync Patients to SatuSehat (Sandbox)
+  - Implemented `post_patient` in `satu_sehat_service.py` with fallback creation.
+  - created `backend/sync_patients_to_satusehat.py` script.
+- [x] Sync Doctors to SatuSehat (Practitioner)
+  - Added `identityCard` (NIK) to `DoctorEntity` and updated DB.
+  - Implemented `search_practitioner_by_nik` in `satu_sehat_service.py`.
+  - Created `backend/sync_doctors_to_satusehat.py`.
 
 ## Goal
-Integrate Klinik Admin with **Satu Sehat Platform (SSP)** using the provided Development Credentials. The system will sync new patients to SSP via FHIR API.
-
-## User Review Required
-- **Credentials**: Confirm if the provided Client ID/Secret are for the **Development** or **Production** environment. (Assuming Development based on context).
+Enhance the "Assign Doctor" flow to support specific payment sub-methods for "General" (Umum) patients.
 
 ## Proposed Changes
 
-### Configuration
-#### [MODIFY] [.env]
-- Add `SATUSEHAT_AUTH_URL`, `SATUSEHAT_BASE_URL`, `SATUSEHAT_CLIENT_ID`, `SATUSEHAT_CLIENT_SECRET`, `SATUSEHAT_ORG_ID`.
-
-### Backend
-#### [NEW] [backend/services/satu_sehat_service.py](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/backend/services/satu_sehat_service.py)
-- **Class `SatuSehatClient`**:
-    - `get_token()`: Handles OAuth2 Client Credentials flow. Caches token until expiry.
-    - `create_patient_fhir(patient_data)`: Maps local patient data to FHIR `Patient` resource JSON.
-    - `post_patient()`: Sends POST request to `/Patient` endpoint.
-
-#### [MODIFY] [backend/routers/patients.py](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/backend/routers/patients.py)
-- In `create_patient`:
-    - Call `SatuSehatClient.post_patient()` after local creation (or alongside Frappe sync).
-    - Save the returned `id` (IHS Number) to a new column `ihs_number` in `Patient` table.
-
-#### [MODIFY] [backend/models.py](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/backend/models.py)
-- Add `ihs_number = Column(String(100), nullable=True)` to `Patient` model.
+### Frontend
+#### [MODIFY] [frontend/lib/screens/registration.dart](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/frontend/lib/screens/registration.dart)
+- **State**: Add `_paymentSubMethod` (String?) and related controllers (e.g., `_paymentAmount`, `_paymentReceipt`).
+- **UI Logic**:
+    - When `issuerId == 1` (General), display a Dropdown for: Cash, QRIS, Debit, Transfer, CreditCard.
+    - **Cash**: Show "Enter Amount" field.
+    - **QRIS**: Show "Scan & Verify" (Instruction/Button).
+    - **Debit/CreditCard**: Show "Enter Receipt / Transaction ID" field.
+    - **Transfer**: Show "Enter Details" field.
+- **Data Handling**:
+    - Store the selected sub-method and details in `insuranceName` (as "Method - Detail") or a separate field if available. For now, we will concatenate into `insuranceName` or `noAssuransi` to persist it without backend schema changes, or just validate for UI demo purposes if backend storage isn't specified.
+    - *Decision*: Save `PaymentMethod: Details` into `insuranceName` field of `Patient` (or Queue) to avoid immediate backend refactor, as `insuranceName` is unused for General patients.
 
 ## Verification Plan
-### Automated Tests
-- Create a script `test_satu_sehat.py` to:
-    1. Authenticate and print Access Token.
-    2. Create a dummy patient and print the returned IHS Number.
+- Manual verification via "Assign Doctor" screen.
+- Select "Umum" -> Verify Dropdown appears.
+- Select "Cash" -> Verify Amount field appears.

@@ -73,7 +73,9 @@ def get_diagnostic_reports(
                     # Update DB
                     patient.ihs_number = ihs_number
                     db.commit()
-            except:
+            except Exception as e:
+                print(f"Error fetching/linking IHS for patient {patient.identityCard}: {e}")
+                # Continue without linking
                 pass
     
     if not ihs_number:

@@ -8,11 +8,11 @@ router = APIRouter(
     tags=["doctors"]
 )
 
-@router.get("/", response_model=List[schemas.Doctor])
+@router.get("", response_model=List[schemas.Doctor])
 def get_doctors(db: Session = Depends(database.get_db)):
     return db.query(models.DoctorEntity).order_by(models.DoctorEntity.namaDokter.asc()).all()
 
-@router.post("/", response_model=schemas.Doctor)
+@router.post("", response_model=schemas.Doctor)
 def create_doctor(doctor: schemas.DoctorBase, db: Session = Depends(database.get_db)):
     new_doctor = models.DoctorEntity(**doctor.dict())
     db.add(new_doctor)
@@ -49,6 +49,8 @@ def update_doctor(doctor_id: int, doctor_update: schemas.DoctorBase, db: Session
     db_doctor.lastName = doctor_update.lastName
     db_doctor.gelarBelakang = doctor_update.gelarBelakang
     db_doctor.doctorSIP = doctor_update.doctorSIP
+    db_doctor.identityCard = doctor_update.identityCard # NIK
+    db_doctor.ihs_practitioner_number = doctor_update.ihs_practitioner_number
     db_doctor.onlineFee = doctor_update.onlineFee
     db_doctor.appointmentFee = doctor_update.appointmentFee
     

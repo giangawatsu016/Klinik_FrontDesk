@@ -6,11 +6,11 @@ from .. import models, schemas, database, dependencies
 from ..services.frappe_service import frappe_client
 
 router = APIRouter(
-    prefix="/patients/queue",
+    prefix="/queue",
     tags=["queues"]
 )
 
-@router.post("/", response_model=schemas.PatientQueue)
+@router.post("", response_model=schemas.PatientQueue)
 def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTasks, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
     today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     
@@ -18,8 +18,7 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
     if queue_data.queueType == "Polyclinic":
         prefix = "PP" if queue_data.isPriority else "P"
     else:
-        # Default to Doctor
-        prefix = "DP" if queue_data.isPriority else "D"
+        prefix = "AP" if queue_data.isPriority else "A"
 
     # Lazy Cleanup: Auto-complete old active queues (yesterday or older)
     old_queues = db.query(models.PatientQueue).filter(
@@ -44,14 +43,27 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
     if existing_queue:
         raise HTTPException(status_code=400, detail="Patient already has an active queue for today")
 
-    # Count for today with this specific prefix
-    count = db.query(models.PatientQueue).filter(
-        models.PatientQueue.numberQueue.like(f"{prefix}-%"),
-        models.PatientQueue.appointmentTime >= today_start
-    ).count()
+    # Get last number
+    last_queue = db.query(models.PatientQueue).filter(
+        models.PatientQueue.appointmentTime >= today_start,
+        models.PatientQueue.numberQueue.like(f"{prefix}%")
+    ).order_by(models.PatientQueue.id.desc()).first()
     
-    # Format: PREFIX-XXX (3 digits)
-    next_number = f"{prefix}-{count + 1:03d}"
+    if last_queue:
+        # Assuming numberQueue is like "P001", "PP002", "A003", "AP004"
+        # Extract the numeric part after the prefix
+        try:
+            last_num_str = last_queue.numberQueue[len(prefix):]
+            last_num = int(last_num_str)
+            new_num = last_num + 1
+        except (ValueError, IndexError):
+            # Fallback if parsing fails, e.g., if numberQueue format is unexpected
+            new_num = 1
+            # Optionally, log this error
+    else:
+        new_num = 1
+        
+    queue_number = f"{prefix}{new_num:03d}"
 
     new_queue = models.PatientQueue(
         numberQueue=next_number, 
@@ -77,16 +89,15 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
 
     return new_queue
 
-@router.get("/", response_model=List[schemas.PatientQueue])
-def get_queue(status: str = None, db: Session = Depends(database.get_db)):
+@router.get("", response_model=List[schemas.PatientQueue])
+def get_queue(db: Session = Depends(database.get_db)):
     today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-    query = db.query(models.PatientQueue).filter(models.PatientQueue.appointmentTime >= today_start)
+    return db.query(models.PatientQueue).filter(models.PatientQueue.appointmentTime >= today_start).all()
     if status:
         query = query.filter(models.PatientQueue.status == status)
     
     all_items = query.all()
     
-    # Sort by Priority then Time
     # Priority (True) comes first, then earlier appointmentTime
     all_items.sort(key=lambda x: (not x.isPriority, x.appointmentTime))
     
