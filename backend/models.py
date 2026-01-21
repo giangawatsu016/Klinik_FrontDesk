@@ -135,6 +135,7 @@ class Medicine(Base):
     qty = Column(Integer, default=0) # Was stock
     
     unit = Column(String(50)) # stock_uom
+    dosageForm = Column(String(50), nullable=True) # Cream, Capsule, etc.
     
     # Consumption
     howToConsume = Column(String(200), nullable=True)

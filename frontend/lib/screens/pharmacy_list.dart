@@ -73,6 +73,8 @@ class _PharmacyListScreenState extends State<PharmacyListScreen> {
     final unitController = TextEditingController(
       text: medicine?.unit ?? 'Unit',
     );
+    String? selectedDosageForm = medicine?.dosageForm; // NEW local state
+
     final priceController = TextEditingController(
       text: medicine?.medicineRetailPrice.toString() ?? '0',
     );
@@ -121,6 +123,32 @@ class _PharmacyListScreenState extends State<PharmacyListScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedDosageForm,
+                  decoration: const InputDecoration(labelText: 'Dosage Form'),
+                  items:
+                      [
+                            "Tablet",
+                            "Capsule",
+                            "Syrup",
+                            "Injection",
+                            "Cream",
+                            "Ointment",
+                            "Drops",
+                            "Suppository",
+                            "Inhaler",
+                            "Patch",
+                            "Other",
+                          ]
+                          .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(e)),
+                          )
+                          .toList(),
+                  onChanged: (v) {
+                    selectedDosageForm = v;
+                  },
+                ),
                 TextFormField(
                   controller: priceController,
                   decoration: const InputDecoration(
@@ -156,6 +184,7 @@ class _PharmacyListScreenState extends State<PharmacyListScreen> {
                   unit: unitController.text.isNotEmpty
                       ? unitController.text
                       : "Unit",
+                  dosageForm: selectedDosageForm, // SAVE HERE
                   medicineRetailPrice: int.tryParse(priceController.text) ?? 0,
                   medicinePrice:
                       medicine?.medicinePrice ?? 0, // Preserve Buy Price
@@ -241,7 +270,7 @@ class _PharmacyListScreenState extends State<PharmacyListScreen> {
                           ),
                           title: Text(medicine.medicineName),
                           subtitle: Text(
-                            "Qty: ${medicine.qty} ${medicine.unit} | Rp ${medicine.medicineRetailPrice}",
+                            "${medicine.dosageForm ?? 'Unknown'} | Qty: ${medicine.qty} ${medicine.unit} | Rp ${medicine.medicineRetailPrice}",
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,

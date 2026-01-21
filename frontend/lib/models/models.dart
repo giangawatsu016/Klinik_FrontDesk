@@ -299,6 +299,7 @@ class Medicine {
   final int medicineRetailPrice;
   final int qty;
   final String unit;
+  final String? dosageForm; // New
   final String? howToConsume;
   final String? notes; // Signa Text
   final int? signa1;
@@ -314,6 +315,7 @@ class Medicine {
     this.medicineRetailPrice = 0,
     required this.qty,
     required this.unit,
+    this.dosageForm,
     this.howToConsume,
     this.notes,
     this.signa1,
@@ -332,6 +334,7 @@ class Medicine {
       medicineRetailPrice: json['medicineRetailPrice'] ?? 0,
       qty: json['qty'] ?? 0,
       unit: json['unit'] ?? 'Unit',
+      dosageForm: json['dosageForm'],
       howToConsume: json['howToConsume'],
       notes: json['notes'],
       signa1: json['signa1'],
@@ -352,6 +355,7 @@ class Medicine {
       'medicineRetailPrice': medicineRetailPrice,
       'qty': qty,
       'unit': unit,
+      'dosageForm': dosageForm,
       'howToConsume': howToConsume,
       'notes': notes,
       'signa1': signa1,

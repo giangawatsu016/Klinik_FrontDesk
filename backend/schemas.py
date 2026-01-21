@@ -158,6 +158,7 @@ class MedicineBase(BaseModel):
     medicineRetailPrice: Optional[int] = 0
     qty: int = 0
     unit: Optional[str] = None
+    dosageForm: Optional[str] = None
     howToConsume: Optional[str] = None
     notes: Optional[str] = None # Signa Text
     signa1: Optional[int] = None
