@@ -32,11 +32,10 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading diseases: $e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading diseases: $e')));
     }
   }
 
@@ -101,16 +100,14 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
                       newDisease,
                     );
                   }
-                  if (mounted) {
-                    Navigator.pop(context);
-                    _loadDiseases();
-                  }
+                  if (!mounted) return;
+                  Navigator.pop(context);
+                  _loadDiseases();
                 } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                  }
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
                 }
               }
             },
@@ -196,10 +193,9 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
                                           onPressed: () async {
                                             await widget.apiService
                                                 .deleteDisease(disease.id!);
-                                            if (mounted) {
-                                              Navigator.pop(ctx);
-                                              _loadDiseases();
-                                            }
+                                            if (!mounted) return;
+                                            Navigator.pop(ctx);
+                                            _loadDiseases();
                                           },
                                           child: const Text(
                                             "Delete",
