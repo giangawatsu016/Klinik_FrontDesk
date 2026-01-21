@@ -125,7 +125,7 @@ class _PharmacyListScreenState extends State<PharmacyListScreen> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: selectedDosageForm,
+                  initialValue: selectedDosageForm,
                   decoration: const InputDecoration(labelText: 'Dosage Form'),
                   items:
                       [
