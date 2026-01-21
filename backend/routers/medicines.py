@@ -110,6 +110,16 @@ def update_medicine(medicine_id: int, medicine_update: schemas.MedicineCreate, d
     db.refresh(db_med)
     return db_med
 
+@router.delete("/{medicine_id}")
+def delete_medicine(medicine_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
+    db_med = db.query(models.Medicine).filter(models.Medicine.id == medicine_id).first()
+    if not db_med:
+        raise HTTPException(status_code=404, detail="Medicine not found")
+    
+    db.delete(db_med)
+    db.commit()
+    return {"message": "Medicine deleted successfully"}
+
 @router.post("/concoctions", response_model=schemas.Medicine)
 def create_concoction(concoction: schemas.ConcoctionCreate, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
     # 1. Calculate Price & Verify Items

@@ -303,6 +303,16 @@ class ApiService {
     return null;
   }
 
+  Future<void> deleteMedicine(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/medicines/$id'),
+      headers: _headers,
+    );
+    if (response.statusCode != 200) {
+      throw Exception("Failed to delete medicine");
+    }
+  }
+
   Future<Medicine?> createConcoction(ConcoctionRequest concoction) async {
     final response = await http.post(
       Uri.parse('$baseUrl/medicines/concoctions'),

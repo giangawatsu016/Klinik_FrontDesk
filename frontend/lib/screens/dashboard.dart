@@ -6,10 +6,10 @@ import 'queue_monitor.dart';
 import 'login.dart';
 import 'doctor_list.dart';
 import 'patient_list.dart';
-import 'medicine_inventory.dart';
 import 'user_management.dart';
 import 'diagnostic_reports.dart';
 import 'disease_list.dart';
+import 'pharmacy_list.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -61,11 +61,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "label": "Patients",
       },
       {
-        "id": "medicines",
-        "page": MedicineInventoryScreen(apiService: widget.apiService),
-        "icon": Icons.medication_outlined,
-        "selectedIcon": Icons.medication,
-        "label": "Medicines",
+        "id": "pharmacy",
+        "page": PharmacyListScreen(apiService: widget.apiService),
+        "icon": Icons.local_pharmacy_outlined,
+        "selectedIcon": Icons.local_pharmacy,
+        "label": "Pharmacy",
       },
       {
         "id": "users",
