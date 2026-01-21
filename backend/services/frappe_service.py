@@ -34,7 +34,25 @@ class FrappeClient:
             return None
 
     def create_patient(self, clinic_patient: dict):
-        # Sync to 'Patient' (Healthcare Module)
+        # 1. Check if patient already exists by Mobile Number (Unique Key)
+        phone = clinic_patient.get("phone")
+        if phone:
+            existing_params = {
+                "filters": json.dumps({"mobile": phone}),
+                "fields": '["name"]'
+            }
+            try:
+                check_url = f"{self.base_url}/api/resource/Patient"
+                check_resp = requests.get(check_url, headers=self.headers, params=existing_params, timeout=5)
+                if check_resp.status_code == 200:
+                    data = check_resp.json().get("data", [])
+                    if data:
+                        print(f"Patient with mobile {phone} already exists: {data[0]['name']}")
+                        return {"data": data[0]} # Return existing record
+            except Exception as e:
+                print(f"Error checking existing patient: {e}")
+
+        # 2. If not exists, sync to 'Patient' (Healthcare Module)
         data = {
             "first_name": clinic_patient.get('firstName'),
             "last_name": clinic_patient.get('lastName'),

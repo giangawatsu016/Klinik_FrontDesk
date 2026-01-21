@@ -17,8 +17,9 @@ def sync_patients():
     frappe = FrappeClient()
     
     try:
-        patients = db.query(Patient).all()
-        print(f"Found {len(patients)} patients in local database.")
+        # Filter patients that don't have a Frappe ID yet
+        patients = db.query(Patient).filter(Patient.frappe_id == None).all()
+        print(f"Found {len(patients)} unsynced patients (frappe_id is None).")
         
         success_count = 0
         for p in patients:
@@ -34,14 +35,14 @@ def sync_patients():
             }
             
             result = frappe.create_patient(patient_dict)
-            if result:
+            if result and "data" in result:
                 success_count += 1
-                # Optional: Update local DB with Frappe ID if needed
-                # p.frappe_id = result['data']['name']
-                # db.commit()
+                # Update local DB with Frappe ID
+                p.frappe_id = result['data']['name']
+                db.commit()
                 print(f" -> Success! Frappe ID: {result['data']['name']}")
             else:
-                print(" -> Failed.")
+                print(f" -> Failed.")
                 
         print(f"\nSync Complete. Successfully synced {success_count}/{len(patients)} patients.")
         
