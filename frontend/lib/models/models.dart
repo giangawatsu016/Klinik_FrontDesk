@@ -38,6 +38,42 @@ class User {
   }
 }
 
+class Disease {
+  final int? id;
+  final String icdCode;
+  final String name;
+  final String? description;
+  final bool isActive;
+
+  Disease({
+    this.id,
+    required this.icdCode,
+    required this.name,
+    this.description,
+    this.isActive = true,
+  });
+
+  factory Disease.fromJson(Map<String, dynamic> json) {
+    return Disease(
+      id: json['id'],
+      icdCode: json['icd_code'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'],
+      isActive: json['is_active'] ?? true,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
+      'icd_code': icdCode,
+      'name': name,
+      'description': description,
+      'is_active': isActive,
+    };
+  }
+}
+
 class Patient {
   final int? id;
   final String firstName;

@@ -9,6 +9,7 @@ import 'patient_list.dart';
 import 'medicine_inventory.dart';
 import 'user_management.dart';
 import 'diagnostic_reports.dart';
+import 'disease_list.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -82,6 +83,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "icon": Icons.analytics_outlined,
         "selectedIcon": Icons.analytics,
         "label": "Diagnosis",
+      },
+      {
+        "id": "diseases",
+        "page": DiseaseListScreen(apiService: widget.apiService),
+        "icon": Icons.local_hospital_outlined,
+        "selectedIcon": Icons.local_hospital,
+        "label": "Diseases",
       },
     ];
 

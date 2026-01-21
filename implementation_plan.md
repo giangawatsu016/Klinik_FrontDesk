@@ -1,32 +1,32 @@
-# Implementation Plan - General Payment Methods
-# Implementation- [x] Implement General Payment Sub-methods (Cash, QRIS, etc.)
-- [x] Sync Patients to SatuSehat (Sandbox)
-  - Implemented `post_patient` in `satu_sehat_service.py` with fallback creation.
-  - created `backend/sync_patients_to_satusehat.py` script.
-- [x] Sync Doctors to SatuSehat (Practitioner)
-  - Added `identityCard` (NIK) to `DoctorEntity` and updated DB.
-  - Implemented `search_practitioner_by_nik` in `satu_sehat_service.py`.
-  - Created `backend/sync_doctors_to_satusehat.py`.
+# Implementation Plan - UI Simplification & Disease List
 
-## Goal
-Enhance the "Assign Doctor" flow to support specific payment sub-methods for "General" (Umum) patients.
+# [Goal Description]
+Simplify the Front-end UI for a cleaner, more minimal look.
+Add a new feature: **List Disease** (Master Data for Diagnoses/ICD-10).
+
+## User Review Required
+- **UI Design**: I will be removing some "visual noise" from the Dashboard. Confirmation on specific preferences (Sidebar vs Bottom Bar) would be ideal, but I will proceed with a standard "Clean Sidebar" approach.
 
 ## Proposed Changes
 
+### Backend
+#### [MODIFY] [backend/models.py](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/backend/models.py)
+- Add `Disease` model (id, icd_code, name, description, is_active).
+
+#### [NEW] [backend/routers/diseases.py](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/backend/routers/diseases.py)
+- CRU endpoints for Diseases.
+
 ### Frontend
-#### [MODIFY] [frontend/lib/screens/registration.dart](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/frontend/lib/screens/registration.dart)
-- **State**: Add `_paymentSubMethod` (String?) and related controllers (e.g., `_paymentAmount`, `_paymentReceipt`).
-- **UI Logic**:
-    - When `issuerId == 1` (General), display a Dropdown for: Cash, QRIS, Debit, Transfer, CreditCard.
-    - **Cash**: Show "Enter Amount" field.
-    - **QRIS**: Show "Scan & Verify" (Instruction/Button).
-    - **Debit/CreditCard**: Show "Enter Receipt / Transaction ID" field.
-    - **Transfer**: Show "Enter Details" field.
-- **Data Handling**:
-    - Store the selected sub-method and details in `insuranceName` (as "Method - Detail") or a separate field if available. For now, we will concatenate into `insuranceName` or `noAssuransi` to persist it without backend schema changes, or just validate for UI demo purposes if backend storage isn't specified.
-    - *Decision*: Save `PaymentMethod: Details` into `insuranceName` field of `Patient` (or Queue) to avoid immediate backend refactor, as `insuranceName` is unused for General patients.
+#### [MODIFY] [frontend/lib/screens/dashboard.dart](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/frontend/lib/screens/dashboard.dart)
+- Refactor `NavigationRail` to be cleaner or switch to a minimal `Drawer`.
+- Add "Disease List" to the menu.
+
+#### [NEW] [frontend/lib/screens/disease_list.dart](file:///c:/Users/1672/.gemini/antigravity/scratch/Klinik_Admin/frontend/lib/screens/disease_list.dart)
+- CRUD UI for Diseases.
 
 ## Verification Plan
-- Manual verification via "Assign Doctor" screen.
-- Select "Umum" -> Verify Dropdown appears.
-- Select "Cash" -> Verify Amount field appears.
+### Automated Tests
+- Test API endpoints for Diseases using `curl`.
+### Manual Verification
+- Verify Dashboard look & feel.
+- Verify "List Disease" menu navigation and functionality.

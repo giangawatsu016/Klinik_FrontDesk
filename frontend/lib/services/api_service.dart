@@ -442,4 +442,52 @@ class ApiService {
     } catch (_) {}
     return [];
   }
+
+  // --- Disease Management ---
+
+  Future<List<Disease>> getDiseases({String query = ""}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/diseases?search=$query'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Disease.fromJson(json)).toList();
+    }
+    return [];
+  }
+
+  Future<Disease?> createDisease(Disease disease) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/diseases'),
+      headers: _headers,
+      body: jsonEncode(disease.toJson()),
+    );
+    if (response.statusCode == 200) {
+      return Disease.fromJson(jsonDecode(response.body));
+    }
+    throw Exception(response.body);
+  }
+
+  Future<Disease?> updateDisease(int id, Disease disease) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/diseases/$id'),
+      headers: _headers,
+      body: jsonEncode(disease.toJson()),
+    );
+    if (response.statusCode == 200) {
+      return Disease.fromJson(jsonDecode(response.body));
+    }
+    throw Exception(response.body);
+  }
+
+  Future<void> deleteDisease(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/diseases/$id'),
+      headers: _headers,
+    );
+    if (response.statusCode != 200) {
+      throw Exception("Failed to delete disease");
+    }
+  }
 }

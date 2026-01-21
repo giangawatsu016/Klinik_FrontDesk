@@ -27,6 +27,15 @@ class Issuer(Base):
     issuer = Column(String(50)) # e.g., BPJS, General, Insurance
     nama = Column(JSON) # Storing sub-issuers as JSON array as implied by nama[]
 
+class Disease(Base):
+    __tablename__ = "diseases"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    icd_code = Column(String(20), unique=True, index=True) # ICD-10 Code
+    name = Column(String(255)) # Disease Name
+    description = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
+
 class DoctorEntity(Base):
     __tablename__ = "doctorcore"
     
