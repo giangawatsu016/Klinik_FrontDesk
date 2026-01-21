@@ -10,6 +10,56 @@ router = APIRouter(
     tags=["patients"]
 )
 
+@router.post("/sync")
+def sync_patients(db: Session = Depends(database.get_db)):
+    from ..services.frappe_service import frappe_client
+    # Pull patients from ERPNext is complex due to volume. 
+    # For now, we will just return a placeholder or implement limited sync (e.g. last 50).
+    # Since the user asked for "Sync" menu, we should confirm behavior.
+    # Assuming "Pull from ERPNext" for consistency.
+    
+    # LIMIT to 50 latest for performance
+    patients = frappe_client.get_patients(limit=50) 
+    count = 0
+    if patients:
+        for p in patients:
+            # Check exist
+            identity = p.get("mobile_uuid") # OR NIK if available in custom field
+            phone = p.get("mobile")
+            
+            existing = db.query(models.Patient).filter(models.Patient.phone == phone).first()
+            if not existing:
+                # Create basic patient
+                new_p = models.Patient(
+                    firstName=p.get("patient_name", "Unknown"),
+                    lastName="",
+                    identityCard=identity or "UNKNOWN",
+                    phone=phone or "000",
+                    gender=p.get("sex", "Male"),
+                    birthday=p.get("dob") or "2000-01-01",
+                    address=p.get("primary_address", ""),
+                    frappeId=p.get("name"),
+                    
+                    # Defaults
+                    religion="Islam",
+                    profession="Unknown",
+                    education="Unknown",
+                    province="Unknown",
+                    city="Unknown",
+                    district="Unknown",
+                    subdistrict="Unknown",
+                    rt="00",
+                    rw="00",
+                    postalCode="00000",
+                    issuerId=1,
+                    maritalStatusId=1
+                )
+                db.add(new_p)
+                count += 1
+        db.commit()
+    
+    return {"status": "success", "message": f"Synced {count} new contacts from ERPNext"}
+
 @router.post("", response_model=schemas.Patient)
 def create_patient(patient: schemas.PatientCreate, background_tasks: BackgroundTasks, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
     # Check if existing by ID Card

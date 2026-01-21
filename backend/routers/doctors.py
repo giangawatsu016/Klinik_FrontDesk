@@ -12,6 +12,48 @@ router = APIRouter(
 def get_doctors(db: Session = Depends(database.get_db)):
     return db.query(models.DoctorEntity).order_by(models.DoctorEntity.namaDokter.asc()).all()
 
+@router.post("/sync")
+def sync_doctors(db: Session = Depends(database.get_db)):
+    from ..services.frappe_service import frappe_client
+    
+    # 1. Fetch Practitioners from ERPNext
+    practitioners = frappe_client.get_practitioners()
+    if not practitioners:
+         return {"status": "failed", "message": "No practitioners found in ERPNext", "count": 0}
+            
+    synced_count = 0
+    
+    for p in practitioners:
+        # Check if exists by IHS Number (or Name if IHS missing)
+        ihs = p.get("practitioner_identifiers", [{}])[0].get("identifier_value") if p.get("practitioner_identifiers") else None
+        name = p.get("name1") # practitioner_name
+        
+        # We use name as generic identifier if IHS is missing for now, though risky
+        existing = None
+        if ihs:
+             existing = db.query(models.DoctorEntity).filter(models.DoctorEntity.ihs_practitioner_number == ihs).first()
+        if not existing:
+             existing = db.query(models.DoctorEntity).filter(models.DoctorEntity.namaDokter == name).first()
+             
+        if existing:
+            # Update info
+            existing.doctorSIP = ihs if ihs else existing.doctorSIP
+            # existing.polyName = ... # Map department?
+        else:
+             # Create new
+             new_doc = models.DoctorEntity(
+                 namaDokter=name,
+                 polyName="General", # Default
+                 is_available=True,
+                 ihs_practitioner_number=ihs
+             )
+             db.add(new_doc)
+        
+        synced_count += 1
+        
+    db.commit()
+    return {"status": "success", "count": synced_count}
+
 @router.post("", response_model=schemas.Doctor)
 def create_doctor(doctor: schemas.DoctorBase, db: Session = Depends(database.get_db)):
     new_doctor = models.DoctorEntity(**doctor.dict())

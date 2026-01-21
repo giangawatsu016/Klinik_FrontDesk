@@ -266,6 +266,29 @@ class ApiService {
     throw Exception("Update Failed: ${response.statusCode}");
   }
 
+  // Sync Methods
+  Future<Map<String, dynamic>> syncDoctors() async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/doctors/sync'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception("Sync Doctors Failed: ${response.body}");
+  }
+
+  Future<Map<String, dynamic>> syncPatients() async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/patients/sync'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception("Sync Patients Failed: ${response.body}");
+  }
+
   // Medicine Methods
   Future<List<Medicine>> getMedicines() async {
     final response = await http.get(
@@ -335,19 +358,6 @@ class ApiService {
       return json.decode(response.body);
     } else {
       throw Exception('Failed to sync medicines');
-    }
-  }
-
-  Future<Map<String, dynamic>> syncDoctors() async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/doctors/sync'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to sync doctors');
     }
   }
 

@@ -10,6 +10,7 @@ import 'user_management.dart';
 import 'diagnostic_reports.dart';
 import 'disease_list.dart';
 import 'pharmacy_list.dart';
+import 'sync_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -91,6 +92,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "selectedIcon": Icons.local_hospital,
         "label": "Diseases",
       },
+      {
+        "id": "sync",
+        "page": SyncScreen(apiService: widget.apiService),
+        "icon": Icons.sync_outlined,
+        "selectedIcon": Icons.sync,
+        "label": "Sync Data",
+      },
     ];
 
     // Filter based on Role
@@ -117,6 +125,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (["doctors", "patients", "medicines", "diagnosis"].contains(id)) {
         // Not visible to Super Admin (who only sees Users)
         return role != "Super Admin";
+      }
+
+      if (id == "sync") {
+        return role == "Super Admin" || role == "Administrator";
       }
 
       return true;
