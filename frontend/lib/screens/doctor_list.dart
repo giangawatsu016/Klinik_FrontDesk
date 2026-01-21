@@ -146,22 +146,14 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(
-                            "Doctor List",
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade900,
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.sync, color: Colors.blue.shade900),
-                            tooltip: "Sync from ERPNext",
+                          OutlinedButton.icon(
                             onPressed: _syncDoctors,
+                            icon: Icon(Icons.sync),
+                            label: Text("Sync from ERPNext"),
                           ),
                         ],
                       ),

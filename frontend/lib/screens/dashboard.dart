@@ -11,6 +11,7 @@ import 'diagnostic_reports.dart';
 import 'disease_list.dart';
 import 'pharmacy_list.dart';
 import 'sync_screen.dart';
+import 'dashboard_home.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -31,14 +32,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Define all possible pages
     final allPages = [
       {
-        "id": "dashboard",
+        "id": "home",
+        "page": const DashboardHomeScreen(),
+        "icon": Icons.analytics_outlined,
+        "selectedIcon": Icons.analytics,
+        "label": "Overview",
+      },
+      {
+        "id": "queue",
         "page": QueueMonitorScreen(apiService: widget.apiService),
-        "icon": Icons.dashboard_outlined,
-        "selectedIcon": Icons.dashboard,
-        "label": "Dashboard",
+        "icon": Icons.monitor_heart_outlined,
+        "selectedIcon": Icons.monitor_heart,
+        "label": "Queue Monitor",
       },
       {
         "id": "registration",
@@ -81,15 +88,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       {
         "id": "diagnosis",
         "page": DiagnosticReportsScreen(apiService: widget.apiService),
-        "icon": Icons.analytics_outlined,
-        "selectedIcon": Icons.analytics,
+        "icon": Icons.file_present_outlined,
+        "selectedIcon": Icons.file_present,
         "label": "Diagnosis",
       },
       {
         "id": "diseases",
         "page": DiseaseListScreen(apiService: widget.apiService),
-        "icon": Icons.local_hospital_outlined,
-        "selectedIcon": Icons.local_hospital,
+        "icon": Icons.coronavirus_outlined,
+        "selectedIcon": Icons.coronavirus,
         "label": "Diseases",
       },
       {
@@ -104,112 +111,216 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Filter based on Role
     final filteredPages = allPages.where((item) {
       final id = item['id'] as String;
-      final role = widget.user.role; // "Super Admin", "Administrator", "Staff"
+      final role = widget.user.role;
 
-      if (id == "dashboard") {
-        // Only Staff can see Dashboard (Queue Monitor)
-        return role == "Staff";
+      if (id == "queue" || id == "registration") {
+        return role == "Staff"; // Only Staff see practical tools
       }
 
-      if (id == "registration") {
-        // Only Staff can see Registration
-        return role == "Staff";
-      }
+      if (id == "home")
+        return true; // Everyone sees overview? Or make logic specific
 
-      if (id == "users") {
-        // Only Super Admin and Administrator can see Users
+      if (id == "users" || id == "sync") {
         return role == "Super Admin" || role == "Administrator";
       }
 
       // Doctors, Patients, Medicines, Diagnosis
       if (["doctors", "patients", "medicines", "diagnosis"].contains(id)) {
-        // Not visible to Super Admin (who only sees Users)
         return role != "Super Admin";
-      }
-
-      if (id == "sync") {
-        return role == "Super Admin" || role == "Administrator";
       }
 
       return true;
     }).toList();
 
-    // Safety check for index
-    if (_selectedIndex >= filteredPages.length) {
-      _selectedIndex = 0;
-    }
+    if (_selectedIndex >= filteredPages.length) _selectedIndex = 0;
+
+    final currentPage = filteredPages[_selectedIndex];
 
     return Scaffold(
-      backgroundColor: Colors.blue.shade100, // Matching gradient start
-      // extendBodyBehindAppBar: true, // Removed to prevent overlap
-      appBar: AppBar(
-        title: Text(
-          "Klinik Admin - ${widget.user.username} (${widget.user.role})",
-          style: TextStyle(
-            color: Colors.blue.shade900,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        iconTheme: IconThemeData(color: Colors.blue.shade900),
-        backgroundColor: Colors.blue.shade100, // Solid color
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.blue.shade100, Colors.purple.shade100],
-          ),
-        ),
-        child: Row(
-          children: [
-            NavigationRail(
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (int index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              labelType: NavigationRailLabelType.all,
-              selectedLabelTextStyle: TextStyle(
-                color: Colors.blue.shade900,
-                fontWeight: FontWeight.bold,
-              ),
-              unselectedLabelTextStyle: TextStyle(color: Colors.blue.shade700),
-              selectedIconTheme: IconThemeData(color: Colors.blue.shade900),
-              unselectedIconTheme: IconThemeData(color: Colors.blue.shade700),
-              destinations: filteredPages.map((item) {
-                return NavigationRailDestination(
-                  icon: Icon(item['icon'] as IconData),
-                  selectedIcon: Icon(item['selectedIcon'] as IconData),
-                  label: Text(item['label'] as String),
-                );
-              }).toList(),
-              trailing: Expanded(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 20.0),
-                    child: IconButton(
-                      icon: Icon(Icons.logout, color: Colors.red.shade700),
-                      onPressed: _logout,
-                      tooltip: 'Logout',
-                    ),
+      body: Row(
+        children: [
+          // SIDEBAR
+          Container(
+            width: 250,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(right: BorderSide(color: Colors.grey.shade200)),
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade700,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.local_hospital,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        "Klinik Admin",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
+                const Divider(height: 1),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 12,
+                    ),
+                    itemCount: filteredPages.length,
+                    itemBuilder: (context, index) {
+                      final item = filteredPages[index];
+                      final isSelected = _selectedIndex == index;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 4.0),
+                        child: ListTile(
+                          leading: Icon(
+                            isSelected
+                                ? (item['selectedIcon'] as IconData)
+                                : (item['icon'] as IconData),
+                            color: isSelected
+                                ? Colors.blue.shade700
+                                : Colors.grey.shade600,
+                          ),
+                          title: Text(
+                            item['label'] as String,
+                            style: TextStyle(
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: isSelected
+                                  ? Colors.blue.shade700
+                                  : Colors.grey.shade700,
+                            ),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          tileColor: isSelected ? Colors.blue.shade50 : null,
+                          onTap: () => setState(() => _selectedIndex = index),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.red),
+                    title: const Text(
+                      "Logout",
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    onTap: _logout,
+                  ),
+                ),
+              ],
             ),
-            VerticalDivider(
-              thickness: 1,
-              width: 1,
-              color: Colors.white.withValues(alpha: 0.3),
+          ),
+
+          // MAIN CONTENT
+          Expanded(
+            child: Column(
+              children: [
+                // HEADER
+                Container(
+                  height: 64,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey.shade200),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        currentPage['label'] as String,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 14,
+                              backgroundColor: Colors.blue.shade700,
+                              child: Text(
+                                widget.user.username[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  widget.user.username,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  widget.user.role,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade500,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    color: Colors
+                        .grey
+                        .shade50, // Light gray background for content
+                    child: currentPage['page'] as Widget,
+                  ),
+                ),
+              ],
             ),
-            Expanded(child: filteredPages[_selectedIndex]['page'] as Widget),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

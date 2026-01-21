@@ -90,7 +90,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
             ),
           ).then((_) => _loadPatients());
         },
-        backgroundColor: Colors.purple.shade900,
+        backgroundColor: Colors.black, // High contrast theme
         child: Icon(Icons.add, color: Colors.white),
       ),
       body: _isLoading
@@ -103,17 +103,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
                 opacity: 0.8,
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        "Patient List",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade900,
-                        ),
-                      ),
-                    ),
+                    // Title Removed
                     Expanded(
                       child: ListView.separated(
                         itemCount: _patients.length,
