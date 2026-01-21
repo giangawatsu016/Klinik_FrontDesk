@@ -49,7 +49,7 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(disease == null ? 'Add Disease' : 'Edit Disease'),
         content: Form(
           key: formKey,
@@ -78,7 +78,7 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
@@ -100,13 +100,13 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
                       newDisease,
                     );
                   }
-                  if (!mounted) return;
-                  Navigator.pop(context);
+                  if (!dialogContext.mounted) return;
+                  Navigator.pop(dialogContext);
                   _loadDiseases();
                 } catch (e) {
-                  if (!mounted) return;
+                  if (!dialogContext.mounted) return;
                   ScaffoldMessenger.of(
-                    context,
+                    dialogContext,
                   ).showSnackBar(SnackBar(content: Text('Error: $e')));
                 }
               }
@@ -181,20 +181,21 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
                                 onPressed: () {
                                   showDialog(
                                     context: context,
-                                    builder: (ctx) => AlertDialog(
+                                    builder: (dialogContext) => AlertDialog(
                                       title: const Text("Confirm Delete"),
                                       content: Text("Delete ${disease.name}?"),
                                       actions: [
                                         TextButton(
-                                          onPressed: () => Navigator.pop(ctx),
+                                          onPressed: () =>
+                                              Navigator.pop(dialogContext),
                                           child: const Text("Cancel"),
                                         ),
                                         TextButton(
                                           onPressed: () async {
                                             await widget.apiService
                                                 .deleteDisease(disease.id!);
-                                            if (!mounted) return;
-                                            Navigator.pop(ctx);
+                                            if (!dialogContext.mounted) return;
+                                            Navigator.pop(dialogContext);
                                             _loadDiseases();
                                           },
                                           child: const Text(
