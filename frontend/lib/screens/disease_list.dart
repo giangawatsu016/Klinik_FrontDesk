@@ -32,18 +32,19 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error loading diseases: $e')));
+      }
     }
   }
 
   void _showDiseaseDialog({Disease? disease}) {
-    final _formKey = GlobalKey<FormState>();
-    final _icdController = TextEditingController(text: disease?.icdCode ?? '');
-    final _nameController = TextEditingController(text: disease?.name ?? '');
-    final _descController = TextEditingController(
+    final formKey = GlobalKey<FormState>();
+    final icdController = TextEditingController(text: disease?.icdCode ?? '');
+    final nameController = TextEditingController(text: disease?.name ?? '');
+    final descController = TextEditingController(
       text: disease?.description ?? '',
     );
 
@@ -52,22 +53,22 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
       builder: (context) => AlertDialog(
         title: Text(disease == null ? 'Add Disease' : 'Edit Disease'),
         content: Form(
-          key: _formKey,
+          key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
-                controller: _icdController,
+                controller: icdController,
                 decoration: const InputDecoration(labelText: 'ICD Code'),
                 validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
               TextFormField(
-                controller: _nameController,
+                controller: nameController,
                 decoration: const InputDecoration(labelText: 'Disease Name'),
                 validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
               TextFormField(
-                controller: _descController,
+                controller: descController,
                 decoration: const InputDecoration(
                   labelText: 'Description (Optional)',
                 ),
@@ -83,12 +84,12 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (_formKey.currentState!.validate()) {
+              if (formKey.currentState!.validate()) {
                 final newDisease = Disease(
                   id: disease?.id,
-                  icdCode: _icdController.text,
-                  name: _nameController.text,
-                  description: _descController.text,
+                  icdCode: icdController.text,
+                  name: nameController.text,
+                  description: descController.text,
                 );
 
                 try {
@@ -100,13 +101,16 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
                       newDisease,
                     );
                   }
-                  if (mounted) Navigator.pop(context);
-                  _loadDiseases();
+                  if (mounted) {
+                    Navigator.pop(context);
+                    _loadDiseases();
+                  }
                 } catch (e) {
-                  if (mounted)
+                  if (mounted) {
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  }
                 }
               }
             },
@@ -192,8 +196,10 @@ class _DiseaseListScreenState extends State<DiseaseListScreen> {
                                           onPressed: () async {
                                             await widget.apiService
                                                 .deleteDisease(disease.id!);
-                                            if (mounted) Navigator.pop(ctx);
-                                            _loadDiseases();
+                                            if (mounted) {
+                                              Navigator.pop(ctx);
+                                              _loadDiseases();
+                                            }
                                           },
                                           child: const Text(
                                             "Delete",
