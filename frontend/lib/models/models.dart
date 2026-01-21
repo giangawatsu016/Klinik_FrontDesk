@@ -290,7 +290,7 @@ class Doctor {
 }
 
 class Medicine {
-  final int id;
+  final int? id;
   final String erpnextItemCode;
   final String medicineName;
   final String? medicineDescription;
@@ -305,7 +305,7 @@ class Medicine {
   final double? signa2;
 
   Medicine({
-    required this.id,
+    this.id,
     required this.erpnextItemCode,
     required this.medicineName,
     this.medicineDescription,
@@ -343,7 +343,7 @@ class Medicine {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      if (id != null) 'id': id,
       'erpnextItemCode': erpnextItemCode,
       'medicineName': medicineName,
       'medicineDescription': medicineDescription,

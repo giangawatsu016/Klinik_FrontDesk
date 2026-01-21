@@ -498,7 +498,7 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
 
                 if (isEditing) {
                   final res = await widget.apiService.updateMedicine(
-                    existingMedicine.id,
+                    existingMedicine.id!,
                     medicineData,
                   );
                   if (res != null) {
@@ -816,7 +816,7 @@ class _ConcoctionDialogState extends State<_ConcoctionDialog> {
                   setState(() {
                     _items.add(
                       ConcoctionItemRequest(
-                        childMedicineId: selected!.id,
+                        childMedicineId: selected!.id!,
                         qty: qty,
                         name: selected!.medicineName,
                       ),

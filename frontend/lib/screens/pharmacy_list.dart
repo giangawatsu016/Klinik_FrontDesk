@@ -50,10 +50,9 @@ class _PharmacyListScreenState extends State<PharmacyListScreen> {
             .where(
               (m) =>
                   m.medicineName.toLowerCase().contains(query.toLowerCase()) ||
-                  (m.erpnextItemCode?.toLowerCase().contains(
-                        query.toLowerCase(),
-                      ) ??
-                      false),
+                  (m.erpnextItemCode.toLowerCase().contains(
+                    query.toLowerCase(),
+                  )),
             )
             .toList();
       });
