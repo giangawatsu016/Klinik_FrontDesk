@@ -287,6 +287,16 @@ class Doctor {
       appointmentFee: json['appointmentFee'],
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Doctor &&
+        other.medicalFacilityPolyDoctorId == medicalFacilityPolyDoctorId;
+  }
+
+  @override
+  int get hashCode => medicalFacilityPolyDoctorId.hashCode;
 }
 
 class Medicine {

@@ -142,3 +142,29 @@ This document chronicles the entire development and implementation journey of th
     -   Moved Port to **8001** to avoid conflict with ERPNext (8000).
     -   Fixed API Route trailing slashes (404 errors).
     -   Created Admin seed user for correct authentication.
+
+---
+
+## Phase 8: UI/UX Overhaul & Dashboard Intelligence (v2.4)
+**Goal:** Modernize the interface and provide real-time actionable insights.
+
+### 8.1 Dashboard Logic Refinement
+*   **Problem:** Dashboard stats were static or inaccurate.
+*   **Solution:**
+    -   **Total Patients:** Added `created_at` timestamp to `patientcore` table to track **New Registrations Today**.
+    -   **Doctors Available:** Calculated as `Total Doctors - Doctors In Consultation`.
+    -   **Queue Today:** Filtered queues by `appointmentTime >= Today Start`.
+
+### 8.2 Queue Optimization
+*   **Action:** Fix queue visibility and sorting.
+*   **Implementation:**
+    -   **Visibility:** Modified endpoint to show ALL active queues (Waiting/In Consultation) regardless of date, preventing "lost" patients.
+    -   **Priority:** Enforced sorting where `isPriority=True` appears at the top.
+    -   **Numbering:** Changed prefixes to `D/DP` (Doctor) and `P/PP` (Polyclinic).
+
+### 8.3 UI & Animations
+*   **Action:** enhance "feel" of the app.
+*   **Implementation:**
+    -   Created `AnimatedEntrance` widget (Slide+Fade).
+    -   Applied staggered animations to **Registration**, **Doctor List**, and **Medicine Inventory** forms.
+    -   Refined Queue Monitor UI for better readability.

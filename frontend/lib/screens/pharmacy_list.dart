@@ -230,7 +230,7 @@ class _PharmacyListScreenState extends State<PharmacyListScreen> {
                 child: TextField(
                   controller: _searchController,
                   decoration: const InputDecoration(
-                    labelText: "Search Pharmacy",
+                    labelText: "Search Medicines",
                     prefixIcon: Icon(Icons.search),
                     border: OutlineInputBorder(),
                   ),

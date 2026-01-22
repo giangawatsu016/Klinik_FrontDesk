@@ -81,6 +81,7 @@ erDiagram
         string phone "Unique"
         string gender
         date birthday
+        datetime created_at "System Timestamp"
         string religion
         string profession
         string education

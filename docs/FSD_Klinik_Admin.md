@@ -1,7 +1,7 @@
 # FUNCTIONAL SPECIFICATION DOCUMENT (FSD)
 **Project Name:** Klinik Admin System
-**Date:** 2026-01-20
-**Version:** 2.3
+**Date:** 2026-01-22
+**Version:** 2.4 (UI/UX & Dashboard)
 
 ---
 
@@ -52,6 +52,7 @@ The system covers:
 *   **REQ-QUEUE-03**: **Sync**: Push to `Event` in ERPNext.
 *   **REQ-QUEUE-04**: TTS Announcements.
 *   **REQ-QUEUE-05**: **Daily Cleanup**: Lazy deletion of previous day's queue to reset counters.
+*   **REQ-QUEUE-06**: **Prioritization**: `isPriority` flag triggers sorting to top of list. Prefix `D-` (Doctor) and `DP-` (Doctor Priority).
 
 ### 3.4 Integration Module
 *   **REQ-INT-01**: **User Sync**: Local User -> ERPNext User (via Email).
@@ -91,8 +92,12 @@ The system covers:
 1.  **Login**: Central Card.
 2.  **Dashboard**: Role-dependent Tabs (Registration, Users, Dashboard, Doctors...).
 3.  **User Management**: Data Table with Actions.
-4.  **Registration**: Split form (Personal -> Address -> Vitals -> Payment).
+4.  **Registration**: Split form (Personal -> Address -> Vitals -> Payment). **Animated Entrances**.
 5.  **Medicine**: List view with Filter, Add Racikan Modal.
+6.  **Dashboard Stats**:
+    *   **Total Patients**: New Registrations Today.
+    *   **Doctors Available**: Active - In Consultation.
+    *   **Queue Today**: Total queues created today.
 
 ---
 

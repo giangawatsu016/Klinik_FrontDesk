@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
+
 import '../services/api_service.dart';
+import '../widgets/animated_entrance.dart';
 
 class MedicineInventoryScreen extends StatefulWidget {
   final ApiService apiService;
@@ -328,142 +330,176 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextFormField(
-                    initialValue: code,
-                    decoration: InputDecoration(
-                      labelText: "Item Code (Unique)",
+                  AnimatedEntrance(
+                    child: TextFormField(
+                      initialValue: code,
+                      decoration: InputDecoration(
+                        labelText: "Item Code (Unique)",
+                      ),
+                      validator: (v) => v!.isEmpty ? "Required" : null,
+                      onSaved: (v) => code = v!,
                     ),
-                    validator: (v) => v!.isEmpty ? "Required" : null,
-                    onSaved: (v) => code = v!,
                   ),
-                  TextFormField(
-                    initialValue: name,
-                    decoration: InputDecoration(labelText: "Medicine Name"),
-                    validator: (v) => v!.isEmpty ? "Required" : null,
-                    onSaved: (v) => name = v!,
-                  ),
-                  TextFormField(
-                    initialValue: description,
-                    decoration: InputDecoration(labelText: "Description"),
-                    maxLines: 2,
-                    onSaved: (v) => description = v ?? '',
-                  ),
-                  TextFormField(
-                    initialValue: label,
-                    decoration: InputDecoration(
-                      labelText: "Label (e.g. Generic)",
+                  SizedBox(height: 10),
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 100),
+                    child: TextFormField(
+                      initialValue: name,
+                      decoration: InputDecoration(labelText: "Medicine Name"),
+                      validator: (v) => v!.isEmpty ? "Required" : null,
+                      onSaved: (v) => name = v!,
                     ),
-                    onSaved: (v) => label = v ?? '',
                   ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: retailPrice.toString(),
-                          decoration: InputDecoration(
-                            labelText: "Retail Price",
+                  SizedBox(height: 10),
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 200),
+                    child: TextFormField(
+                      initialValue: description,
+                      decoration: InputDecoration(labelText: "Description"),
+                      maxLines: 2,
+                      onSaved: (v) => description = v ?? '',
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 300),
+                    child: TextFormField(
+                      initialValue: label,
+                      decoration: InputDecoration(
+                        labelText: "Label (e.g. Generic)",
+                      ),
+                      onSaved: (v) => label = v ?? '',
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 400),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: retailPrice.toString(),
+                            decoration: InputDecoration(
+                              labelText: "Retail Price",
+                            ),
+                            keyboardType: TextInputType.number,
+                            onSaved: (v) =>
+                                retailPrice = int.tryParse(v ?? '0') ?? 0,
                           ),
-                          keyboardType: TextInputType.number,
-                          onSaved: (v) =>
-                              retailPrice = int.tryParse(v ?? '0') ?? 0,
                         ),
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: price.toString(),
-                          decoration: InputDecoration(labelText: "Buy Price"),
-                          keyboardType: TextInputType.number,
-                          onSaved: (v) => price = int.tryParse(v ?? '0') ?? 0,
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: price.toString(),
+                            decoration: InputDecoration(labelText: "Buy Price"),
+                            keyboardType: TextInputType.number,
+                            onSaved: (v) => price = int.tryParse(v ?? '0') ?? 0,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: TextFormField(
-                          initialValue: qty.toString(),
-                          decoration: InputDecoration(labelText: "Stock Qty"),
-                          keyboardType: TextInputType.number,
-                          validator: (v) => v!.isEmpty ? "Required" : null,
-                          onSaved: (v) => qty = int.tryParse(v!) ?? 0,
+                  SizedBox(height: 10),
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 500),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: TextFormField(
+                            initialValue: qty.toString(),
+                            decoration: InputDecoration(labelText: "Stock Qty"),
+                            keyboardType: TextInputType.number,
+                            validator: (v) => v!.isEmpty ? "Required" : null,
+                            onSaved: (v) => qty = int.tryParse(v!) ?? 0,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        flex: 1,
-                        child: DropdownButtonFormField<String>(
-                          decoration: InputDecoration(labelText: "Unit"),
-                          initialValue:
-                              [
-                                'Pcs',
-                                'Box',
-                                'Bottle',
-                                'Strip',
-                                'Tablet',
-                                'Capsule',
-                              ].contains(unit)
-                              ? unit
-                              : null,
-                          items:
-                              [
-                                    'Pcs',
-                                    'Box',
-                                    'Bottle',
-                                    'Strip',
-                                    'Tablet',
-                                    'Capsule',
-                                  ]
-                                  .map(
-                                    (u) => DropdownMenuItem(
-                                      value: u,
-                                      child: Text(u),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (v) => unit = v!,
-                          onSaved: (v) => unit = v!,
+                        SizedBox(width: 8),
+                        Expanded(
+                          flex: 1,
+                          child: DropdownButtonFormField<String>(
+                            decoration: InputDecoration(labelText: "Unit"),
+                            initialValue:
+                                [
+                                  'Pcs',
+                                  'Box',
+                                  'Bottle',
+                                  'Strip',
+                                  'Tablet',
+                                  'Capsule',
+                                ].contains(unit)
+                                ? unit
+                                : null,
+                            items:
+                                [
+                                      'Pcs',
+                                      'Box',
+                                      'Bottle',
+                                      'Strip',
+                                      'Tablet',
+                                      'Capsule',
+                                    ]
+                                    .map(
+                                      (u) => DropdownMenuItem(
+                                        value: u,
+                                        child: Text(u),
+                                      ),
+                                    )
+                                    .toList(),
+                            onChanged: (v) => unit = v!,
+                            onSaved: (v) => unit = v!,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   Divider(),
                   Text("Dosage Info"),
-                  TextFormField(
-                    initialValue: howToConsume,
-                    decoration: InputDecoration(labelText: "How to Consume"),
-                    onSaved: (v) => howToConsume = v ?? '',
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: signa1?.toString(),
-                          decoration: InputDecoration(labelText: "Freq (x)"),
-                          keyboardType: TextInputType.number,
-                          onSaved: (v) => signa1 = int.tryParse(v ?? ''),
-                        ),
-                      ),
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: signa2?.toString(),
-                          decoration: InputDecoration(labelText: "Qty/Dose"),
-                          keyboardType: TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          onSaved: (v) => signa2 = double.tryParse(v ?? ''),
-                        ),
-                      ),
-                    ],
-                  ),
-                  TextFormField(
-                    initialValue: notes,
-                    decoration: InputDecoration(
-                      labelText: "Notes (Signa Text)",
+                  SizedBox(height: 10),
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 600),
+                    child: TextFormField(
+                      initialValue: howToConsume,
+                      decoration: InputDecoration(labelText: "How to Consume"),
+                      onSaved: (v) => howToConsume = v ?? '',
                     ),
-                    onSaved: (v) => notes = v ?? '',
+                  ),
+                  SizedBox(height: 10),
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 700),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: signa1?.toString(),
+                            decoration: InputDecoration(labelText: "Freq (x)"),
+                            keyboardType: TextInputType.number,
+                            onSaved: (v) => signa1 = int.tryParse(v ?? ''),
+                          ),
+                        ),
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: signa2?.toString(),
+                            decoration: InputDecoration(labelText: "Qty/Dose"),
+                            keyboardType: TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            onSaved: (v) => signa2 = double.tryParse(v ?? ''),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 800),
+                    child: TextFormField(
+                      initialValue: notes,
+                      decoration: InputDecoration(
+                        labelText: "Notes (Signa Text)",
+                      ),
+                      onSaved: (v) => notes = v ?? '',
+                    ),
                   ),
                 ],
               ),

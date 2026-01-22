@@ -77,7 +77,7 @@ class SatuSehatClient:
         print(f"NIK {nik} not found. Searching by Demographics...")
         demo_result = self.search_patient_by_demographics(
             patient_data.get("firstName", "") + " " + patient_data.get("lastName", ""),
-            patient_data.get("birthday", "2000-01-01"),
+            str(patient_data.get("birthday", "2000-01-01")),
             patient_data.get("gender", "unknown")
         )
         if demo_result and demo_result.get("ihs_number"):
@@ -154,7 +154,7 @@ class SatuSehatClient:
                 }
             ],
             "gender": gender,
-            "birthDate": patient_data.get("birthday", "2000-01-01"),
+            "birthDate": str(patient_data.get("birthday", "2000-01-01")),
             "multipleBirthBoolean": False,
             "address": [
                 {

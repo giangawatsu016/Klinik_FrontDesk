@@ -90,30 +90,8 @@ class _DiagnosticReportsScreenState extends State<DiagnosticReportsScreen> {
         child: Column(
           children: [
             // Header
-            GlassContainer(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.analytics,
-                      color: Colors.purple.shade900,
-                      size: 32,
-                    ),
-                    SizedBox(width: 16),
-                    Text(
-                      "Diagnosis & Reports",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.purple.shade900,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
+            // Header Removed
+            // Search & Content
 
             // Search & Content
             Expanded(
@@ -299,7 +277,7 @@ class _DiagnosticReportsScreenState extends State<DiagnosticReportsScreen> {
       itemBuilder: (context, index) {
         final report = _reports[index];
         return Card(
-          elevation: 2,
+          // Elevation 0 from Theme
           margin: EdgeInsets.only(bottom: 12),
           child: ListTile(
             leading: CircleAvatar(

@@ -9,7 +9,7 @@ import 'patient_list.dart';
 import 'user_management.dart';
 import 'diagnostic_reports.dart';
 import 'disease_list.dart';
-import 'pharmacy_list.dart';
+import 'medicine_inventory.dart';
 import 'sync_screen.dart';
 import 'dashboard_home.dart';
 
@@ -35,7 +35,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final allPages = [
       {
         "id": "home",
-        "page": const DashboardHomeScreen(),
+        "page": DashboardHomeScreen(apiService: widget.apiService),
         "icon": Icons.analytics_outlined,
         "selectedIcon": Icons.analytics,
         "label": "Overview",
@@ -69,11 +69,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "label": "Patients",
       },
       {
-        "id": "pharmacy",
-        "page": PharmacyListScreen(apiService: widget.apiService),
-        "icon": Icons.local_pharmacy_outlined,
-        "selectedIcon": Icons.local_pharmacy,
-        "label": "Pharmacy",
+        "id": "medicines",
+        "page": MedicineInventoryScreen(apiService: widget.apiService),
+        "icon": Icons.medication_outlined,
+        "selectedIcon": Icons.medication,
+        "label": "Medicines",
       },
       {
         "id": "users",
@@ -117,8 +117,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return role == "Staff"; // Only Staff see practical tools
       }
 
-      if (id == "home")
-        return true; // Everyone sees overview? Or make logic specific
+      if (id == "home") {
+        return true;
+      }
 
       if (id == "users" || id == "sync") {
         return role == "Super Admin" || role == "Administrator";
@@ -132,7 +133,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return true;
     }).toList();
 
-    if (_selectedIndex >= filteredPages.length) _selectedIndex = 0;
+    if (_selectedIndex >= filteredPages.length) {
+      _selectedIndex = 0;
+    }
 
     final currentPage = filteredPages[_selectedIndex];
 

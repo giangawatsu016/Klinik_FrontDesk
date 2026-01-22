@@ -135,33 +135,4 @@ def get_doctor_schedule(doctor_id: int):
 
 from ..services.frappe_service import frappe_client
 
-@router.post("/sync")
-def sync_doctors(db: Session = Depends(database.get_db)):
-    # 1. Fetch from Frappe
-    erp_doctors = frappe_client.get_doctors()
-    if not erp_doctors:
-        return {"status": "failed", "message": "No doctors found or Frappe error", "count": 0}
 
-    count = 0
-    # 2. Sync to Local DB
-    # Mapping: practitioner_name -> namaDokter, department -> polyName
-    for doc in erp_doctors:
-        name = doc.get("practitioner_name")
-        dept = doc.get("department") or "General"
-        
-        # Check if exists by name (simple check)
-        existing = db.query(models.DoctorEntity).filter(models.DoctorEntity.namaDokter == name).first()
-        if not existing:
-             new_doc = models.DoctorEntity(
-                 medicalFacilityPolyDoctorId=0, # Ignored/Auto
-                 namaDokter=name,
-                 gelarDepan="Dr.", # Default title as it's not always in Practitioner
-                 polyName=dept
-             )
-             db.add(new_doc)
-             count += 1
-    
-    if count > 0:
-        db.commit()
-        
-    return {"status": "success", "count": count}

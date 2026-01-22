@@ -6,7 +6,7 @@ from .. import models, schemas, database, dependencies
 from ..services.frappe_service import frappe_client
 
 router = APIRouter(
-    prefix="/queue",
+    prefix="/patients/queue",
     tags=["queues"]
 )
 
@@ -18,7 +18,7 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
     if queue_data.queueType == "Polyclinic":
         prefix = "PP" if queue_data.isPriority else "P"
     else:
-        prefix = "AP" if queue_data.isPriority else "A"
+        prefix = "DP" if queue_data.isPriority else "D"
 
     # Lazy Cleanup: Auto-complete old active queues (yesterday or older)
     old_queues = db.query(models.PatientQueue).filter(
@@ -66,7 +66,7 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
     queue_number = f"{prefix}{new_num:03d}"
 
     new_queue = models.PatientQueue(
-        numberQueue=next_number, 
+        numberQueue=queue_number, 
         userId=queue_data.userId,
         appointmentTime=datetime.utcnow(),
         status="Waiting",
@@ -92,16 +92,10 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
 @router.get("", response_model=List[schemas.PatientQueue])
 def get_queue(db: Session = Depends(database.get_db)):
     today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-    return db.query(models.PatientQueue).filter(models.PatientQueue.appointmentTime >= today_start).all()
-    if status:
-        query = query.filter(models.PatientQueue.status == status)
-    
-    all_items = query.all()
-    
-    # Priority (True) comes first, then earlier appointmentTime
-    all_items.sort(key=lambda x: (not x.isPriority, x.appointmentTime))
-    
-    return all_items
+    return db.query(models.PatientQueue).filter(
+        (models.PatientQueue.status.in_(["Waiting", "In Consultation"])) | 
+        ((models.PatientQueue.status == "Completed") & (models.PatientQueue.appointmentTime >= today_start))
+    ).order_by(models.PatientQueue.isPriority.desc(), models.PatientQueue.appointmentTime.asc()).all()
 
 @router.put("/{queue_id}/status", response_model=schemas.PatientQueue)
 def update_queue_status(queue_id: int, status_update: schemas.QueueUpdateStatus, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):

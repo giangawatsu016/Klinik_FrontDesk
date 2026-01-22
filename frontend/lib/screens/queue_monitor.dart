@@ -38,10 +38,20 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
   }
 
   void _fetchQueue() async {
-    final queue = await widget.apiService.getQueue();
-    setState(() {
-      _queue = queue;
-    });
+    try {
+      final queue = await widget.apiService.getQueue();
+      debugPrint("QUEUE DEBUG: Fetched ${queue.length} items");
+      for (var q in queue) {
+        debugPrint(
+          "QUEUE ITEM: ID=${q.id}, Type='${q.queueType}', Status='${q.status}', Time='${q.appointmentTime}'",
+        );
+      }
+      setState(() {
+        _queue = queue;
+      });
+    } catch (e) {
+      debugPrint("QUEUE DEBUG: Error fetching queue: $e");
+    }
   }
 
   @override
@@ -156,18 +166,20 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                 Text(
                   currentConsult.numberQueue,
                   style: TextStyle(
-                    fontSize: 64, // Bigger for modern look
+                    fontSize: 48, // Reduced from 64
                     fontWeight: FontWeight.w900,
                     color: Colors.green[900],
                     shadows: [Shadow(color: Colors.white, blurRadius: 10)],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 4.0,
+                  ), // Reduced from 8.0
                   child: Text(
                     "Status: ${currentConsult.status}",
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16, // Reduced from 18
                       fontWeight: FontWeight.w500,
                       color: Colors.green[800],
                     ),
@@ -176,7 +188,7 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                 Text(
                   "${currentConsult.patient?.firstName} ${currentConsult.patient?.lastName}",
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 20, // Reduced from 24
                     fontWeight: FontWeight.bold,
                     color: Colors.green[900],
                   ),

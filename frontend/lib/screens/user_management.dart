@@ -235,25 +235,17 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          // Theme defaults handle shape and elevation (0)
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.end, // Align button to right
                   children: [
-                    Text(
-                      "User Management",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Spacer(),
+                    // Title Removed (Handled by Dashboard Header)
                     ElevatedButton.icon(
                       onPressed: () => _showUserDialog(),
                       icon: Icon(Icons.add),

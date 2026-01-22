@@ -60,6 +60,7 @@ class Patient(Base):
     __tablename__ = "patientcore"
     
     id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow) # New field for dashboard stats
     firstName = Column(String(100))
     lastName = Column(String(100), nullable=True)
     phone = Column(String(20), unique=True) # Added unique constraint
@@ -157,3 +158,6 @@ class MedicineConcoction(Base):
     
     parent_medicine = relationship("Medicine", foreign_keys=[parent_medicine_id], back_populates="ingredients")
     child_medicine = relationship("Medicine", foreign_keys=[child_medicine_id])
+
+# Alias for backward compatibility or cleaner usage
+Doctor = DoctorEntity

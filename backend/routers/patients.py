@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import List
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from .. import models, schemas, database, dependencies
 from ..services.frappe_service import frappe_client
 from ..services.satu_sehat_service import satu_sehat_client
@@ -93,10 +94,18 @@ def create_patient(patient: schemas.PatientCreate, background_tasks: BackgroundT
 
     
     new_patient = models.Patient(**patient_data)
-    db.add(new_patient)
-    db.commit()
-    db.refresh(new_patient)
-    
+    try:
+        db.add(new_patient)
+        db.commit()
+        db.refresh(new_patient)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Patient with NIK {patient.identityCard} already exists.")
+    except Exception as e:
+        db.rollback()
+        print(f"Database Error: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error during patient creation")
+
     return new_patient
 
 @router.put("/{patient_id}", response_model=schemas.Patient)

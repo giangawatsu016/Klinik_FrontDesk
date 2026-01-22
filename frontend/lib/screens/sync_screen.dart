@@ -101,7 +101,7 @@ class _SyncScreenState extends State<SyncScreen> {
               SizedBox(width: 40), // Spacer
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo,
+                  backgroundColor: Colors.black, // Standardized
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 ),
@@ -157,7 +157,7 @@ class _SyncScreenState extends State<SyncScreen> {
     VoidCallback onTap,
   ) {
     return Card(
-      elevation: 2,
+      // Elevation 0 from Theme
       child: InkWell(
         onTap: _isLoading ? null : onTap,
         child: Container(

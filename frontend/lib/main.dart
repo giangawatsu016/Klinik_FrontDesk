@@ -26,7 +26,7 @@ class KlinikAdminApp extends StatelessWidget {
           outline: Colors.grey.shade300, // For borders
         ),
         textTheme: GoogleFonts.poppinsTextTheme(),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 0, // No shadows
           color: Colors.white,
           shape: RoundedRectangleBorder(
@@ -44,6 +44,10 @@ class KlinikAdminApp extends StatelessWidget {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -55,6 +59,12 @@ class KlinikAdminApp extends StatelessWidget {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: Colors.black),
+          ),
+          floatingLabelBehavior:
+              FloatingLabelBehavior.always, // Prevent overlap
+          floatingLabelStyle: const TextStyle(
+            color: Colors.black,
+            backgroundColor: Colors.white,
           ),
         ),
         dividerTheme: DividerThemeData(

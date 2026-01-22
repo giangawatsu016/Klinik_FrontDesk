@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../widgets/glass_container.dart';
+import '../widgets/animated_entrance.dart';
 
 class DoctorListScreen extends StatefulWidget {
   final ApiService apiService;
@@ -228,109 +229,132 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: DropdownButtonFormField<String>(
-                          decoration: InputDecoration(labelText: "Title"),
-                          initialValue: title.isNotEmpty ? title : 'Dr.',
-                          items:
-                              ['Dr.', 'Prof.', 'Sp.', 'Ns.', 'Bidan', 'Other']
-                                  .map(
-                                    (t) => DropdownMenuItem(
-                                      value: t,
-                                      child: Text(t),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (v) => title = v!,
-                          onSaved: (v) => title = v!,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        flex: 2,
-                        child: TextFormField(
-                          initialValue: gelarBelakang,
-                          decoration: InputDecoration(
-                            labelText: "Suffix (Gelar Belakang)",
+                  AnimatedEntrance(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: DropdownButtonFormField<String>(
+                            decoration: InputDecoration(labelText: "Title"),
+                            initialValue: title.isNotEmpty ? title : 'Dr.',
+                            items:
+                                ['Dr.', 'Prof.', 'Sp.', 'Ns.', 'Bidan', 'Other']
+                                    .map(
+                                      (t) => DropdownMenuItem(
+                                        value: t,
+                                        child: Text(t),
+                                      ),
+                                    )
+                                    .toList(),
+                            onChanged: (v) => title = v!,
+                            onSaved: (v) => title = v!,
                           ),
-                          onSaved: (v) => gelarBelakang = v ?? '',
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 8),
+                        Expanded(
+                          flex: 2,
+                          child: TextFormField(
+                            initialValue: gelarBelakang,
+                            decoration: InputDecoration(
+                              labelText: "Suffix (Gelar Belakang)",
+                            ),
+                            onSaved: (v) => gelarBelakang = v ?? '',
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: firstName,
-                          decoration: InputDecoration(labelText: "First Name"),
-                          validator: (v) => v!.isEmpty ? "Required" : null,
-                          onSaved: (v) => firstName = v!,
+                  SizedBox(height: 10),
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 100),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: firstName,
+                            decoration: InputDecoration(
+                              labelText: "First Name",
+                            ),
+                            validator: (v) => v!.isEmpty ? "Required" : null,
+                            onSaved: (v) => firstName = v!,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: lastName,
-                          decoration: InputDecoration(labelText: "Last Name"),
-                          onSaved: (v) => lastName = v ?? '',
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: lastName,
+                            decoration: InputDecoration(labelText: "Last Name"),
+                            onSaved: (v) => lastName = v ?? '',
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  SizedBox(height: 10),
 
-                  TextFormField(
-                    initialValue: doctorSIP,
-                    decoration: InputDecoration(labelText: "SIP Number"),
-                    onSaved: (v) => doctorSIP = v ?? '',
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 200),
+                    child: TextFormField(
+                      initialValue: doctorSIP,
+                      decoration: InputDecoration(labelText: "SIP Number"),
+                      onSaved: (v) => doctorSIP = v ?? '',
+                    ),
                   ),
+                  SizedBox(height: 10),
 
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(labelText: "Polyclinic"),
-                    initialValue: poly,
-                    items:
-                        [
-                              'General',
-                              'Dental',
-                              'Pediatric',
-                              'Neurology',
-                              'Cardiology',
-                              'Internal Medicine',
-                              'Surgery',
-                              'Obgyn',
-                            ]
-                            .map(
-                              (p) => DropdownMenuItem(value: p, child: Text(p)),
-                            )
-                            .toList(),
-                    onChanged: (v) => poly = v!,
-                    onSaved: (v) => poly = v!,
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 300),
+                    child: DropdownButtonFormField<String>(
+                      decoration: InputDecoration(labelText: "Polyclinic"),
+                      initialValue: poly,
+                      items:
+                          [
+                                'General',
+                                'Dental',
+                                'Pediatric',
+                                'Neurology',
+                                'Cardiology',
+                                'Internal Medicine',
+                                'Surgery',
+                                'Obgyn',
+                              ]
+                              .map(
+                                (p) =>
+                                    DropdownMenuItem(value: p, child: Text(p)),
+                              )
+                              .toList(),
+                      onChanged: (v) => poly = v!,
+                      onSaved: (v) => poly = v!,
+                    ),
                   ),
+                  SizedBox(height: 10),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: onlineFee?.toString(),
-                          decoration: InputDecoration(labelText: "Online Fee"),
-                          keyboardType: TextInputType.number,
-                          onSaved: (v) => onlineFee = int.tryParse(v ?? ''),
+                  AnimatedEntrance(
+                    delay: Duration(milliseconds: 400),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: onlineFee?.toString(),
+                            decoration: InputDecoration(
+                              labelText: "Online Fee",
+                            ),
+                            keyboardType: TextInputType.number,
+                            onSaved: (v) => onlineFee = int.tryParse(v ?? ''),
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: appointmentFee?.toString(),
-                          decoration: InputDecoration(labelText: "Appt Fee"),
-                          keyboardType: TextInputType.number,
-                          onSaved: (v) =>
-                              appointmentFee = int.tryParse(v ?? ''),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: appointmentFee?.toString(),
+                            decoration: InputDecoration(labelText: "Appt Fee"),
+                            keyboardType: TextInputType.number,
+                            onSaved: (v) =>
+                                appointmentFee = int.tryParse(v ?? ''),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),

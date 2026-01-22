@@ -1,7 +1,7 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
 **Project Name:** Klinik Admin System
-**Date:** 2026-01-20
-**Version:** 2.3
+**Date:** 2026-01-22
+**Version:** 2.4 (UI/UX & Dashboard)
 
 ---
 
@@ -54,4 +54,5 @@ The Klinik Admin System is designed to modernize clinic operations by providing 
 *   **v2.1:** Core Patient & Queue (Completed).
 *   **v2.2:** ERPNext Sync (Completed).
 *   **v2.3:** SatuSehat & Concoctions (Completed).
-*   **v2.4:** E-Prescribing & Clinical Notes (Next).
+*   **v2.4:** UI/UX Polish, Animations, & Dashboard Logic (Completed).
+*   **v2.5:** E-Prescribing & Clinical Notes (Next).

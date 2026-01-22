@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
+import '../widgets/animated_entrance.dart';
 
 class RegistrationScreen extends StatefulWidget {
   final ApiService apiService;
@@ -338,7 +339,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         frappeId: widget.patientToEdit?.frappeId,
         // New Fields
         nomorRekamMedis: nomorRekamMedis,
-        address: simpleAddress,
+        address: addressDetails,
         height: height,
         weight: weight,
       );
@@ -753,21 +754,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
-                    key: ValueKey("fname_$firstName"),
-                    initialValue: firstName,
-                    decoration: InputDecoration(labelText: 'First Name'),
-                    onSaved: (v) => firstName = v!,
-                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                  child: _buildLabeledField(
+                    label: "First Name",
+                    child: TextFormField(
+                      key: ValueKey("fname_$firstName"),
+                      initialValue: firstName,
+                      decoration: InputDecoration(hintText: 'Enter First Name'),
+                      onSaved: (v) => firstName = v!,
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                    ),
                   ),
                 ),
                 SizedBox(width: 16),
                 Expanded(
-                  child: TextFormField(
-                    initialValue: lastName,
-                    decoration: InputDecoration(labelText: 'Last Name'),
-                    onSaved: (v) => lastName = v ?? '',
-                    validator: null,
+                  child: _buildLabeledField(
+                    label: "Last Name",
+                    child: TextFormField(
+                      initialValue: lastName,
+                      decoration: InputDecoration(hintText: 'Enter Last Name'),
+                      onSaved: (v) => lastName = v ?? '',
+                      validator: null,
+                    ),
                   ),
                 ),
               ],
@@ -776,28 +783,31 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: TextFormField(
-                    initialValue: identityCard,
-                    decoration: InputDecoration(labelText: 'ID Card (NIK)'),
-                    keyboardType: TextInputType.number,
-                    maxLength: 16,
-                    onChanged: (v) => identityCard = v, // Capture for button
-                    onSaved: (v) => identityCard = v!,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Required';
-                      if (v.length != 16) {
-                        return 'NIK must be exactly 16 digits';
-                      }
-                      if (!RegExp(r'^[0-9]+$').hasMatch(v)) {
-                        return 'Numeric only';
-                      }
-                      return null;
-                    },
+                  child: _buildLabeledField(
+                    label: "ID Card (NIK)",
+                    child: TextFormField(
+                      initialValue: identityCard,
+                      decoration: InputDecoration(hintText: '16 digit NIK'),
+                      keyboardType: TextInputType.number,
+                      maxLength: 16,
+                      onChanged: (v) => identityCard = v, // Capture for button
+                      onSaved: (v) => identityCard = v!,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Required';
+                        if (v.length != 16) {
+                          return 'NIK must be exactly 16 digits';
+                        }
+                        if (!RegExp(r'^[0-9]+$').hasMatch(v)) {
+                          return 'Numeric only';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
                 ),
                 SizedBox(width: 10),
                 Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
+                  padding: const EdgeInsets.only(top: 28.0), // Align with input
                   child: ElevatedButton(
                     onPressed: _isFetchingSatuSehat
                         ? null
@@ -819,54 +829,61 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
               ],
             ),
-            TextFormField(
-              key: ValueKey("phone_$phone"),
-              initialValue: phone,
-              decoration: InputDecoration(labelText: 'Phone', counterText: ""),
-              maxLength: 14,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(14),
-              ],
-              onSaved: (v) => phone = v!,
-              validator: (v) => v!.isEmpty ? 'Required' : null,
+            _buildLabeledField(
+              label: "Phone",
+              child: TextFormField(
+                key: ValueKey("phone_$phone"),
+                initialValue: phone,
+                decoration: InputDecoration(
+                  hintText: '08xxxxxxxx',
+                  counterText: "",
+                ),
+                maxLength: 14,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(14),
+                ],
+                onSaved: (v) => phone = v!,
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
             ),
             _buildDatePicker(),
             SizedBox(height: 16),
             _buildSectionTitle("Medical & Profiling"),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    initialValue: nomorRekamMedis,
-                    decoration: InputDecoration(
-                      labelText: 'Medical Record No.',
-                    ),
-                    onSaved: (v) => nomorRekamMedis = v ?? '',
-                  ),
-                ),
-              ],
+            _buildLabeledField(
+              label: "Medical Record No.",
+              child: TextFormField(
+                initialValue: nomorRekamMedis,
+                decoration: InputDecoration(hintText: 'Enter MRN'),
+                onSaved: (v) => nomorRekamMedis = v ?? '',
+              ),
             ),
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
-                    initialValue: height?.toString(),
-                    decoration: InputDecoration(labelText: 'Height (cm)'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onSaved: (v) => height = int.tryParse(v ?? ''),
+                  child: _buildLabeledField(
+                    label: "Height (cm)",
+                    child: TextFormField(
+                      initialValue: height?.toString(),
+                      decoration: InputDecoration(hintText: '0'),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onSaved: (v) => height = int.tryParse(v ?? ''),
+                    ),
                   ),
                 ),
                 SizedBox(width: 16),
                 Expanded(
-                  child: TextFormField(
-                    initialValue: weight?.toString(),
-                    decoration: InputDecoration(labelText: 'Weight (kg)'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onSaved: (v) => weight = int.tryParse(v ?? ''),
+                  child: _buildLabeledField(
+                    label: "Weight (kg)",
+                    child: TextFormField(
+                      initialValue: weight?.toString(),
+                      decoration: InputDecoration(hintText: '0'),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onSaved: (v) => weight = int.tryParse(v ?? ''),
+                    ),
                   ),
                 ),
               ],
@@ -875,102 +892,128 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             Row(
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    // ignore: deprecated_member_use
-                    value: gender,
-                    decoration: InputDecoration(labelText: 'Gender'),
-                    items: ['Male', 'Female']
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
-                    onChanged: (v) => setState(() => gender = v!),
+                  child: _buildLabeledField(
+                    label: "Gender",
+                    child: DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
+                      value: gender,
+                      decoration: InputDecoration(hintText: 'Select Gender'),
+                      items: ['Male', 'Female']
+                          .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(e)),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() => gender = v!),
+                    ),
                   ),
                 ),
                 SizedBox(width: 16),
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    // ignore: deprecated_member_use
-                    value: religion,
-                    decoration: InputDecoration(labelText: 'Religion'),
-                    items: religions
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
-                    onChanged: (v) => setState(() => religion = v!),
+                  child: _buildLabeledField(
+                    label: "Religion",
+                    child: DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
+                      value: religion,
+                      decoration: InputDecoration(hintText: 'Select Religion'),
+                      items: religions
+                          .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(e)),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() => religion = v!),
+                    ),
                   ),
                 ),
               ],
             ),
-            DropdownButtonFormField<int>(
-              // ignore: deprecated_member_use
-              value: maritalStatusId,
-              decoration: InputDecoration(labelText: 'Marital Status'),
-              items: maritalStatuses.entries
-                  .map(
-                    (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => maritalStatusId = v!),
+            _buildLabeledField(
+              label: "Marital Status",
+              child: DropdownButtonFormField<int>(
+                // ignore: deprecated_member_use
+                value: maritalStatusId,
+                decoration: InputDecoration(hintText: 'Select Status'),
+                items: maritalStatuses.entries
+                    .map(
+                      (e) =>
+                          DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => maritalStatusId = v!),
+              ),
             ),
 
             _buildSectionTitle("Background"),
-            TextFormField(
-              initialValue: profession,
-              decoration: InputDecoration(labelText: 'Profession'),
-              onSaved: (v) => profession = v!,
+            _buildLabeledField(
+              label: "Profession",
+              child: TextFormField(
+                initialValue: profession,
+                decoration: InputDecoration(hintText: 'Enter Profession'),
+                onSaved: (v) => profession = v!,
+              ),
             ),
-            DropdownButtonFormField<String>(
-              // ignore: deprecated_member_use
-              value: education,
-              decoration: InputDecoration(labelText: 'Education'),
-              items: educations
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
-              onChanged: (v) => setState(() => education = v!),
+            _buildLabeledField(
+              label: "Education",
+              child: DropdownButtonFormField<String>(
+                // ignore: deprecated_member_use
+                value: education,
+                decoration: InputDecoration(hintText: 'Select Education'),
+                items: educations
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (v) => setState(() => education = v!),
+              ),
             ),
 
             _buildSectionTitle("Address"),
             Row(
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    key: ValueKey("prov_$_selectedProvinceId"),
-                    initialValue:
-                        _selectedProvinceId ??
-                        (province.isNotEmpty ? null : null),
-                    decoration: InputDecoration(
-                      labelText: 'Province (Reselect to update)',
+                  child: _buildLabeledField(
+                    label: "Province",
+                    child: DropdownButtonFormField<String>(
+                      key: ValueKey("prov_$_selectedProvinceId"),
+                      initialValue:
+                          _selectedProvinceId ??
+                          (province.isNotEmpty ? null : null),
+                      decoration: InputDecoration(
+                        hintText: 'Reselect to update',
+                      ),
+                      hint: province.isNotEmpty ? Text(province) : null,
+                      items: _provinces
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e['id'] as String,
+                              child: Text(e['name']),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: _onProvinceChanged,
+                      validator: (v) =>
+                          (v == null && province.isEmpty) ? 'Required' : null,
                     ),
-                    hint: province.isNotEmpty ? Text(province) : null,
-                    items: _provinces
-                        .map(
-                          (e) => DropdownMenuItem(
-                            value: e['id'] as String,
-                            child: Text(e['name']),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: _onProvinceChanged,
-                    validator: (v) =>
-                        (v == null && province.isEmpty) ? 'Required' : null,
                   ),
                 ),
                 SizedBox(width: 16),
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    key: ValueKey("city_$_selectedCityId"),
-                    initialValue: _selectedCityId,
-                    decoration: InputDecoration(labelText: 'City'),
-                    hint: city.isNotEmpty ? Text(city) : null,
-                    items: _cities
-                        .map(
-                          (e) => DropdownMenuItem(
-                            value: e['id'] as String,
-                            child: Text(e['name']),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: _onCityChanged,
-                    validator: (v) =>
-                        (v == null && city.isEmpty) ? 'Required' : null,
+                  child: _buildLabeledField(
+                    label: "City",
+                    child: DropdownButtonFormField<String>(
+                      key: ValueKey("city_$_selectedCityId"),
+                      initialValue: _selectedCityId,
+                      decoration: InputDecoration(hintText: 'Select City'),
+                      hint: city.isNotEmpty ? Text(city) : null,
+                      items: _cities
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e['id'] as String,
+                              child: Text(e['name']),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: _onCityChanged,
+                      validator: (v) =>
+                          (v == null && city.isEmpty) ? 'Required' : null,
+                    ),
                   ),
                 ),
               ],
@@ -978,42 +1021,51 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             Row(
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    key: ValueKey("dist_$_selectedDistrictId"),
-                    initialValue: _selectedDistrictId,
-                    decoration: InputDecoration(labelText: 'District'),
-                    hint: district.isNotEmpty ? Text(district) : null,
-                    items: _districts
-                        .map(
-                          (e) => DropdownMenuItem(
-                            value: e['id'] as String,
-                            child: Text(e['name']),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: _onDistrictChanged,
-                    validator: (v) =>
-                        (v == null && district.isEmpty) ? 'Required' : null,
+                  child: _buildLabeledField(
+                    label: "District",
+                    child: DropdownButtonFormField<String>(
+                      key: ValueKey("dist_$_selectedDistrictId"),
+                      initialValue: _selectedDistrictId,
+                      decoration: InputDecoration(hintText: 'Select District'),
+                      hint: district.isNotEmpty ? Text(district) : null,
+                      items: _districts
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e['id'] as String,
+                              child: Text(e['name']),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: _onDistrictChanged,
+                      validator: (v) =>
+                          (v == null && district.isEmpty) ? 'Required' : null,
+                    ),
                   ),
                 ),
                 SizedBox(width: 16),
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    key: ValueKey("sub_$_selectedSubdistrictId"),
-                    initialValue: _selectedSubdistrictId,
-                    decoration: InputDecoration(labelText: 'Subdistrict'),
-                    hint: subdistrict.isNotEmpty ? Text(subdistrict) : null,
-                    items: _subdistricts
-                        .map(
-                          (e) => DropdownMenuItem(
-                            value: e['id'] as String,
-                            child: Text(e['name']),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: _onSubdistrictChanged,
-                    validator: (v) =>
-                        (v == null && subdistrict.isEmpty) ? 'Required' : null,
+                  child: _buildLabeledField(
+                    label: "Subdistrict",
+                    child: DropdownButtonFormField<String>(
+                      key: ValueKey("sub_$_selectedSubdistrictId"),
+                      initialValue: _selectedSubdistrictId,
+                      decoration: InputDecoration(
+                        hintText: 'Select Subdistrict',
+                      ),
+                      hint: subdistrict.isNotEmpty ? Text(subdistrict) : null,
+                      items: _subdistricts
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e['id'] as String,
+                              child: Text(e['name']),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: _onSubdistrictChanged,
+                      validator: (v) => (v == null && subdistrict.isEmpty)
+                          ? 'Required'
+                          : null,
+                    ),
                   ),
                 ),
               ],
@@ -1021,35 +1073,47 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
-                    initialValue: rt,
-                    decoration: InputDecoration(labelText: 'RT'),
-                    onSaved: (v) => rt = v!,
+                  child: _buildLabeledField(
+                    label: "RT",
+                    child: TextFormField(
+                      initialValue: rt,
+                      decoration: InputDecoration(hintText: '000'),
+                      onSaved: (v) => rt = v!,
+                    ),
                   ),
                 ),
                 SizedBox(width: 16),
                 Expanded(
-                  child: TextFormField(
-                    initialValue: rw,
-                    decoration: InputDecoration(labelText: 'RW'),
-                    onSaved: (v) => rw = v!,
+                  child: _buildLabeledField(
+                    label: "RW",
+                    child: TextFormField(
+                      initialValue: rw,
+                      decoration: InputDecoration(hintText: '000'),
+                      onSaved: (v) => rw = v!,
+                    ),
                   ),
                 ),
                 SizedBox(width: 16),
                 Expanded(
-                  child: TextFormField(
-                    initialValue: postalCode,
-                    decoration: InputDecoration(labelText: 'Postal Code'),
-                    onSaved: (v) => postalCode = v!,
+                  child: _buildLabeledField(
+                    label: "Postal Code",
+                    child: TextFormField(
+                      initialValue: postalCode,
+                      decoration: InputDecoration(hintText: '12345'),
+                      onSaved: (v) => postalCode = v!,
+                    ),
                   ),
                 ),
               ],
             ),
-            TextFormField(
-              key: ValueKey("addr_$addressDetails"),
-              initialValue: addressDetails,
-              decoration: InputDecoration(labelText: 'Full Address'),
-              onSaved: (v) => addressDetails = v!,
+            _buildLabeledField(
+              label: "Full Address",
+              child: TextFormField(
+                key: ValueKey("addr_$addressDetails"),
+                initialValue: addressDetails,
+                decoration: InputDecoration(hintText: 'Street, Number, etc.'),
+                onSaved: (v) => addressDetails = v!,
+              ),
             ),
 
             if (widget.isRegistrationOnly) ...[
@@ -1154,7 +1218,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
+  // Wrapper for consistency
   Widget _buildDatePicker() {
+    return _buildLabeledField(label: "Birthday", child: _datePickerInternal());
+  }
+
+  Widget _datePickerInternal() {
     return InkWell(
       onTap: () async {
         final picked = await showDatePicker(
@@ -1260,102 +1329,122 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   SizedBox(height: 20),
 
                   if (!_isPolyclinic)
-                    DropdownButtonFormField<Doctor>(
-                      decoration: InputDecoration(
-                        labelText: 'Select Doctor',
-                        border: OutlineInputBorder(),
-                      ),
-                      // ignore: deprecated_member_use
-                      value: selectedDoctor,
-                      items: doctors
-                          .map(
-                            (d) => DropdownMenuItem(
-                              value: d,
-                              child: Text(
-                                "${d.gelarDepan} ${d.namaDokter} (${d.polyName})",
+                    _buildLabeledField(
+                      label: "Select Doctor",
+                      child: DropdownButtonFormField<Doctor>(
+                        decoration: InputDecoration(
+                          hintText: 'Choose a Doctor',
+                          border: OutlineInputBorder(),
+                        ),
+                        // ignore: deprecated_member_use
+                        value: selectedDoctor,
+                        items: doctors
+                            .map(
+                              (d) => DropdownMenuItem(
+                                value: d,
+                                child: Text(
+                                  "${d.gelarDepan} ${d.namaDokter} (${d.polyName})",
+                                ),
                               ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) => setState(() => selectedDoctor = v),
-                      validator: (v) =>
-                          v == null ? 'Please select a Doctor' : null,
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() => selectedDoctor = v),
+                        validator: (v) =>
+                            v == null ? 'Please select a Doctor' : null,
+                      ),
                     )
                   else
-                    DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
-                        labelText: 'Select Polyclinic',
-                        border: OutlineInputBorder(),
+                    _buildLabeledField(
+                      label: "Select Polyclinic",
+                      child: DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          hintText: 'Choose Polyclinic',
+                          border: OutlineInputBorder(),
+                        ),
+                        // ignore: deprecated_member_use
+                        value: _selectedPolyclinic,
+                        items: polyclinics
+                            .map(
+                              (p) => DropdownMenuItem(value: p, child: Text(p)),
+                            )
+                            .toList(),
+                        onChanged: (v) =>
+                            setState(() => _selectedPolyclinic = v),
+                        validator: (v) =>
+                            v == null ? 'Please select a Polyclinic' : null,
                       ),
-                      // ignore: deprecated_member_use
-                      value: _selectedPolyclinic,
-                      items: polyclinics
-                          .map(
-                            (p) => DropdownMenuItem(value: p, child: Text(p)),
-                          )
-                          .toList(),
-                      onChanged: (v) => setState(() => _selectedPolyclinic = v),
-                      validator: (v) =>
-                          v == null ? 'Please select a Polyclinic' : null,
                     ),
 
                   SizedBox(height: 20),
                   _buildSectionTitle("Pembayaran"),
-                  DropdownButtonFormField<int>(
-                    // ignore: deprecated_member_use
-                    value: issuerId,
-                    decoration: InputDecoration(labelText: 'Metode Pembayaran'),
-                    items: issuers.entries
-                        .map(
-                          (e) => DropdownMenuItem(
-                            value: e.key,
-                            child: Text(e.value),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (v) {
-                      setState(() {
-                        issuerId = v!;
-                        insuranceName = null;
-                      });
-                    },
-                    onSaved: (v) => issuerId = v!,
+                  _buildLabeledField(
+                    label: "Metode Pembayaran",
+                    child: DropdownButtonFormField<int>(
+                      // ignore: deprecated_member_use
+                      value: issuerId,
+                      decoration: InputDecoration(hintText: 'Select Method'),
+                      items: issuers.entries
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(e.value),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        setState(() {
+                          issuerId = v!;
+                          insuranceName = null;
+                        });
+                      },
+                      onSaved: (v) => issuerId = v!,
+                    ),
                   ),
                   if (issuerId == 1) ...[
                     Padding(
                       padding: const EdgeInsets.only(top: 16.0),
-                      child: DropdownButtonFormField<String>(
-                        key: ValueKey("pay_$_paymentSubMethod"),
-                        initialValue: _paymentSubMethod,
-                        decoration: InputDecoration(
-                          labelText: 'Payment Method',
+                      child: _buildLabeledField(
+                        label: "Payment Method",
+                        child: DropdownButtonFormField<String>(
+                          key: ValueKey("pay_$_paymentSubMethod"),
+                          initialValue: _paymentSubMethod,
+                          decoration: InputDecoration(hintText: 'Select Type'),
+                          items:
+                              [
+                                    'Cash',
+                                    'QRIS',
+                                    'Debit',
+                                    'Transfer',
+                                    'CreditCard',
+                                  ]
+                                  .map(
+                                    (e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(e),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (v) => setState(() {
+                            _paymentSubMethod = v;
+                            // Clear fields on change
+                            _paymentAmountCtrl.clear();
+                            _paymentReceiptCtrl.clear();
+                            _paymentDetailsCtrl.clear();
+                          }),
+                          validator: (v) =>
+                              v == null ? 'Select Payment Method' : null,
                         ),
-                        items:
-                            ['Cash', 'QRIS', 'Debit', 'Transfer', 'CreditCard']
-                                .map(
-                                  (e) => DropdownMenuItem(
-                                    value: e,
-                                    child: Text(e),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (v) => setState(() {
-                          _paymentSubMethod = v;
-                          // Clear fields on change
-                          _paymentAmountCtrl.clear();
-                          _paymentReceiptCtrl.clear();
-                          _paymentDetailsCtrl.clear();
-                        }),
-                        validator: (v) =>
-                            v == null ? 'Select Payment Method' : null,
                       ),
                     ),
                     if (_paymentSubMethod == 'Cash')
-                      TextFormField(
-                        controller: _paymentAmountCtrl,
-                        decoration: InputDecoration(labelText: 'Enter Amount'),
-                        keyboardType: TextInputType.number,
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      _buildLabeledField(
+                        label: "Amount Received",
+                        child: TextFormField(
+                          controller: _paymentAmountCtrl,
+                          decoration: InputDecoration(hintText: 'Enter Amount'),
+                          keyboardType: TextInputType.number,
+                          validator: (v) => v!.isEmpty ? 'Required' : null,
+                        ),
                       ),
                     if (_paymentSubMethod == 'QRIS')
                       ListTile(
@@ -1366,18 +1455,26 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       ),
                     if (_paymentSubMethod == 'Debit' ||
                         _paymentSubMethod == 'CreditCard')
-                      TextFormField(
-                        controller: _paymentReceiptCtrl,
-                        decoration: InputDecoration(
-                          labelText: 'Enter Receipt / Ref #',
+                      _buildLabeledField(
+                        label: "Receipt / Ref Number",
+                        child: TextFormField(
+                          controller: _paymentReceiptCtrl,
+                          decoration: InputDecoration(
+                            hintText: 'Enter Receipt / Ref #',
+                          ),
+                          validator: (v) => v!.isEmpty ? 'Required' : null,
                         ),
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
                       ),
                     if (_paymentSubMethod == 'Transfer')
-                      TextFormField(
-                        controller: _paymentDetailsCtrl,
-                        decoration: InputDecoration(labelText: 'Enter Details'),
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      _buildLabeledField(
+                        label: "Transfer Details",
+                        child: TextFormField(
+                          controller: _paymentDetailsCtrl,
+                          decoration: InputDecoration(
+                            hintText: 'Enter Details',
+                          ),
+                          validator: (v) => v!.isEmpty ? 'Required' : null,
+                        ),
                       ),
                   ],
                   if (issuerId == 2) // BPJS
@@ -1457,6 +1554,32 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLabeledField({required String label, required Widget child}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AnimatedEntrance(
+          offsetHelper: 20,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Colors.grey[700],
+            ),
+          ),
+        ),
+        SizedBox(height: 8),
+        AnimatedEntrance(
+          offsetHelper: 10,
+          delay: Duration(milliseconds: 100),
+          child: child,
+        ),
+        SizedBox(height: 16),
+      ],
     );
   }
 }

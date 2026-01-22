@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from .routers import auth, patients, queue, master_data, medicines, users, integration, doctors, diseases
+from .routers import auth, patients, queue, master_data, medicines, users, integration, doctors, diseases, dashboard
 import os
 from dotenv import load_dotenv
 from slowapi import _rate_limit_exceeded_handler
@@ -28,8 +28,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
     # Allow any localhost/127.0.0.1 port
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False, # Must be False if allow_origins is [*]
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -37,14 +37,14 @@ app.add_middleware(
 # Include Routers
 app.include_router(auth.router)
 app.include_router(users.router)
-app.include_router(patients.router)
 app.include_router(queue.router)
+app.include_router(patients.router)
 app.include_router(master_data.router)
 app.include_router(medicines.router)
-app.include_router(users.router)
 app.include_router(integration.router)
 app.include_router(doctors.router)
 app.include_router(diseases.router)
+app.include_router(dashboard.router)
 
 @app.get("/")
 def read_root():
