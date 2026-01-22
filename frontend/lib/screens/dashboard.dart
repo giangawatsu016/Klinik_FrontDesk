@@ -144,7 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           // SIDEBAR
           Container(
-            width: 250,
+            width: 280,
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(right: BorderSide(color: Colors.grey.shade200)),
@@ -167,11 +167,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Text(
-                        "Klinik Intimedicare",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                      Expanded(
+                        child: const Text(
+                          "Klinik Intimedicare",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                          overflow: TextOverflow.visible,
                         ),
                       ),
                     ],
