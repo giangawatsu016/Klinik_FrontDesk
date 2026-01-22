@@ -1,12 +1,12 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
-**Project Name:** Klinik Admin System
+**Project Name:** Klinik Intimedicare System
 **Date:** 2026-01-22
 **Version:** 2.4 (UI/UX & Dashboard)
 
 ---
 
 ## 1. Executive Summary
-The Klinik Admin System is designed to modernize clinic operations by providing a unified interface for patient management, medical records, and inventory. Version 2.3 specifically upgrades the system to meet Indonesian Health Ministry regulations (**SatuSehat**) and integrates with **ERPNext** for back-office accounting, while introducing advanced features like **Medicine Concoctions**.
+The Klinik Intimedicare System is designed to modernize clinic operations by providing a unified interface for patient management, medical records, and inventory. Version 2.3 specifically upgrades the system to meet Indonesian Health Ministry regulations (**SatuSehat**) and integrates with **ERPNext** for back-office accounting, while introducing advanced features like **Medicine Concoctions**.
 
 ## 2. Problem Statement
 *   **Regulatory Compliance:** Clinics are mandated to sync patient and practitioner data with the SatuSehat national platform.
@@ -55,4 +55,4 @@ The Klinik Admin System is designed to modernize clinic operations by providing 
 *   **v2.2:** ERPNext Sync (Completed).
 *   **v2.3:** SatuSehat & Concoctions (Completed).
 *   **v2.4:** UI/UX Polish, Animations, & Dashboard Logic (Completed).
-*   **v2.5:** E-Prescribing & Clinical Notes (Next).
+*   **v2.5:** TBD (To Be Defined).

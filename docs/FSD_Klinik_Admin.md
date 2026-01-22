@@ -1,5 +1,5 @@
 # FUNCTIONAL SPECIFICATION DOCUMENT (FSD)
-**Project Name:** Klinik Admin System
+**Project Name:** Klinik Intimedicare System
 **Date:** 2026-01-22
 **Version:** 2.4 (UI/UX & Dashboard)
 
@@ -8,7 +8,7 @@
 ## 1. Introduction
 
 ### 1.1 Purpose
-The purpose of the Klinik Admin System is to streamline the operational workflow of a medical clinic, focusing on patient registration, queue management, medicine inventory (including concoctions), user access control, and regulatory compliance through data synchronization with SatuSehat and external ERP systems (Frappe/ERPNext).
+The purpose of the Klinik Intimedicare System is to streamline the operational workflow of a medical clinic, focusing on patient registration, queue management, medicine inventory (including concoctions), user access control, and regulatory compliance through data synchronization with SatuSehat and external ERP systems (Frappe/ERPNext).
 
 ### 1.2 Scope
 The system covers:
@@ -110,4 +110,4 @@ The system covers:
 *   **Message Broker**: Kafka (KRaft mode) - Optional for async events.
 
 ### 5.2 Database Schema
-*   See `ERD_Klinik Admin.md`.
+*   See `ERD_Klinik Intimedicare.md`.

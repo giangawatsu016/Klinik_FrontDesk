@@ -13,7 +13,7 @@ class KlinikAdminApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Klinik Admin',
+      title: 'Klinik Intimedicare',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

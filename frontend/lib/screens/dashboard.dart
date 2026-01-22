@@ -168,7 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(width: 12),
                       const Text(
-                        "Klinik Admin",
+                        "Klinik Intimedicare",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,

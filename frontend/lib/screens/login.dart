@@ -76,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
               AnimatedEntrance(
                 delay: Duration(milliseconds: 100),
                 child: Text(
-                  "Klinik Admin",
+                  "Klinik Intimedicare",
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
