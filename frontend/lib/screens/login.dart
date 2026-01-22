@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import '../widgets/glass_container.dart';
+import '../widgets/animated_entrance.dart';
 import 'dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -52,82 +52,123 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.blue.shade300, Colors.purple.shade300],
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Container(
+          width: 400,
+          padding: const EdgeInsets.all(40),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
           ),
-        ),
-        child: Center(
-          child: GlassContainer(
-            opacity: 0.8, // Slightly more opaque for readability
-            child: SizedBox(
-              width: 350, // Fixed width
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.local_hospital,
-                    size: 64,
-                    color: Colors.blue.shade800,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedEntrance(
+                child: Icon(
+                  Icons.local_hospital_rounded,
+                  size: 64,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 20),
+              AnimatedEntrance(
+                delay: Duration(milliseconds: 100),
+                child: Text(
+                  "Klinik Admin",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
-                  SizedBox(height: 10),
-                  Text(
-                    "Klinik Staff Login",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade900,
+                ),
+              ),
+              SizedBox(height: 8),
+              AnimatedEntrance(
+                delay: Duration(milliseconds: 150),
+                child: Text(
+                  "Please sign in to continue",
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ),
+              SizedBox(height: 40),
+              AnimatedEntrance(
+                delay: Duration(milliseconds: 200),
+                child: TextField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                    labelText: "Username",
+                    labelStyle: TextStyle(color: Colors.grey),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.black),
                     ),
                   ),
-                  SizedBox(height: 30),
-                  TextField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      labelText: "Username",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.5),
+                  onSubmitted: (_) => _login(),
+                ),
+              ),
+              SizedBox(height: 20),
+              AnimatedEntrance(
+                delay: Duration(milliseconds: 300),
+                child: TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    labelStyle: TextStyle(color: Colors.grey),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
-                    onSubmitted: (_) => _login(),
-                  ),
-                  SizedBox(height: 16),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: "Password",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.5),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.black),
                     ),
-                    onSubmitted: (_) => _login(),
                   ),
-                  SizedBox(height: 24),
-                  ElevatedButton(
+                  onSubmitted: (_) => _login(),
+                ),
+              ),
+              SizedBox(height: 40),
+              AnimatedEntrance(
+                delay: Duration(milliseconds: 400),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
                     onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity, 50),
-                      elevation: 5,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      backgroundColor: Colors.blue.shade700,
+                      elevation: 0,
+                      backgroundColor: Colors.black,
                       foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: _isLoading
-                        ? CircularProgressIndicator(color: Colors.white)
-                        : Text("Login", style: TextStyle(fontSize: 16)),
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            "Sign In",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),

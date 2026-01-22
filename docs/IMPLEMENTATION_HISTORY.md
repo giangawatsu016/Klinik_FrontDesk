@@ -168,3 +168,4 @@ This document chronicles the entire development and implementation journey of th
     -   Created `AnimatedEntrance` widget (Slide+Fade).
     -   Applied staggered animations to **Registration**, **Doctor List**, and **Medicine Inventory** forms.
     -   Refined Queue Monitor UI for better readability.
+    -   **Login Screen:** Redesigned to match "Flat White" theme (removed gradient/glass) and standardized input/button styling.
