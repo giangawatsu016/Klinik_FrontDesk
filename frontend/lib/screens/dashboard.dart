@@ -126,7 +126,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       // Doctors, Patients, Medicines, Diagnosis
-      if (["doctors", "patients", "medicines", "diagnosis"].contains(id)) {
+      if ([
+        "doctors",
+        "patients",
+        "medicines",
+        "diagnosis",
+        "diseases",
+      ].contains(id)) {
         return role != "Super Admin";
       }
 
