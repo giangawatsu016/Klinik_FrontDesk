@@ -36,8 +36,9 @@ class _SyncScreenState extends State<SyncScreen> {
       try {
         final pullRes = await pullFn();
         _addLog("Pull Success: ${pullRes['message'] ?? pullRes['status']}");
-        if (pullRes['count'] != null)
+        if (pullRes['count'] != null) {
           _addLog("Pulled Count: ${pullRes['count']}");
+        }
       } catch (e) {
         _addLog("Pull Error: $e");
       }
@@ -47,8 +48,9 @@ class _SyncScreenState extends State<SyncScreen> {
       try {
         final pushRes = await pushFn();
         _addLog("Push Success: ${pushRes['message'] ?? pushRes['status']}");
-        if (pushRes['count'] != null)
+        if (pushRes['count'] != null) {
           _addLog("Pushed Count: ${pushRes['count']}");
+        }
       } catch (e) {
         _addLog("Push Error: $e");
       }
