@@ -531,6 +531,14 @@ class ApiService {
     throw Exception(response.body);
   }
 
+  Future<Map<String, dynamic>> syncDiseases() async {
+    final response = await _safePost('/diseases/sync', null);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception("Sync Failed: ${response.body}");
+  }
+
   Future<void> deleteDisease(int id) async {
     final response = await _safeDelete('/diseases/$id');
     if (response.statusCode != 200) {

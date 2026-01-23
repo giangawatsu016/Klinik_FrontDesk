@@ -60,7 +60,7 @@ class Patient(Base):
     __tablename__ = "patientcore"
     
     id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow) # New field for dashboard stats
+    created_at = Column(DateTime, default=datetime.utcnow, index=True) # New field for dashboard stats
     firstName = Column(String(100))
     lastName = Column(String(100), nullable=True)
     phone = Column(String(20), unique=True) # Added unique constraint
@@ -108,9 +108,9 @@ class PatientQueue(Base):
     id = Column(Integer, primary_key=True, index=True)
     numberQueue = Column(String(20))
     userId = Column(Integer, ForeignKey("patientcore.id")) # Refers to patient
-    appointmentTime = Column(DateTime, default=datetime.utcnow)
+    appointmentTime = Column(DateTime, default=datetime.utcnow, index=True)
     status = Column(String(20), default="Waiting") # Waiting, In Consultation, Completed
-    isPriority = Column(Boolean, default=False)
+    isPriority = Column(Boolean, default=False, index=True)
     isChecked = Column(Boolean, default=False)
     
     medicalFacilityPolyDoctorId = Column(Integer, ForeignKey("doctorcore.medicalFacilityPolyDoctorId"), nullable=True)

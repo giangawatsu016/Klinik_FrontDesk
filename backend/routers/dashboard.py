@@ -28,8 +28,27 @@ def get_dashboard_overview(db: Session = Depends(database.get_db), current_user:
         models.PatientQueue.appointmentTime >= today_start
     ).count()
 
+    # 4. Recent Activity (Last 5 Queues TODAY)
+    recent_queues = db.query(models.PatientQueue).filter(
+        models.PatientQueue.appointmentTime >= today_start
+    ).order_by(
+        models.PatientQueue.appointmentTime.desc()
+    ).limit(5).all()
+
+    recent_activity = []
+    for q in recent_queues:
+        # Format: "Patient Name - Polyclinic (Status)"
+        patient_name = f"{q.patient.firstName} {q.patient.lastName or ''}".strip() if q.patient else "Unknown"
+        activity = {
+            "time": q.appointmentTime.strftime("%H:%M"),
+            "description": f"{patient_name} - {q.queueType}",
+            "status": q.status
+        }
+        recent_activity.append(activity)
+
     return {
         "total_patients": total_patients,
         "doctors_available": doctors_available,
-        "queue_today": queue_today
+        "queue_today": queue_today,
+        "recent_activity": recent_activity
     }

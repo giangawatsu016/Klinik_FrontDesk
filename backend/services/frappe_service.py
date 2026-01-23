@@ -121,19 +121,14 @@ class FrappeClient:
             print(f"Frappe Get Items Error: {e}")
             return []
     
-    def get_doctors(self):
+    def get_practitioners(self):
         # Fetch Healthcare Practitioner
         filters = {"status": "Active"}
         try:
-            # Need to ensure we fetch practitioner_name and department
-            # get_list by default fetches 'name' (ID). We might need more details.
-            # Using standard get_list, we'll get 'name'.
-            # Ideally we want: practitioner_name, department_name (or department)
-            
-            # Using REST API with fields
+            # Need to fetch identifiers for IHS linking
             url = f"{self.base_url}/api/resource/Healthcare Practitioner"
             params = {
-                "fields": '["name", "practitioner_name", "department"]',
+                "fields": '["name", "practitioner_name", "department", "practitioner_identifiers"]',
                 "filters": json.dumps(filters),
                 "limit_page_length": 500
             }
@@ -142,7 +137,32 @@ class FrappeClient:
                 return response.json().get("data", [])
             return []
         except Exception as e:
-            print(f"Frappe Get Doctors Error: {e}")
+            print(f"Frappe Get Practitioners Error: {e}")
+            return []
+
+    def get_patients(self, limit: int = 50):
+        # Fetch Patients
+        filters = {"status": "Active"} # Assuming status field exists, or remove if not sure
+        try:
+            url = f"{self.base_url}/api/resource/Patient"
+            # Fetch fields needed by patients.py
+            fields = '["name", "patient_name", "sex", "mobile", "dob", "primary_address", "mobile_uuid"]'
+            
+            # Note: mobile_uuid might be a custom field. If it fails, we should handle it.
+            # Safe bet: fetch standard fields first.
+            
+            params = {
+                "fields": fields,
+                "limit_page_length": limit,
+                "order_by": "creation desc"
+            }
+            response = requests.get(url, headers=self.headers, params=params, timeout=10)
+            if response.status_code == 200:
+                return response.json().get("data", [])
+            print(f"Frappe Get Patients Failed: {response.text}")
+            return []
+        except Exception as e:
+            print(f"Frappe Get Patients Error: {e}")
             return []
 
     def create_practitioner(self, first_name: str, last_name: str, department: str):
@@ -225,6 +245,21 @@ class FrappeClient:
     
     def delete_erp_user(self, email: str):
         return self.delete_document("User", email)
+
+    # --- Diagnosis / Disease ---
+    def create_diagnosis(self, icd_code: str, description: str):
+        # Check if exists first
+        filters = {"code": icd_code}
+        existing = self.get_list("Diagnosis", filters=filters)
+        if existing:
+            return existing[0]
+
+        data = {
+            "code": icd_code,
+            "description": description,
+            "diagnosis_group": "General" # Optional default
+        }
+        return self._post("Diagnosis", data)
 
 # Singleton
 frappe_client = FrappeClient()

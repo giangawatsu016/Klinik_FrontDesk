@@ -69,3 +69,21 @@ def delete_disease(disease_id: int, db: Session = Depends(database.get_db), curr
     db.delete(db_disease)
     db.commit()
     return {"message": "Disease deleted"}
+
+@router.post("/sync")
+def sync_diseases(db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
+    from ..services.frappe_service import frappe_client
+    
+    # Push Local -> ERPNext
+    diseases = db.query(models.Disease).all()
+    count = 0
+    errors = 0
+    
+    for disease in diseases:
+        result = frappe_client.create_diagnosis(disease.icd_code, disease.name)
+        if result:
+            count += 1
+        else:
+            errors += 1
+            
+    return {"status": "success", "synced": count, "errors": errors}

@@ -93,8 +93,7 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
 def get_queue(db: Session = Depends(database.get_db)):
     today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     return db.query(models.PatientQueue).filter(
-        (models.PatientQueue.status.in_(["Waiting", "In Consultation"])) | 
-        ((models.PatientQueue.status == "Completed") & (models.PatientQueue.appointmentTime >= today_start))
+        models.PatientQueue.appointmentTime >= today_start
     ).order_by(models.PatientQueue.isPriority.desc(), models.PatientQueue.appointmentTime.asc()).all()
 
 @router.put("/{queue_id}/status", response_model=schemas.PatientQueue)

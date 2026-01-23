@@ -81,6 +81,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(2, 2),
+                        blurRadius: 4.0,
+                        color: Colors.black.withValues(alpha: 0.15),
+                      ),
+                    ],
                   ),
                 ),
               ),

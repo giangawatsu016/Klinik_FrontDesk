@@ -168,11 +168,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: const Text(
+                        child: Text(
                           "Klinik Intimedicare",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(2, 2),
+                                blurRadius: 4.0,
+                                color: Colors.black.withValues(alpha: 0.15),
+                              ),
+                            ],
                           ),
                           overflow: TextOverflow.visible,
                         ),

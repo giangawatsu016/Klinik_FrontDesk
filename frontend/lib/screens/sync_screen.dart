@@ -53,6 +53,7 @@ class _SyncScreenState extends State<SyncScreen> {
     await _runSync("Doctors", widget.apiService.syncDoctors);
     await _runSync("Medicines", widget.apiService.syncMedicines);
     await _runSync("Patients", widget.apiService.syncPatients);
+    await _runSync("Diseases", widget.apiService.syncDiseases);
 
     _addLog("Sync All Complete.");
     if (mounted) setState(() => _isLoading = false);
@@ -97,6 +98,12 @@ class _SyncScreenState extends State<SyncScreen> {
                 Icons.people,
                 Colors.orange,
                 () => _runSync("Patients", widget.apiService.syncPatients),
+              ),
+              _buildSyncCard(
+                "Sync Diseases",
+                Icons.coronavirus,
+                Colors.purple,
+                () => _runSync("Diseases", widget.apiService.syncDiseases),
               ),
               SizedBox(width: 40), // Spacer
               ElevatedButton.icon(

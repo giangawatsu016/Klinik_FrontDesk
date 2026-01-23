@@ -14,13 +14,16 @@ class DashboardHomeScreen extends StatelessWidget {
         // Defaults while loading or if error
         String totalPatients = "...";
         String doctorsAvailable = "...";
-        String queueToday = "...";
+        List<Map<String, dynamic>> recentActivity = [];
 
         if (snapshot.hasData) {
           final data = snapshot.data!;
           totalPatients = data['total_patients'].toString();
           doctorsAvailable = data['doctors_available'].toString();
-          queueToday = data['queue_today'].toString();
+
+          recentActivity = List<Map<String, dynamic>>.from(
+            data['recent_activity'] ?? [],
+          );
         }
 
         return Padding(
@@ -51,18 +54,10 @@ class DashboardHomeScreen extends StatelessWidget {
                     icon: Icons.medical_services_outlined,
                     color: Colors.green.shade600,
                   ),
-                  const SizedBox(width: 16),
-                  _buildStatCard(
-                    context,
-                    title: "Queue Today",
-                    value: queueToday,
-                    icon: Icons.chair_alt_outlined,
-                    color: Colors.orange.shade600,
-                  ),
                 ],
               ),
               const SizedBox(height: 32),
-              // Placeholder for Chart or Recent Activity
+              // Recent Activity List
               Expanded(
                 child: Container(
                   width: double.infinity,
@@ -83,14 +78,48 @@ class DashboardHomeScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            "Chart Visualization Placeholder",
-                            style: TextStyle(color: Colors.grey.shade400),
+                      if (recentActivity.isEmpty)
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              "No recent activity",
+                              style: TextStyle(color: Colors.grey.shade400),
+                            ),
+                          ),
+                        )
+                      else
+                        Expanded(
+                          child: ListView.separated(
+                            itemCount: recentActivity.length,
+                            separatorBuilder: (context, index) =>
+                                const Divider(),
+                            itemBuilder: (context, index) {
+                              final activity = recentActivity[index];
+                              return ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.blue.shade50,
+                                  child: Icon(
+                                    Icons.person_outline,
+                                    color: Colors.blue.shade600,
+                                    size: 20,
+                                  ),
+                                ),
+                                title: Text(
+                                  activity['description'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  activity['time'],
+                                  style: TextStyle(color: Colors.grey.shade500),
+                                ),
+                                trailing: _buildStatusBadge(activity['status']),
+                              );
+                            },
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -99,6 +128,39 @@ class DashboardHomeScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    Color color;
+    switch (status) {
+      case "Waiting":
+        color = Colors.orange;
+        break;
+      case "In Consultation":
+        color = Colors.blue;
+        break;
+      case "Completed":
+        color = Colors.green;
+        break;
+      default:
+        color = Colors.grey;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 
