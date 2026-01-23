@@ -13,7 +13,8 @@ def get_doctors(db: Session = Depends(database.get_db)):
     return db.query(models.DoctorEntity).order_by(models.DoctorEntity.namaDokter.asc()).all()
 
 @router.post("/sync")
-def sync_doctors(db: Session = Depends(database.get_db)):
+def sync_doctors_pull(db: Session = Depends(database.get_db)):
+    """Pull data from ERPNext to App"""
     from ..services.frappe_service import frappe_client
     
     # 1. Fetch Practitioners from ERPNext
@@ -26,7 +27,7 @@ def sync_doctors(db: Session = Depends(database.get_db)):
     for p in practitioners:
         # Check if exists by IHS Number (or Name if IHS missing)
         ihs = p.get("practitioner_identifiers", [{}])[0].get("identifier_value") if p.get("practitioner_identifiers") else None
-        name = p.get("name1") # practitioner_name
+        name = p.get("practitioner_name")
         
         # We use name as generic identifier if IHS is missing for now, though risky
         existing = None
@@ -36,11 +37,11 @@ def sync_doctors(db: Session = Depends(database.get_db)):
              existing = db.query(models.DoctorEntity).filter(models.DoctorEntity.namaDokter == name).first()
              
         if existing:
-            # Update info
+            # Update info from ERPNext (Master)
             existing.doctorSIP = ihs if ihs else existing.doctorSIP
             # existing.polyName = ... # Map department?
         else:
-             # Create new
+             # Create new locally
              new_doc = models.DoctorEntity(
                  namaDokter=name,
                  polyName="General", # Default
@@ -52,6 +53,42 @@ def sync_doctors(db: Session = Depends(database.get_db)):
         synced_count += 1
         
     db.commit()
+    return {"status": "success", "count": synced_count}
+
+@router.post("/sync/push")
+def sync_doctors_push(db: Session = Depends(database.get_db)):
+    """Push data from App to ERPNext"""
+    from ..services.frappe_service import frappe_client
+    
+    local_doctors = db.query(models.DoctorEntity).all()
+    synced_count = 0
+    
+    for doc in local_doctors:
+        try:
+            name_parts = doc.namaDokter.split(" ", 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ""
+            
+            # Check if exists in ERPNext by Name (since we don't store ERP ID reliably yet)
+            erp_docs = frappe_client.get_list("Healthcare Practitioner", filters={"practitioner_name": doc.namaDokter})
+            
+            if erp_docs:
+                # Update
+                frappe_id = erp_docs[0].get("name")
+                update_data = {
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "department": doc.polyName
+                }
+                frappe_client.update_practitioner(frappe_id, update_data)
+            else:
+                # Create
+                frappe_client.create_practitioner(first_name, last_name, doc.polyName)
+            
+            synced_count += 1
+        except Exception as e:
+            print(f"Error pushing doctor {doc.namaDokter}: {e}")
+
     return {"status": "success", "count": synced_count}
 
 @router.post("", response_model=schemas.Doctor)

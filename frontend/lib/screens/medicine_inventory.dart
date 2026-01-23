@@ -18,7 +18,7 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
   List<Medicine> _medicines = [];
   List<Medicine> _filteredMedicines = [];
   bool _isLoading = true;
-  bool _isSyncing = false;
+
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -63,35 +63,6 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
           )
           .toList();
     });
-  }
-
-  void _syncMedicines() async {
-    setState(() => _isSyncing = true);
-    try {
-      final result = await widget.apiService.syncMedicines();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "Sync Success! Updated ${result['count']} items from ERPNext.",
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-        _loadMedicines(); // Reload list
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Sync Failed: ${e.toString()}"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSyncing = false);
-    }
   }
 
   void _showDetailDialog(Medicine medicine) {
@@ -174,20 +145,7 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen> {
               );
             },
           ),
-          IconButton(
-            icon: _isSyncing
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.blue,
-                    ),
-                  )
-                : Icon(Icons.sync, color: Colors.blue.shade900),
-            tooltip: "Sync with ERPNext",
-            onPressed: _isSyncing ? null : _syncMedicines,
-          ),
+
           SizedBox(width: 16),
         ],
       ),

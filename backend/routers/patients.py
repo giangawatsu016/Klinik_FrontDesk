@@ -61,6 +61,46 @@ def sync_patients(db: Session = Depends(database.get_db)):
     
     return {"status": "success", "message": f"Synced {count} new contacts from ERPNext"}
 
+@router.post("/sync/push")
+def sync_patients_push(db: Session = Depends(database.get_db)):
+    """Push data from App to ERPNext"""
+    from ..services.frappe_service import frappe_client
+    
+    local_patients = db.query(models.Patient).all()
+    synced_count = 0
+    
+    for pat in local_patients:
+        try:
+            # Prepare data
+            data = {
+                "first_name": pat.firstName,
+                "last_name": pat.lastName,
+                "sex": pat.gender,
+                "mobile": pat.phone,
+                "dob": str(pat.birthday) if pat.birthday else None,
+            }
+            
+            # Check if linked (has frappe_id)
+            if pat.frappeId:
+                 # Update
+                 frappe_client.update_patient(pat.frappeId, data)
+                 synced_count += 1
+            else:
+                 # Create (or Check existence by phone via create_patient logic in service)
+                 # The service `create_patient` handles check-if-exists logic.
+                 resp = frappe_client.create_patient(data)
+                 if resp and "data" in resp:
+                     # Update local ID
+                     new_id = resp["data"].get("name")
+                     pat.frappeId = new_id
+                     synced_count += 1
+                     
+        except Exception as e:
+            print(f"Error pushing patient {pat.firstName}: {e}")
+            
+    db.commit()
+    return {"status": "success", "count": synced_count}
+
 @router.post("", response_model=schemas.Patient)
 def create_patient(patient: schemas.PatientCreate, background_tasks: BackgroundTasks, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
     # Check if existing by ID Card

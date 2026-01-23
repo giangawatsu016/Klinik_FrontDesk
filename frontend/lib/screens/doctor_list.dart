@@ -41,29 +41,6 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
     }
   }
 
-  Future<void> _syncDoctors() async {
-    setState(() => _isLoading = true);
-    try {
-      final res = await widget.apiService.syncDoctors();
-      if (mounted) {
-        String msg = "Synced ${res['count']} new doctors.";
-        if (res['status'] == 'failed') msg = "Sync Failed: ${res['message']}";
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
-        _loadDoctors(); // Reload list
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Sync Error: $e")));
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
   void _showDoctorDetail(Doctor doctor) {
     showDialog(
       context: context,
@@ -146,19 +123,6 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                 opacity: 0.8,
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: _syncDoctors,
-                            icon: Icon(Icons.sync),
-                            label: Text("Sync from ERPNext"),
-                          ),
-                        ],
-                      ),
-                    ),
                     Expanded(
                       child: ListView.separated(
                         itemCount: _doctors.length,
@@ -297,6 +261,7 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                     child: TextFormField(
                       initialValue: doctorSIP,
                       decoration: InputDecoration(labelText: "SIP Number"),
+                      validator: (v) => v!.isEmpty ? "Required" : null,
                       onSaved: (v) => doctorSIP = v ?? '',
                     ),
                   ),

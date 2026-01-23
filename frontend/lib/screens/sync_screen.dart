@@ -22,21 +22,38 @@ class _SyncScreenState extends State<SyncScreen> {
     });
   }
 
-  Future<void> _runSync(
+  Future<void> _runCombinedSync(
     String name,
-    Future<Map<String, dynamic>> Function() syncFn,
+    Future<Map<String, dynamic>> Function() pullFn,
+    Future<Map<String, dynamic>> Function() pushFn,
   ) async {
     setState(() => _isLoading = true);
     _addLog("Starting $name Sync...");
 
     try {
-      final result = await syncFn();
-      _addLog("Success: ${result['message'] ?? result['status'] ?? 'OK'}");
-      if (result['count'] != null) {
-        _addLog("Synced Count: ${result['count']}");
+      // 1. PULL
+      _addLog("Pulling $name from ERPNext...");
+      try {
+        final pullRes = await pullFn();
+        _addLog("Pull Success: ${pullRes['message'] ?? pullRes['status']}");
+        if (pullRes['count'] != null)
+          _addLog("Pulled Count: ${pullRes['count']}");
+      } catch (e) {
+        _addLog("Pull Error: $e");
+      }
+
+      // 2. PUSH
+      _addLog("Pushing $name to ERPNext...");
+      try {
+        final pushRes = await pushFn();
+        _addLog("Push Success: ${pushRes['message'] ?? pushRes['status']}");
+        if (pushRes['count'] != null)
+          _addLog("Pushed Count: ${pushRes['count']}");
+      } catch (e) {
+        _addLog("Push Error: $e");
       }
     } catch (e) {
-      _addLog("Error ($name): $e");
+      _addLog("General Error ($name): $e");
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -50,12 +67,30 @@ class _SyncScreenState extends State<SyncScreen> {
       _logs.clear();
     });
 
-    await _runSync("Doctors", widget.apiService.syncDoctors);
-    await _runSync("Medicines", widget.apiService.syncMedicines);
-    await _runSync("Patients", widget.apiService.syncPatients);
-    await _runSync("Diseases", widget.apiService.syncDiseases);
+    _addLog("Starting Global Sync (Pull + Push)...");
 
-    _addLog("Sync All Complete.");
+    await _runCombinedSync(
+      "Doctors",
+      widget.apiService.syncDoctors,
+      widget.apiService.syncDoctorsPush,
+    );
+    await _runCombinedSync(
+      "Medicines",
+      widget.apiService.syncMedicines,
+      widget.apiService.syncMedicinesPush,
+    );
+    await _runCombinedSync(
+      "Patients",
+      widget.apiService.syncPatients,
+      widget.apiService.syncPatientsPush,
+    );
+    await _runCombinedSync(
+      "Diseases",
+      widget.apiService.syncDiseases,
+      widget.apiService.syncDiseasesPush,
+    );
+
+    _addLog("Global Sync Complete.");
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -82,33 +117,52 @@ class _SyncScreenState extends State<SyncScreen> {
             runSpacing: 16,
             children: [
               _buildSyncCard(
-                "Sync Doctors",
+                "Doctors",
                 Icons.medical_services,
                 Colors.blue,
-                () => _runSync("Doctors", widget.apiService.syncDoctors),
+                () => _runCombinedSync(
+                  "Doctors",
+                  widget.apiService.syncDoctors,
+                  widget.apiService.syncDoctorsPush,
+                ),
               ),
               _buildSyncCard(
-                "Sync Medicines",
+                "Medicines",
                 Icons.medication,
                 Colors.green,
-                () => _runSync("Medicines", widget.apiService.syncMedicines),
+                () => _runCombinedSync(
+                  "Medicines",
+                  widget.apiService.syncMedicines,
+                  widget.apiService.syncMedicinesPush,
+                ),
               ),
               _buildSyncCard(
-                "Sync Patients",
+                "Patients",
                 Icons.people,
                 Colors.orange,
-                () => _runSync("Patients", widget.apiService.syncPatients),
+                () => _runCombinedSync(
+                  "Patients",
+                  widget.apiService.syncPatients,
+                  widget.apiService.syncPatientsPush,
+                ),
               ),
               _buildSyncCard(
-                "Sync Diseases",
+                "Diseases",
                 Icons.coronavirus,
                 Colors.purple,
-                () => _runSync("Diseases", widget.apiService.syncDiseases),
+                () => _runCombinedSync(
+                  "Diseases",
+                  widget.apiService.syncDiseases,
+                  widget.apiService.syncDiseasesPush,
+                ),
               ),
-              SizedBox(width: 40), // Spacer
+
+              SizedBox(width: 40),
+
+              // Global Action
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black, // Standardized
+                  backgroundColor: Colors.black,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 ),
@@ -123,7 +177,7 @@ class _SyncScreenState extends State<SyncScreen> {
                         ),
                       )
                     : Icon(Icons.sync_alt),
-                label: Text("SYNC ALL DATA"),
+                label: Text("SYNC ALL DATA (Pull + Push)"),
               ),
             ],
           ),
@@ -164,21 +218,24 @@ class _SyncScreenState extends State<SyncScreen> {
     VoidCallback onTap,
   ) {
     return Card(
-      // Elevation 0 from Theme
+      elevation: 2,
       child: InkWell(
         onTap: _isLoading ? null : onTap,
         child: Container(
-          width: 200,
+          width: 220,
           padding: EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 40, color: _isLoading ? Colors.grey : color),
               SizedBox(height: 12),
-              Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                title,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
               SizedBox(height: 8),
               Text(
-                "Pull from ERPNext",
+                "Pull & Push",
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],

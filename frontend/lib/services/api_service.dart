@@ -314,12 +314,28 @@ class ApiService {
     throw Exception("Sync Doctors Failed: ${response.body}");
   }
 
+  Future<Map<String, dynamic>> syncDoctorsPush() async {
+    final response = await _safePost('/doctors/sync/push', null);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception("Push Doctors Failed: ${response.body}");
+  }
+
   Future<Map<String, dynamic>> syncPatients() async {
     final response = await _safePost('/patients/sync', null);
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     }
     throw Exception("Sync Patients Failed: ${response.body}");
+  }
+
+  Future<Map<String, dynamic>> syncPatientsPush() async {
+    final response = await _safePost('/patients/sync/push', null);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception("Push Patients Failed: ${response.body}");
   }
 
   // Medicine Methods
@@ -414,6 +430,15 @@ class ApiService {
       return json.decode(response.body);
     } else {
       throw Exception('Failed to sync medicines');
+    }
+  }
+
+  Future<Map<String, dynamic>> syncMedicinesPush() async {
+    final response = await _safePost('/medicines/sync/push', null);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to push medicines');
     }
   }
 
@@ -537,6 +562,14 @@ class ApiService {
       return jsonDecode(response.body);
     }
     throw Exception("Sync Failed: ${response.body}");
+  }
+
+  Future<Map<String, dynamic>> syncDiseasesPush() async {
+    final response = await _safePost('/diseases/sync/push', null);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception("Push Failed: ${response.body}");
   }
 
   Future<void> deleteDisease(int id) async {

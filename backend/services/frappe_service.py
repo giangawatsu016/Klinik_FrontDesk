@@ -261,5 +261,22 @@ class FrappeClient:
         }
         return self._post("Diagnosis", data)
 
+    # --- Items (Medicines) ---
+    def create_item(self, item_code: str, item_name: str, stock_uom: str, description: str = None, standard_rate: int = 0):
+        data = {
+            "item_code": item_code,
+            "item_name": item_name,
+            "item_group": "Products", # Default group
+            "stock_uom": stock_uom,
+            "description": description,
+            "standard_rate": standard_rate,
+            "is_stock_item": 1,
+            "is_sales_item": 1
+        }
+        return self._post("Item", data)
+
+    def update_item(self, item_code: str, data: dict):
+        return self._put("Item", item_code, data)
+
 # Singleton
 frappe_client = FrappeClient()

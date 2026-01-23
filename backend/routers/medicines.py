@@ -41,7 +41,8 @@ def create_medicine(medicine: schemas.MedicineCreate, db: Session = Depends(data
     return new_med
 
 @router.post("/sync")
-def sync_medicines(db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
+def sync_medicines_pull(db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
+    """Pull data from ERPNext to App"""
     # 1. Fetch Items from ERPNext
     items = frappe_client.get_items()
     if not items:
@@ -80,6 +81,46 @@ def sync_medicines(db: Session = Depends(database.get_db), current_user: models.
         synced_count += 1
     
     db.commit()
+    return {"status": "success", "count": synced_count}
+
+@router.post("/sync/push")
+def sync_medicines_push(db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
+    """Push data from App to ERPNext"""
+    local_meds = db.query(models.Medicine).all()
+    synced_count = 0
+    
+    for med in local_meds:
+        try:
+            # Check if using manual code (e.g. MANUAL-...), maybe we want to create real code in ERP?
+            # For now, we respect the local item code which should be "Item Code" in ERPNext.
+            
+            # Check if exists by Item Code
+            # Optimization: could fetch all items first, but per-item is safer for now.
+            filters = {"item_code": med.erpnext_item_code}
+            existing_erp = frappe_client.get_list("Item", filters=filters)
+            
+            if existing_erp:
+                # Update
+                update_data = {
+                    "item_name": med.medicineName,
+                    "description": med.medicineDescription,
+                    "stock_uom": med.unit,
+                    "standard_rate": med.medicineRetailPrice
+                }
+                frappe_client.update_item(med.erpnext_item_code, update_data)
+            else:
+                # Create
+                frappe_client.create_item(
+                    item_code=med.erpnext_item_code,
+                    item_name=med.medicineName,
+                    stock_uom=med.unit,
+                    description=med.medicineDescription,
+                    standard_rate=med.medicineRetailPrice
+                )
+            synced_count += 1
+        except Exception as e:
+            print(f"Error pushing medicine {med.medicineName}: {e}")
+
     return {"status": "success", "count": synced_count}
 
 @router.put("/{medicine_id}", response_model=schemas.Medicine)
