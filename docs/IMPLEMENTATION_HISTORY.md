@@ -169,3 +169,29 @@ This document chronicles the entire development and implementation journey of th
     -   Applied staggered animations to **Registration**, **Doctor List**, and **Medicine Inventory** forms.
     -   Refined Queue Monitor UI for better readability.
     -   **Login Screen:** Redesigned to match "Flat White" theme (removed gradient/glass) and standardized input/button styling.
+
+---
+
+## Phase 9: Bi-directional Sync & Logic Refinements (v2.5)
+**Goal:** Complete the two-way data integration loop and refine application logic/UI.
+
+### 9.1 Bi-Directional Synchronization
+*   **Action:** Enable full data consistency between App and ERPNext.
+*   **Implementation:**
+    -   **Push Endpoints:** Created `/sync/push` endpoints in Backend (`doctors`, `medicines`, `patients`, `diseases`) to send local data to ERPNext.
+    -   **Unified Sync UI:** Refactored `SyncScreen` in Frontend.
+        *   Combined "Pull" and "Push" buttons into a single "Sync" action per module.
+        *   Created global "SYNC ALL" button for sequential Pull-then-Push operations.
+    -   **Disease Sync:** Centralized Disease sync to the main Sync Screen.
+
+### 9.2 Logic & Validation Strengthening
+*   **Action:** Ensure data validity and accurate reporting.
+*   **Implementation:**
+    -   **Daily Queue Reset:** Updated `dashboard.py` and `Recent Activity` logic to strictly filter by "Today's Date", ensuring the queue resets at midnight.
+    -   **Mandatory SIP:** Added `validator` to Doctor Form to enforce SIP Number entry.
+
+### 9.3 UI Refinements
+*   **Action:** Clean up interface.
+*   **Implementation:**
+    -   Removed redundant "Sync" buttons from individual List screens (Doctor, Medicine) to force use of the centralized `SyncScreen`.
+    -   Added "Recent Activity" list to Dashboard for real-time visibility.

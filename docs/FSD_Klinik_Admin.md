@@ -1,7 +1,7 @@
 # FUNCTIONAL SPECIFICATION DOCUMENT (FSD)
 **Project Name:** Klinik Intimedicare System
 **Date:** 2026-01-22
-**Version:** 2.4 (UI/UX & Dashboard)
+**Version:** 2.5 (Bi-directional Sync & Dashboard Logic)
 
 ---
 
@@ -55,10 +55,10 @@ The system covers:
 *   **REQ-QUEUE-06**: **Prioritization**: `isPriority` flag triggers sorting to top of list. Prefix `D-` (Doctor) and `DP-` (Doctor Priority).
 
 ### 3.4 Integration Module
-*   **REQ-INT-01**: **User Sync**: Local User -> ERPNext User (via Email).
-*   **REQ-INT-02**: **Patient Sync**: Local Patient -> ERPNext Customer.
-*   **REQ-INT-03**: **Doctor Sync**: Local Doctor -> Healthcare Practitioner (ERPNext) & Practitioner (SatuSehat).
-*   **REQ-INT-04**: **Medicine Sync**: ERPNext Item -> Local Medicine.
+*   **REQ-INT-01**: **Bi-Directional User Sync**: Local User <-> ERPNext User (via Email).
+*   **REQ-INT-02**: **Bi-Directional Patient Sync**: Local Patient <-> ERPNext Customer.
+*   **REQ-INT-03**: **Doctor Sync**: Local Doctor <-> Healthcare Practitioner (ERPNext) & Practitioner (SatuSehat).
+*   **REQ-INT-04**: **Bi-Directional Medicine Sync**: ERPNext Item <-> Local Medicine.
 *   **REQ-INT-05**: **Satu Sehat Auth**: OAuth2 Token Management (Client Credentials).
 *   **REQ-INT-06**: **Patient Verification**: Search NIK -> Auto-fill Form.
 *   **REQ-INT-07**: **KFA Search**: Search Medicine from Kemkes KFA Browser.
@@ -71,7 +71,7 @@ The system covers:
 *   **REQ-USER-05**: **Rules**: Admin cannot edit Super Admin. Staff cannot view User List.
 
 ### 3.6 Medicine Inventory Module
-*   **REQ-MED-01**: Sync Items from ERPNext.
+*   **REQ-MED-01**: **Bi-Directional Sync**: Pull Items from ERPNext / Push Local Creations to ERPNext.
 *   **REQ-MED-02**: Manual entry support.
 *   **REQ-MED-03**: **Concoctions (Racikan)**: Create combined medicines (Parent) from multiple ingredients (Children) with pricing logic.
 *   **REQ-MED-04**: Stock-based validation.
@@ -97,7 +97,8 @@ The system covers:
 6.  **Dashboard Stats**:
     *   **Total Patients**: New Registrations Today.
     *   **Doctors Available**: Active - In Consultation.
-    *   **Queue Today**: Total queues created today.
+    *   **Queue Today**: Total queues created today (Auto-resets daily).
+    *   **Recent Activity**: Live list of last 5 patients added today.
 
 ---
 

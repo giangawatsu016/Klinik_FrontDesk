@@ -1,7 +1,7 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
 **Project Name:** Klinik Intimedicare System
 **Date:** 2026-01-22
-**Version:** 2.4 (UI/UX & Dashboard)
+**Version:** 2.5 (Bi-directional Sync & Dashboard Logic)
 
 ---
 
@@ -28,7 +28,8 @@ The Klinik Intimedicare System is designed to modernize clinic operations by pro
 *   **Location Sync:** Map Clinic Location ID.
 
 ### 4.2 ERPNext Integration
-*   **Two-Way Sync:** Users, Patients, Medicines.
+*   **Two-Way Sync:** Bi-directional synchronization for Users, Patients, Medicines, and Doctors (Pull & Push).
+*   **Unified Interface:** Single "Sync Data" screen with combined Pull/Push actions.
 *   **Queue-to-Event:** Queues appear on the ERPNext Calendar.
 
 ### 4.3 Advanced Inventory (Concoctions)
@@ -55,4 +56,5 @@ The Klinik Intimedicare System is designed to modernize clinic operations by pro
 *   **v2.2:** ERPNext Sync (Completed).
 *   **v2.3:** SatuSehat & Concoctions (Completed).
 *   **v2.4:** UI/UX Polish, Animations, & Dashboard Logic (Completed).
-*   **v2.5:** TBD (To Be Defined).
+*   **v2.5:** Bi-directional Sync & Logic Refinements (Completed).
+*   **v2.6:** TBD (To Be Defined).

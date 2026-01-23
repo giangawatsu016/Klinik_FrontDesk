@@ -1,5 +1,5 @@
 # Entity Relationship Diagram (ERD) - Klinik Intimedicare
-**Version:** 2.3 (Matches `backend/models.py`)
+**Version:** 2.5 (Matches `backend/models.py`)
 
 ```mermaid
 erDiagram
