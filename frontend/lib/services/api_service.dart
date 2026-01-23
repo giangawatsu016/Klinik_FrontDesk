@@ -526,6 +526,52 @@ class ApiService {
     return [];
   }
 
+  // --- Satu Sehat Sync Methods ---
+
+  Future<Map<String, dynamic>> syncSatuSehatDoctors() async {
+    final response = await _safePost(
+      '/integration/satusehat/doctors/sync',
+      null,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception("SS Pull Doctors Failed: ${response.body}");
+  }
+
+  Future<Map<String, dynamic>> syncSatuSehatDoctorsPush() async {
+    final response = await _safePost(
+      '/integration/satusehat/doctors/push',
+      null,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception("SS Push Doctors Failed: ${response.body}");
+  }
+
+  Future<Map<String, dynamic>> syncSatuSehatPatients() async {
+    final response = await _safePost(
+      '/integration/satusehat/patients/sync',
+      null,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception("SS Pull Patients Failed: ${response.body}");
+  }
+
+  Future<Map<String, dynamic>> syncSatuSehatPatientsPush() async {
+    final response = await _safePost(
+      '/integration/satusehat/patients/push',
+      null,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception("SS Push Patients Failed: ${response.body}");
+  }
+
   // --- Disease Management ---
 
   Future<List<Disease>> getDiseases({String query = ""}) async {

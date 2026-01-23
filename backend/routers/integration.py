@@ -87,3 +87,157 @@ def get_diagnostic_reports(
         return reports
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# --- Sync Endpoints (Doctors) ---
+
+@router.post("/satusehat/doctors/sync")
+def sync_doctors_pull(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Pull/Link: Search SatuSehat by NIK for local doctors and update IHS Number.
+    """
+    try:
+        doctors = db.query(models.DoctorEntity).filter(
+            models.DoctorEntity.identityCard != None
+        ).all()
+        
+        count = 0
+        updated = 0
+        
+        for d in doctors:
+            # Skip if already linked (optional, but good for perf)
+            # if d.ihs_practitioner_number: continue 
+            
+            if len(d.identityCard) != 16: continue
+            
+            result = satu_sehat_client.search_practitioner_by_nik(d.identityCard)
+            if result and result.get("ihs_number"):
+                if d.ihs_practitioner_number != result.get("ihs_number"):
+                    d.ihs_practitioner_number = result.get("ihs_number")
+                    updated += 1
+                count += 1
+        
+        db.commit()
+        return {"status": "success", "message": f"Linked {updated} doctors. Total verified: {count}", "count": updated}
+    except Exception as e:
+        print(f"Error syncing doctors: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/satusehat/doctors/push")
+def sync_doctors_push(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Push: Create Doctors on SatuSehat if they don't exist.
+    """
+    try:
+        # Get doctors with NIK but NO IHS
+        doctors = db.query(models.DoctorEntity).filter(
+            models.DoctorEntity.identityCard != None,
+            models.DoctorEntity.ihs_practitioner_number == None
+        ).all()
+        
+        count = 0
+        for d in doctors:
+            if len(d.identityCard) != 16: continue
+            
+            # Use the service method which constructs payload
+            # Mapping model to dict for the helper
+            d_data = {
+                "identityCard": d.identityCard,
+                "namaDokter": d.namaDokter,
+                "firstName": d.firstName,
+                "lastName": d.lastName
+            }
+            new_ihs = satu_sehat_client.create_practitioner_on_satusehat(d_data)
+            if new_ihs:
+                d.ihs_practitioner_number = new_ihs
+                count += 1
+                
+        db.commit()
+        return {"status": "success", "message": f"Created {count} new practitioners on SatuSehat.", "count": count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Sync Endpoints (Patients) ---
+
+@router.post("/satusehat/patients/sync")
+def sync_patients_pull(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Pull/Link: Search SatuSehat by NIK for local patients and update IHS Number.
+    """
+    try:
+        # Get patients with NIK
+        patients = db.query(models.Patient).filter(
+            models.Patient.identityCard != None
+        ).all()
+        
+        updated = 0
+        verified = 0
+        
+        for p in patients:
+            if len(p.identityCard) != 16: continue
+            
+            # Check SS
+            ss_data = satu_sehat_client.search_patient_by_nik(p.identityCard)
+            if ss_data and ss_data.get("ihs_number"):
+                if p.ihs_number != ss_data.get("ihs_number"):
+                    p.ihs_number = ss_data.get("ihs_number")
+                    updated += 1
+                verified += 1
+                
+        db.commit()
+        return {"status": "success", "message": f"Linked {updated} patients. Total verified: {verified}", "count": updated}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/satusehat/patients/push")
+def sync_patients_push(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Push: Create Patients on SatuSehat if they don't exist.
+    """
+    try:
+        # Patients with NIK but NO IHS
+        patients = db.query(models.Patient).filter(
+            models.Patient.identityCard != None,
+            models.Patient.ihs_number == None
+        ).all()
+        
+        count = 0
+        for p in patients:
+            if len(p.identityCard) != 16: continue
+            
+            # Convert model to dict for service
+            p_data = {
+                "identityCard": p.identityCard,
+                "firstName": p.firstName,
+                "lastName": p.lastName,
+                "gender": p.gender,
+                "birthday": p.birthday,
+                "phone": p.phone,
+                "address": p.address,
+                "city": p.city,
+                "postalCode": p.postalCode
+            }
+            
+            # This method attempts to create
+            new_ihs = satu_sehat_client._create_new_patient_on_satusehat(p_data)
+            if new_ihs:
+                p.ihs_number = new_ihs
+                count += 1
+                
+        db.commit()
+        return {"status": "success", "message": f"Created {count} new patients on SatuSehat.", "count": count}
+    except Exception as e:
+        print(f"Push Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

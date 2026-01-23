@@ -183,6 +183,47 @@ class _SyncScreenState extends State<SyncScreen> {
               ),
             ],
           ),
+
+          SizedBox(height: 32),
+
+          // --- SatuSehat Section ---
+          Row(
+            children: [
+              Icon(Icons.health_and_safety, size: 32, color: Colors.green),
+              SizedBox(width: 16),
+              Text(
+                "SatuSehat Synchronization",
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+            ],
+          ),
+          SizedBox(height: 24),
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: [
+              _buildSyncCard(
+                "SatuSehat Doctors",
+                Icons.medical_services_outlined,
+                Colors.teal,
+                () => _runCombinedSync(
+                  "SatuSehat Doctors",
+                  widget.apiService.syncSatuSehatDoctors,
+                  widget.apiService.syncSatuSehatDoctorsPush,
+                ),
+              ),
+              _buildSyncCard(
+                "SatuSehat Patients",
+                Icons.people_outline,
+                Colors.orangeAccent,
+                () => _runCombinedSync(
+                  "SatuSehat Patients",
+                  widget.apiService.syncSatuSehatPatients,
+                  widget.apiService.syncSatuSehatPatientsPush,
+                ),
+              ),
+            ],
+          ),
           Divider(height: 48),
           Text("Sync Logs", style: TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: 8),
