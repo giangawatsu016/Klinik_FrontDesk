@@ -43,23 +43,24 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
     if existing_queue:
         raise HTTPException(status_code=400, detail="Patient already has an active queue for today")
 
-    # Get last number
+    # Get last number for this specific type and priority
     last_queue = db.query(models.PatientQueue).filter(
         models.PatientQueue.appointmentTime >= today_start,
-        models.PatientQueue.numberQueue.like(f"{prefix}%")
+        models.PatientQueue.queueType == queue_data.queueType,
+        models.PatientQueue.isPriority == queue_data.isPriority
     ).order_by(models.PatientQueue.id.desc()).first()
     
     if last_queue:
         # Assuming numberQueue is like "P001", "PP002", "A003", "AP004"
         # Extract the numeric part after the prefix
         try:
+            # We know the prefix matches because we filtered by the exact same type/priority
             last_num_str = last_queue.numberQueue[len(prefix):]
             last_num = int(last_num_str)
             new_num = last_num + 1
         except (ValueError, IndexError):
-            # Fallback if parsing fails, e.g., if numberQueue format is unexpected
+            # Fallback if parsing fails
             new_num = 1
-            # Optionally, log this error
     else:
         new_num = 1
         

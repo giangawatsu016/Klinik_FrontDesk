@@ -56,10 +56,21 @@ erDiagram
         int medicineRetailPrice "Sell Price"
         int qty "Stock"
         string unit "uom"
+        string unit "uom"
+        string dosage_form
         string howToConsume
         string notes
         int signa1
         float signa2
+    }
+
+    %% Core: Medicine Batch
+    MedicineBatch {
+        int id PK
+        int medicineId FK
+        string batchNumber
+        date expiryDate
+        int qty
     }
 
     %% Core: Medicine Concoction (Racikan)
@@ -116,12 +127,27 @@ erDiagram
         int medicalFacilityPolyDoctorId FK
     }
 
+    %% Core: Payments
+    Payment {
+        int id PK
+        int patient_id FK
+        int amount
+        string method "Cash, BPJS, Insurance"
+        string insuranceName
+        string insuranceNumber
+        string notes
+        string claimStatus
+        datetime created_at
+    }
+
     %% Relationships
     Patient }|..|| MaritalStatus : "has"
     Patient }|..|| Issuer : "uses payment"
     Patient ||--o{ PatientQueue : "requests"
+    Patient ||--o{ Payment : "makes"
     DoctorEntity ||--o{ PatientQueue : "assigned to"
     Medicine ||--o{ MedicineConcoction : "composed of"
     Medicine ||--o{ MedicineConcoction : "is ingredient in"
+    Medicine ||--o{ MedicineBatch : "has batches"
 
 ```

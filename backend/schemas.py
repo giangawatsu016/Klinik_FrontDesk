@@ -189,15 +189,47 @@ class Medicine(MedicineBase):
     class Config:
         from_attributes = True
 
-# Concoction Schemas
-class ConcoctionItemCreate(BaseModel):
-    child_medicine_id: int
-    qty: float
 
-class ConcoctionCreate(BaseModel):
-    medicineName: str
-    items: List[ConcoctionItemCreate]
-    serviceFee: Optional[int] = 0
-    totalQty: int
-    unit: str = "Pcs"
-    description: Optional[str] = None
+
+# Payment Schemas
+class PaymentBase(BaseModel):
+    patient_id: int
+    amount: int
+    method: str
+    insuranceName: Optional[str] = None
+    insuranceNumber: Optional[str] = None
+    notes: Optional[str] = None
+
+class PaymentCreate(PaymentBase):
+    pass
+
+class Payment(PaymentBase):
+    id: int
+    claimStatus: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Pharmacist Schemas
+class PharmacistBase(BaseModel):
+    name: str
+    sip_no: str
+    ihs_number: Optional[str] = None
+    is_active: bool = True
+
+class PharmacistCreate(PharmacistBase):
+    pass
+
+class Pharmacist(PharmacistBase):
+    id: int
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
+class AppConfig(BaseModel):
+    key: str
+    value: str 
+    
+    class Config:
+        from_attributes = True

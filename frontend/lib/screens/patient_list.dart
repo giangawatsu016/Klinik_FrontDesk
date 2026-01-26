@@ -113,60 +113,87 @@ class _PatientListScreenState extends State<PatientListScreen> {
                     ),
                   ],
                 ),
-                child: ListView.separated(
+                child: GridView.builder(
                   padding: EdgeInsets.all(16),
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 180,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.8,
+                  ),
                   itemCount: _patients.length,
-                  separatorBuilder: (context, index) =>
-                      Divider(color: Colors.grey.shade100, height: 1),
                   itemBuilder: (context, index) {
                     final patient = _patients[index];
-                    return ListTile(
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      leading: CircleAvatar(
-                        backgroundColor: Theme.of(
-                          context,
-                        ).primaryColor.withValues(alpha: 0.1),
-                        radius: 24,
-                        child: Icon(
-                          LucideIcons.user,
-                          color: Theme.of(context).primaryColor,
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(
-                        "${patient.firstName} ${patient.lastName}",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                      subtitle: Row(
-                        children: [
-                          Icon(LucideIcons.phone, size: 14, color: Colors.grey),
-                          SizedBox(width: 4),
-                          Text(
-                            patient.phone,
-                            style: TextStyle(fontFamily: 'Inter'),
-                          ),
-                        ],
-                      ),
-                      trailing: Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          LucideIcons.chevronRight,
-                          size: 16,
-                          color: Colors.grey.shade400,
-                        ),
-                      ),
+                    return InkWell(
                       onTap: () => _showPatientDetail(patient),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Theme.of(
+                                context,
+                              ).primaryColor.withValues(alpha: 0.1),
+                              radius: 30,
+                              child: Icon(
+                                LucideIcons.user,
+                                color: Theme.of(context).primaryColor,
+                                size: 24,
+                              ),
+                            ),
+                            SizedBox(height: 12),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
+                              child: Text(
+                                "${patient.firstName} ${patient.lastName}",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  fontFamily: 'Inter',
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  LucideIcons.phone,
+                                  size: 12,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  patient.phone,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     );
                   },
                 ),

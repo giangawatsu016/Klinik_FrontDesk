@@ -379,50 +379,21 @@ class Medicine {
       'signa2': signa2,
     };
   }
-}
 
-class ConcoctionItemRequest {
-  final int childMedicineId;
-  final double qty;
-  final String? name; // For UI display only
-
-  ConcoctionItemRequest({
-    required this.childMedicineId,
-    required this.qty,
-    this.name,
-  });
-
-  Map<String, dynamic> toJson() => {
-    "child_medicine_id": childMedicineId,
-    "qty": qty,
-  };
-}
-
-class ConcoctionRequest {
-  final String medicineName;
-  final List<ConcoctionItemRequest> items;
-  final int serviceFee;
-  final int totalQty;
-  final String unit;
-  final String? description;
-
-  ConcoctionRequest({
-    required this.medicineName,
-    required this.items,
-    this.serviceFee = 0,
-    required this.totalQty,
-    this.unit = "Pcs",
-    this.description,
-  });
-
-  Map<String, dynamic> toJson() => {
-    "medicineName": medicineName,
-    "items": items.map((x) => x.toJson()).toList(),
-    "serviceFee": serviceFee,
-    "totalQty": totalQty,
-    "unit": unit,
-    "description": description,
-  };
+  // Helper to extract "Paracetamol" from "Paracetamol 500 mg Tablet..."
+  String get simplifiedName {
+    if (medicineName.isEmpty) return "Unknown";
+    // Regex: Find first occurrence of " <digit>" indicating start of dosage
+    final match = RegExp(r'\s\d').firstMatch(medicineName);
+    if (match != null) {
+      return medicineName.substring(0, match.start).trim();
+    }
+    // Fallback: If no dosage found, check if it's very long and has parenthesis
+    if (medicineName.contains('(')) {
+      return medicineName.split('(').first.trim();
+    }
+    return medicineName;
+  }
 }
 
 class MedicineBatch {
@@ -455,4 +426,53 @@ class MedicineBatch {
     'expiryDate': expiryDate,
     'qty': qty,
   };
+}
+
+class Payment {
+  final int? id;
+  final int patientId;
+  final int amount;
+  final String method;
+  final String? insuranceName;
+  final String? insuranceNumber;
+  final String? notes;
+  final String? claimStatus;
+  final String? createdAt;
+
+  Payment({
+    this.id,
+    required this.patientId,
+    required this.amount,
+    required this.method,
+    this.insuranceName,
+    this.insuranceNumber,
+    this.notes,
+    this.claimStatus,
+    this.createdAt,
+  });
+
+  factory Payment.fromJson(Map<String, dynamic> json) {
+    return Payment(
+      id: json['id'],
+      patientId: json['patient_id'],
+      amount: json['amount'],
+      method: json['method'],
+      insuranceName: json['insuranceName'],
+      insuranceNumber: json['insuranceNumber'],
+      notes: json['notes'],
+      claimStatus: json['claimStatus'],
+      createdAt: json['created_at'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'patient_id': patientId,
+      'amount': amount,
+      'method': method,
+      'insuranceName': insuranceName,
+      'insuranceNumber': insuranceNumber,
+      'notes': notes,
+    };
+  }
 }

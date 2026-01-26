@@ -7,13 +7,13 @@ from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 # --- CONFIGURATION ---
-# --- CONFIGURATION ---
-FRONTEND_URL = "http://localhost:8000" # Updated to port 8000 as requested
-REPORT_DIR = "test_reports"
+FRONTEND_URL = "http://localhost:8000" 
+REPORT_DIR = "Test Automation Evidence"
 
 # Credentials
-VALID_USER = "admin"
-VALID_PASS = "admin123"
+# Credentials
+VALID_USER = os.getenv("TEST_USER", "admin")
+VALID_PASS = os.getenv("TEST_PASS", "admin123")
 INVALID_USER = "wronguser"
 INVALID_PASS = "wrongpass"
 
@@ -54,7 +54,6 @@ def run_tests():
 
     with sync_playwright() as p:
         # Launch Browser
-        # headless=True for automation stability in this env, can be changed to False for local debug
         browser = p.chromium.launch(headless=True) 
         context = browser.new_context(viewport={'width': 1280, 'height': 720})
         
@@ -92,8 +91,6 @@ def run_tests():
                     # Try finding any input of this type
                     loc = page.locator(f"input[type='{input_type}']")
                     if loc.count() > 0:
-                         # If multiple, try to guess by order? 
-                         # Usually Username is first input, Password is second.
                          index = 1 if is_password and loc.count() >= 2 else 0
                          loc.nth(index).fill(value)
                          return True
@@ -121,7 +118,7 @@ def run_tests():
                     page.mouse.click(200, 200)
                     page.wait_for_timeout(500)
                     
-                    # Tab to Username (Assumption: 1st focusable)
+                    # Tab to Username 
                     page.keyboard.press("Tab")
                     page.wait_for_timeout(200)
                     if scenario["u"]:
@@ -155,21 +152,19 @@ def run_tests():
 
                 
                 # 4. Wait for Result
-                page.wait_for_timeout(5000) # Increased to 5s
+                page.wait_for_timeout(5000) 
                 
                 print(f"  [DEBUG] URL: {page.url}")
                 print(f"  [DEBUG] Title: {page.title()}")
                 
                 # Check for indicators
-                is_dashboard = "dashboard" in page.url.lower() # Relaxed check
-                # Fallback text check
+                is_dashboard = "dashboard" in page.url.lower() 
                 if not is_dashboard:
                      is_dashboard = page.get_by_text("Dashboard").count() > 0
                 
                 print(f"  [DEBUG] is_dashboard: {is_dashboard}")
 
                 is_login_page = "login" in page.url.lower() and not is_dashboard
-                # Only check login button if we aren't already sure it's dashboard
                 if not is_dashboard:
                      if page.get_by_role("button", name="Login").count() > 0:
                          is_login_page = True
@@ -178,18 +173,15 @@ def run_tests():
                 
                 actual_success = is_dashboard and not is_login_page
                 
-                # Special Handle for CanvasKit (Scenario 1)
                 if "Valid/Valid" in scenario["name"] and blind_tab_used and not is_dashboard and not is_login_page:
                     print("  [INFO] CanvasKit Limbo detected for Valid Login. Assuming Success.")
                     actual_success = True
 
-                # SnackBar check
                 has_error_snackbar = page.locator("div.snack-bar").count() > 0 or page.locator("text=Login Failed").count() > 0
                 
                 if has_error_snackbar:
                      actual_success = False
 
-                # Determine Pass/Fail
                 if actual_success == scenario['expect_success']:
                     status = "Passed"
                     color = RGBColor(0, 128, 0) # Green
@@ -239,7 +231,7 @@ def run_tests():
     # Save Report with Incremental ID
     report_id = 1
     while True:
-        report_filename = f"Test_Auto_Login_{today_str}_{report_id}.docx"
+        report_filename = f"Test_Automation_{today_str}_{report_id}.docx"
         if not os.path.exists(os.path.join(REPORT_DIR, report_filename)):
             break
         report_id += 1
@@ -248,11 +240,9 @@ def run_tests():
     print(f"\n[OK] Report generated: {os.path.join(REPORT_DIR, report_filename)}")
     print(f"[OK] Screenshots saved to: {SCREENSHOT_DIR}")
     
-    # Save the screenshot dir functionality
     run_tests.last_screenshot_dir = SCREENSHOT_DIR
 
 if __name__ == "__main__":
-    # Removed blocking input to allow automated execution
     import sys
     if len(sys.argv) > 1:
         FRONTEND_URL = sys.argv[1]

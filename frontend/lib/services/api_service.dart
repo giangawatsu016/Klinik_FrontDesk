@@ -433,17 +433,6 @@ class ApiService {
     }
   }
 
-  Future<Medicine?> createConcoction(ConcoctionRequest concoction) async {
-    final response = await _safePost(
-      '/medicines/concoctions',
-      jsonEncode(concoction.toJson()),
-    );
-    if (response.statusCode == 200) {
-      return Medicine.fromJson(jsonDecode(response.body));
-    }
-    return null;
-  }
-
   Future<Map<String, dynamic>> syncMedicines() async {
     final response = await _safePost('/medicines/sync', null);
 
@@ -648,11 +637,71 @@ class ApiService {
     }
   }
 
+  // --- Payments ---
+  Future<Payment> processPayment(Payment payment) async {
+    final response = await _safePost("/payments/", payment.toJson());
+    if (response.statusCode == 200) {
+      return Payment.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception("Failed to process payment: ${response.body}");
+    }
+  }
+
   Future<Map<String, dynamic>> getDashboardOverview() async {
     final response = await _safeGet('/dashboard/overview');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     }
     throw Exception('Failed to load dashboard stats');
+  }
+
+  Future<List<Doctor>> getIdleDoctors() async {
+    final response = await _safeGet('/dashboard/idle_doctors');
+    if (response.statusCode == 200) {
+      final List<dynamic> list = jsonDecode(response.body);
+      return list.map((json) => Doctor.fromJson(json)).toList();
+    }
+    throw Exception('Failed to fetch idle doctors');
+  }
+
+  // --- App Config ---
+  Future<List<String>> getHiddenMenus() async {
+    return (await getAppConfig('hidden_menus') as List).cast<String>();
+  }
+
+  // Generic Config
+  Future<dynamic> getAppConfig(String key) async {
+    try {
+      final response = await _safeGet('/config/$key');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['value'] != null && data['value'].toString().isNotEmpty) {
+          try {
+            return jsonDecode(data['value']);
+          } catch (e) {
+            return data['value']; // Return as string if not JSON
+          }
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> saveAppConfig(String key, dynamic value) async {
+    final body = jsonEncode({
+      "key": key,
+      "value": value is String ? value : jsonEncode(value),
+    });
+
+    final response = await _safePost('/config/', body);
+    if (response.statusCode != 200) {
+      throw Exception("Failed to save config: ${response.body}");
+    }
+  }
+
+  Future<void> setHiddenMenus(List<String> hiddenMenus) async {
+    await saveAppConfig("hidden_menus", hiddenMenus);
   }
 }

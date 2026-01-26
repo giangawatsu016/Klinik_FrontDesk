@@ -63,37 +63,57 @@ class _SyncScreenState extends State<SyncScreen> {
     }
   }
 
-  Future<void> _syncAll() async {
+  Future<void> _syncEverything() async {
     setState(() {
       _isLoading = true;
       _logs.clear();
     });
 
-    _addLog("Starting Global Sync (Pull + Push)...");
+    try {
+      _addLog("=== STARTING FULL SYNC ===");
 
-    await _runCombinedSync(
-      "Doctors",
-      widget.apiService.syncDoctors,
-      widget.apiService.syncDoctorsPush,
-    );
-    await _runCombinedSync(
-      "Medicines",
-      widget.apiService.syncMedicines,
-      widget.apiService.syncMedicinesPush,
-    );
-    await _runCombinedSync(
-      "Patients",
-      widget.apiService.syncPatients,
-      widget.apiService.syncPatientsPush,
-    );
-    await _runCombinedSync(
-      "Diseases",
-      widget.apiService.syncDiseases,
-      widget.apiService.syncDiseasesPush,
-    );
+      // 1. ERPNext
+      _addLog("--- Phase 1: ERPNext ---");
+      await _runCombinedSync(
+        "Doctors",
+        widget.apiService.syncDoctors,
+        widget.apiService.syncDoctorsPush,
+      );
+      await _runCombinedSync(
+        "Medicines",
+        widget.apiService.syncMedicines,
+        widget.apiService.syncMedicinesPush,
+      );
+      await _runCombinedSync(
+        "Patients",
+        widget.apiService.syncPatients,
+        widget.apiService.syncPatientsPush,
+      );
+      await _runCombinedSync(
+        "Diseases",
+        widget.apiService.syncDiseases,
+        widget.apiService.syncDiseasesPush,
+      );
 
-    _addLog("Global Sync Complete.");
-    if (mounted) setState(() => _isLoading = false);
+      // 2. SatuSehat
+      _addLog("--- Phase 2: SatuSehat ---");
+      await _runCombinedSync(
+        "SS Doctors",
+        widget.apiService.syncSatuSehatDoctors,
+        widget.apiService.syncSatuSehatDoctorsPush,
+      );
+      await _runCombinedSync(
+        "SS Patients",
+        widget.apiService.syncSatuSehatPatients,
+        widget.apiService.syncSatuSehatPatientsPush,
+      );
+
+      _addLog("=== FULL SYNC COMPLETE ===");
+    } catch (e) {
+      _addLog("CRITICAL ERROR: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -108,17 +128,57 @@ class _SyncScreenState extends State<SyncScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.sync, size: 32, color: Colors.blue),
-                      SizedBox(width: 16),
-                      Text(
-                        "ERPNext Data Synchronization",
-                        style: Theme.of(context).textTheme.headlineSmall,
+                  Center(
+                    child: Container(
+                      width: double.infinity,
+                      margin: EdgeInsets.only(bottom: 32),
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade900,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 4,
+                        ),
+                        onPressed: _isLoading ? null : _syncEverything,
+                        icon: _isLoading
+                            ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : Icon(Icons.sync, size: 32),
+                        label: Text(
+                          "SYNC ALL DATA (ERPNext + SatuSehat)",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                  SizedBox(height: 24),
+
+                  Text(
+                    "Granular Sync (Optional)",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+
+                  // ERPNext Section (Cards Only)
+                  Text(
+                    "ERPNext Resources",
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  SizedBox(height: 8),
                   Wrap(
                     spacing: 16,
                     runSpacing: 16,
@@ -166,79 +226,44 @@ class _SyncScreenState extends State<SyncScreen> {
                     ],
                   ),
 
-                  SizedBox(height: 32),
-
-                  // --- SatuSehat Section ---
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.health_and_safety,
-                        size: 32,
-                        color: Colors.green,
-                      ),
-                      SizedBox(width: 16),
-                      Text(
-                        "SatuSehat Synchronization",
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    ],
-                  ),
                   SizedBox(height: 24),
+                  // SatuSehat Section (Cards Only)
+                  Text(
+                    "SatuSehat Resources",
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  SizedBox(height: 8),
                   Wrap(
                     spacing: 16,
                     runSpacing: 16,
                     children: [
                       _buildSyncCard(
-                        "SatuSehat Doctors",
+                        "SS Doctors",
                         Icons.medical_services_outlined,
                         Colors.teal,
                         () => _runCombinedSync(
-                          "SatuSehat Doctors",
+                          "SS Doctors",
                           widget.apiService.syncSatuSehatDoctors,
                           widget.apiService.syncSatuSehatDoctorsPush,
                         ),
                       ),
                       _buildSyncCard(
-                        "SatuSehat Patients",
+                        "SS Patients",
                         Icons.people_outline,
                         Colors.orangeAccent,
                         () => _runCombinedSync(
-                          "SatuSehat Patients",
+                          "SS Patients",
                           widget.apiService.syncSatuSehatPatients,
                           widget.apiService.syncSatuSehatPatientsPush,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 24),
                 ],
               ),
             ),
           ),
-          SizedBox(height: 24),
-          // Global Sync Button
-          Center(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              ),
-              onPressed: _isLoading ? null : _syncAll,
-              icon: _isLoading
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Icon(Icons.sync_alt),
-              label: Text("SYNC ALL DATA (Pull + Push)"),
-            ),
-          ),
-          SizedBox(height: 24),
+          SizedBox(height: 16),
           Divider(height: 32),
           Text("Sync Logs", style: TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: 8),
@@ -279,7 +304,7 @@ class _SyncScreenState extends State<SyncScreen> {
       child: InkWell(
         onTap: _isLoading ? null : onTap,
         child: Container(
-          width: 220,
+          width: 200, // Reduced width slightly
           padding: EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -289,6 +314,7 @@ class _SyncScreenState extends State<SyncScreen> {
               Text(
                 title,
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                textAlign: TextAlign.center,
               ),
               SizedBox(height: 8),
               Text(

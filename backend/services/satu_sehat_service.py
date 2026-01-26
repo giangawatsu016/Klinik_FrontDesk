@@ -527,4 +527,72 @@ class SatuSehatClient:
             print(f"Create Practitioner Request Error: {e}")
             return None
 
+    def create_coverage(self, ihs_number: str, insurance_name: str, insurance_number: str, method: str):
+        """
+        Create Coverage (Insurance) in SatuSehat
+        POST /Coverage
+        """
+        token = self.get_access_token()
+        if not token: return None
+
+        url = f"{self.base_url}/Coverage"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+
+        # Determine Payor (Organization)
+        # For BPJS, there is a specific Organization ID in prod. For Sandbox, we might need to use a dummy or the default Org.
+        # Assuming SATUSEHAT_ORG_ID is our clinic, but Payor should be BPJS. 
+        # For simplicity in Sandbox, we will use our own Org as Payor or a known dummy if available.
+        # Using "Organization/unknown" or created Organization is better.
+        
+        # Mapping for showcase:
+        payor_name = insurance_name
+        
+        payload = {
+            "resourceType": "Coverage",
+            "status": "active",
+            "type": {
+                "coding": [
+                    {
+                        "system": "http://terminology.hl7.org/CodeSystem/coverage-selfpay",
+                        "code": "pay" if method == "Cash" else "insurance",
+                        "display": "Pay" if method == "Cash" else "Insurance"
+                    }
+                ]
+            },
+            "subscriber": {
+                "reference": f"Patient/{ihs_number}"
+            },
+            "subscriberId": insurance_number,
+            "beneficiary": {
+                "reference": f"Patient/{ihs_number}"
+            },
+            "payor": [
+                {
+                    "display": payor_name
+                }
+            ],
+            "period": {
+                "start": "2024-01-01",
+                "end": "2025-01-01"
+            }
+        }
+
+        try:
+            print(f"Creating Coverage for {ihs_number} - {payor_name}...")
+            response = requests.post(url, headers=headers, json=payload, timeout=15)
+            if response.status_code in [200, 201]:
+                data = response.json()
+                cov_id = data.get("id")
+                print(f"Successfully Created Coverage. ID: {cov_id}")
+                return cov_id
+            else:
+                print(f"Failed to create Coverage ({response.status_code}): {response.text}")
+                return None
+        except Exception as e:
+            print(f"Create Coverage Error: {e}")
+            return None
+
 satu_sehat_client = SatuSehatClient()

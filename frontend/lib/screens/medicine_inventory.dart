@@ -160,28 +160,6 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen>
                 SizedBox(width: 16),
                 // Racikan Button Removed
                 SizedBox(width: 16),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    // Sync Logic via Wrapper
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (c) => _SyncDialogWrapper(
-                          apiService: widget.apiService,
-                          onSync: _loadMedicines,
-                        ),
-                      ),
-                    );
-                  },
-                  icon: Icon(LucideIcons.refreshCw),
-                  label: Text("Sync SATU SEHAT"),
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                    backgroundColor: Colors.white,
-                    side: BorderSide(color: Colors.teal),
-                  ),
-                ),
-                SizedBox(width: 16),
                 ElevatedButton.icon(
                   onPressed: () => _showAddMedicineDialog(),
                   icon: Icon(LucideIcons.plus, color: Colors.white),
@@ -292,11 +270,26 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen>
   Widget _buildMedicineList() {
     if (_isLoading) return Center(child: CircularProgressIndicator());
 
+    // 1. Group Medicines by Simplified Name
+    final Map<String, List<Medicine>> groups = {};
+    for (var med in _filteredMedicines) {
+      final key = med.simplifiedName;
+      if (!groups.containsKey(key)) {
+        groups[key] = [];
+      }
+      groups[key]!.add(med);
+    }
+
+    final groupKeys = groups.keys.toList();
+
     return ListView.separated(
-      itemCount: _filteredMedicines.length,
+      itemCount: groupKeys.length,
       separatorBuilder: (c, i) => SizedBox(height: 16),
       itemBuilder: (ctx, i) {
-        final med = _filteredMedicines[i];
+        final groupName = groupKeys[i];
+        final variants = groups[groupName]!;
+
+        // Level 1: Generic Name Group
         return Card(
           elevation: 0,
           color: Colors.white,
@@ -316,91 +309,78 @@ class _MedicineInventoryScreenState extends State<MedicineInventoryScreen>
                 ),
                 child: Icon(LucideIcons.pill, color: Colors.teal),
               ),
-              title: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      med.medicineName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Icon(
-                    LucideIcons.checkCircle,
-                    size: 16,
-                    color: Colors.green,
-                  ), // Verified Icon
-                ],
+              title: Text(
+                groupName,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.teal.shade900,
+                ),
               ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 4),
-                  Text(
-                    "KFA: ${med.erpnextItemCode}",
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+              subtitle: Text(
+                "${variants.length} Variants",
+                style: TextStyle(color: Colors.grey),
+              ),
+              children: variants.map((med) {
+                // Level 2: Specific Variant
+
+                // Level 2: Specific Variant
+                return ExpansionTile(
+                  tilePadding: EdgeInsets.only(
+                    left: 48,
+                    right: 24,
+                    top: 4,
+                    bottom: 4,
                   ),
-                  // Tags
-                  Wrap(
-                    spacing: 4,
+                  title: Row(
                     children: [
+                      Expanded(
+                        child: Text(
+                          med.medicineName, // Name only
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                       if (med.qty < 10)
                         _buildTag("Low Stock", Colors.red.shade100, Colors.red),
-                      // if (expiry near)...
                     ],
                   ),
-                ],
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        "Price",
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        "Rp ${med.medicineRetailPrice}",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                  subtitle: Text(
+                    "Stock: ${med.qty} ${med.unit} | Rp ${med.medicineRetailPrice}",
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
-                  SizedBox(width: 24),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        "Stock",
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  children: [
+                    // Level 3: Details & Batches
+                    Padding(
+                      padding: EdgeInsets.only(left: 48, right: 16, bottom: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Divider(),
+                          Text(
+                            "Detail Information",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "KFA Code: ${med.erpnextItemCode}",
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          SizedBox(height: 8),
+                          _buildBatchTable(med), // Existing Batch Table
+                        ],
                       ),
-                      Text(
-                        "${med.qty} ${med.unit}",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  SizedBox(width: 8),
-                  Icon(LucideIcons.chevronDown),
-                ],
-              ),
-              children: [_buildBatchTable(med)],
+                    ),
+                  ],
+                );
+              }).toList(),
             ),
           ),
         );
@@ -777,29 +757,6 @@ class _AddBatchDialogState extends State<_AddBatchDialog> {
   }
 }
 
-class _SyncDialogWrapper extends StatelessWidget {
-  final ApiService apiService;
-  final VoidCallback onSync;
-  const _SyncDialogWrapper({required this.apiService, required this.onSync});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Sync")),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () async {
-            await apiService.syncMedicines();
-            onSync();
-            if (context.mounted) Navigator.pop(context);
-          },
-          child: Text("Sync Now"),
-        ),
-      ),
-    );
-  }
-}
-
 class _KfaSearchDialog extends StatefulWidget {
   final ApiService apiService;
   final Function(String name, String unit, String code) onImport;
@@ -984,235 +941,6 @@ class _KfaSearchDialogState extends State<_KfaSearchDialog> {
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text("Close"),
-        ),
-      ],
-    );
-  }
-}
-
-class _ConcoctionDialog extends StatefulWidget {
-  final ApiService apiService;
-  final List<Medicine> availableMedicines;
-  final VoidCallback onSuccess;
-
-  const _ConcoctionDialog({
-    required this.apiService,
-    required this.availableMedicines,
-    required this.onSuccess,
-  });
-
-  @override
-  State<_ConcoctionDialog> createState() => _ConcoctionDialogState();
-}
-
-class _ConcoctionDialogState extends State<_ConcoctionDialog> {
-  final _formKey = GlobalKey<FormState>();
-  String _name = "";
-  int _totalQty = 1;
-  int _serviceFee = 0;
-  String _unit = "Pcs";
-  String _desc = "";
-
-  final List<ConcoctionItemRequest> _items = [];
-
-  void _addItem() {
-    // Show dialog to pick medicine and qty
-    Medicine? selected;
-    if (widget.availableMedicines.isNotEmpty) {
-      selected = widget.availableMedicines.first;
-    }
-    double qty = 1;
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: Text("Add Ingredient"),
-          content: StatefulBuilder(
-            builder: (context, setDialogState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButton<Medicine>(
-                    isExpanded: true,
-                    value: selected,
-                    hint: Text("Select Medicine"),
-                    items: widget.availableMedicines.map((m) {
-                      return DropdownMenuItem(
-                        value: m,
-                        child: Text(m.medicineName),
-                      );
-                    }).toList(),
-                    onChanged: (v) => setDialogState(() => selected = v),
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    initialValue: "1",
-                    decoration: InputDecoration(labelText: "Quantity Needed"),
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onChanged: (v) => qty = double.tryParse(v) ?? 1,
-                  ),
-                ],
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (selected != null) {
-                  setState(() {
-                    _items.add(
-                      ConcoctionItemRequest(
-                        childMedicineId: selected!.id!,
-                        qty: qty,
-                        name: selected!.medicineName,
-                      ),
-                    );
-                  });
-                  Navigator.pop(ctx);
-                }
-              },
-              child: Text("Add"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text("Create Racikan"),
-      content: SizedBox(
-        width: 600,
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextFormField(
-                  decoration: InputDecoration(labelText: "Concoction Name"),
-                  validator: (v) => v!.isEmpty ? "Required" : null,
-                  onSaved: (v) => _name = v!,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: "Description / Signa"),
-                  onSaved: (v) => _desc = v ?? '',
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        initialValue: "1",
-                        decoration: InputDecoration(
-                          labelText: "Total Result Qty",
-                        ),
-                        keyboardType: TextInputType.number,
-                        onSaved: (v) => _totalQty = int.parse(v!),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: TextFormField(
-                        initialValue: "Pcs",
-                        decoration: InputDecoration(labelText: "Unit"),
-                        onSaved: (v) => _unit = v!,
-                      ),
-                    ),
-                  ],
-                ),
-                TextFormField(
-                  initialValue: "0",
-                  decoration: InputDecoration(labelText: "Service Fee (Rp)"),
-                  keyboardType: TextInputType.number,
-                  onSaved: (v) => _serviceFee = int.parse(v!),
-                ),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Ingredients:",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextButton.icon(
-                      onPressed: _addItem,
-                      icon: Icon(LucideIcons.plus, size: 16),
-                      label: Text("Add Item"),
-                    ),
-                  ],
-                ),
-                if (_items.isEmpty)
-                  Text(
-                    "No ingredients added.",
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ..._items.asMap().entries.map((entry) {
-                  final idx = entry.key;
-                  final item = entry.value;
-                  return ListTile(
-                    title: Text(item.name ?? "Unknown"),
-                    subtitle: Text("Qty: ${item.qty}"),
-                    trailing: IconButton(
-                      icon: Icon(LucideIcons.trash2, color: Colors.red),
-                      onPressed: () => setState(() => _items.removeAt(idx)),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text("Cancel"),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              if (_items.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Add at least one ingredient")),
-                );
-                return;
-              }
-              _formKey.currentState!.save();
-
-              try {
-                final req = ConcoctionRequest(
-                  medicineName: _name,
-                  items: _items,
-                  serviceFee: _serviceFee,
-                  totalQty: _totalQty,
-                  unit: _unit,
-                  description: _desc,
-                );
-                await widget.apiService.createConcoction(req);
-                if (mounted && context.mounted) {
-                  Navigator.pop(context);
-                  widget.onSuccess();
-                }
-              } catch (e) {
-                if (mounted && context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text("Error: $e")));
-                }
-              }
-            }
-          },
-          child: Text("Create"),
         ),
       ],
     );

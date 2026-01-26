@@ -28,7 +28,7 @@ class KlinikUser(HttpUser):
 
     @task(1)
     def view_queue(self):
-        self.client.get("/queue")
+        self.client.get("/patients/queue")
 
     # Simulate Search
     @task(1)

@@ -161,53 +161,7 @@ def delete_medicine(medicine_id: int, db: Session = Depends(database.get_db), cu
     db.commit()
     return {"message": "Medicine deleted successfully"}
 
-@router.post("/concoctions", response_model=schemas.Medicine)
-def create_concoction(concoction: schemas.ConcoctionCreate, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
-    # 1. Calculate Price & Verify Items
-    total_price = 0
-    
-    # We need to verify all child items exist to avoid FK errors
-    for item in concoction.items:
-        child_med = db.query(models.Medicine).get(item.child_medicine_id)
-        if not child_med:
-             raise HTTPException(status_code=404, detail=f"Ingredient ID {item.child_medicine_id} not found")
-        
-        # Determine price (use RetailPrice if available, or just Price?)
-        # For cost calculation, usually we use Buy Price + Margin or Retail Price.
-        # Let's say we sum up the Retail Price of ingredients to be safe, or as defined policy.
-        price_per_unit = child_med.medicineRetailPrice if child_med.medicineRetailPrice else 0
-        total_price += (price_per_unit * item.qty)
 
-    # Add Service Fee
-    total_price += (concoction.serviceFee or 0)
-    
-    # 2. Create Parent Medicine
-    code = f"RACIKAN-{uuid.uuid4().hex[:8].upper()}"
-    new_med = models.Medicine(
-        erpnext_item_code=code,
-        medicineName=concoction.medicineName,
-        medicineDescription=concoction.description or "Racikan / Concoction",
-        qty=concoction.totalQty,
-        unit=concoction.unit,
-        medicinePrice=0, # Cost price complex to calc, set 0 for now
-        medicineRetailPrice=int(total_price), # Sell Price
-        medicineLabel="Racikan"
-    )
-    db.add(new_med)
-    db.commit()
-    db.refresh(new_med)
-    
-    # 3. Create Links
-    for item in concoction.items:
-        link = models.MedicineConcoction(
-            parent_medicine_id=new_med.id,
-            child_medicine_id=item.child_medicine_id,
-            qty_needed=item.qty
-        )
-        db.add(link)
-    
-    db.commit()
-    return new_med
 
 # Batch Management
 @router.post("/{medicine_id}/batches", response_model=schemas.MedicineBatch)

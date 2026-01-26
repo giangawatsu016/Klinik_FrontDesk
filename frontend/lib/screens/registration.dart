@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../widgets/animated_entrance.dart';
+import '../services/insurance_providers.dart';
 
 class RegistrationScreen extends StatefulWidget {
   final ApiService apiService;
@@ -1502,7 +1503,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         decoration: InputDecoration(
                           labelText: 'Insurance Provider',
                         ),
-                        items: ['Allianz', 'Prudential', 'Manulife']
+                        items: InsuranceProviders.all
                             .map(
                               (e) => DropdownMenuItem(value: e, child: Text(e)),
                             )

@@ -136,54 +136,88 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                     ),
                   ],
                 ),
-                child: ListView.separated(
+                child: GridView.builder(
                   padding: EdgeInsets.all(16),
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 180,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.8,
+                  ),
                   itemCount: _doctors.length,
-                  separatorBuilder: (context, index) =>
-                      Divider(color: Colors.grey.shade100, height: 1),
                   itemBuilder: (context, index) {
                     final doctor = _doctors[index];
-                    return ListTile(
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      leading: CircleAvatar(
-                        backgroundColor: Theme.of(
-                          context,
-                        ).primaryColor.withValues(alpha: 0.1),
-                        radius: 24,
-                        child: Icon(
-                          LucideIcons.stethoscope,
-                          color: Theme.of(context).primaryColor,
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(
-                        "${doctor.gelarDepan} ${doctor.namaDokter}",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                      subtitle: Text(
-                        doctor.polyName,
-                        style: TextStyle(fontFamily: 'Inter'),
-                      ),
-                      trailing: Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          LucideIcons.info,
-                          size: 16,
-                          color: Colors.grey.shade400,
-                        ),
-                      ),
+                    return InkWell(
                       onTap: () => _showDoctorDetail(doctor),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Theme.of(
+                                context,
+                              ).primaryColor.withValues(alpha: 0.1),
+                              radius: 32,
+                              child: Icon(
+                                LucideIcons.stethoscope,
+                                color: Theme.of(context).primaryColor,
+                                size: 24,
+                              ),
+                            ),
+                            SizedBox(height: 12),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
+                              child: Text(
+                                "${doctor.gelarDepan} ${doctor.namaDokter}",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  fontFamily: 'Inter',
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                doctor.polyName,
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -235,7 +269,17 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                           flex: 1,
                           child: DropdownButtonFormField<String>(
                             decoration: InputDecoration(labelText: "Title"),
-                            initialValue: title.isNotEmpty ? title : 'Dr.',
+                            initialValue:
+                                [
+                                  'Dr.',
+                                  'Prof.',
+                                  'Sp.',
+                                  'Ns.',
+                                  'Bidan',
+                                  'Other',
+                                ].contains(title)
+                                ? title
+                                : 'Dr.',
                             items:
                                 ['Dr.', 'Prof.', 'Sp.', 'Ns.', 'Bidan', 'Other']
                                     .map(
@@ -306,7 +350,19 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                     delay: Duration(milliseconds: 300),
                     child: DropdownButtonFormField<String>(
                       decoration: InputDecoration(labelText: "Polyclinic"),
-                      initialValue: poly,
+                      initialValue:
+                          [
+                            'General',
+                            'Dental',
+                            'Pediatric',
+                            'Neurology',
+                            'Cardiology',
+                            'Internal Medicine',
+                            'Surgery',
+                            'Obgyn',
+                          ].contains(poly)
+                          ? poly
+                          : 'General',
                       items:
                           [
                                 'General',

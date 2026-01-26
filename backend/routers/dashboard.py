@@ -57,3 +57,25 @@ def get_dashboard_overview(db: Session = Depends(database.get_db), current_user:
         "active_queue": active_queue,
         "recent_activity": recent_activity
     }
+
+@router.get("/idle_doctors")
+def get_idle_doctors(db: Session = Depends(database.get_db)):
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Doctors are busy if they are assigned to a queue that is Waiting or In Consultation
+    busy_doctors_query = db.query(models.PatientQueue.medicalFacilityPolyDoctorId).filter(
+        models.PatientQueue.status.in_(["Waiting", "In Consultation"]),
+        models.PatientQueue.medicalFacilityPolyDoctorId != None,
+        models.PatientQueue.appointmentTime >= today_start
+    ).distinct()
+    
+    # Get ID list
+    busy_doctor_ids = [r[0] for r in busy_doctors_query.all()]
+    
+    # Query Idle Doctors
+    idle_doctors = db.query(models.Doctor).filter(
+        models.Doctor.is_available == True,
+        ~models.Doctor.medicalFacilityPolyDoctorId.in_(busy_doctor_ids)
+    ).all()
+    
+    return idle_doctors

@@ -46,6 +46,20 @@ The Klinik Intimedicare System is designed to modernize clinic operations by pro
 *   **Port Config:** Non-standard ports (8001) to avoid conflicts.
 *   **Audit:** Regular scanning for common vulnerabilities (Bandit).
 
+### 4.6 Payment & Insurance (v2.6)
+*   **Billing:** Calculate Total (Consultation + Medicine).
+*   **Methods:** Cash, BPJS, Private Insurance.
+*   **Claims:** Record Insurance Number and Claim Status.
+
+### 4.7 Medicine Batches (v2.6)
+*   **Tracking:** Manage multiple batches per medicine with distinct Expiry Dates.
+*   **FEFO:** First-Expired-First-Out logic (Manual selection for now).
+
+### 4.8 Testing Framework (v2.7)
+*   **Automation:** End-to-End testing for Queue flows (`Queue_Automation.py`).
+*   **Performance:** Load testing for 50+ concurrent users (`locust`).
+*   **Security:** Static Analysis (`bandit`) for vulnerability scanning.
+
 ## 5. Metrics for Success
 *   **Sync Rate:** 99% of new patients successfully synced to ERPNext.
 *   **System Uptime:** 99.9% during clinic hours.
@@ -57,4 +71,5 @@ The Klinik Intimedicare System is designed to modernize clinic operations by pro
 *   **v2.3:** SatuSehat & Concoctions (Completed).
 *   **v2.4:** UI/UX Polish, Animations, & Dashboard Logic (Completed).
 *   **v2.5:** Bi-directional Sync & Logic Refinements (Completed).
-*   **v2.6:** TBD (To Be Defined).
+*   **v2.6:** Medicine Batch Management & Payment Integration (Completed).
+*   **v2.7:** Comprehensive Testing & Security Hardening (Completed).

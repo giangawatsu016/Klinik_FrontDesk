@@ -11,8 +11,10 @@ import 'user_management.dart';
 import 'diagnostic_reports.dart';
 import 'disease_list.dart';
 import 'medicine_inventory.dart';
+import 'pharmacist_list.dart';
 import 'sync_screen.dart';
 import 'home_screen.dart'; // New Kiosk Home
+import 'menu_settings.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -59,6 +61,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "label": "Doctors",
       },
       {
+        "id": "pharmacists",
+        "page": PharmacistListScreen(apiService: widget.apiService),
+        "icon": LucideIcons.contact,
+        "label": "Pharmacy",
+      },
+      {
         "id": "patients",
         "page": PatientListScreen(apiService: widget.apiService),
         "icon": LucideIcons.users,
@@ -70,6 +78,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "icon": LucideIcons.pill,
         "label": "Medicines",
       },
+
       {
         "id": "users",
         "page": UserManagementScreen(
@@ -99,39 +108,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
     ];
 
-    // Filter based on Role
-    final filteredPages = allPages.where((item) {
-      final id = item['id'] as String;
-      final role = widget.user.role;
+    final displayedPages = _filteredPages(allPages);
 
-      if (id == "queue" || id == "registration") {
-        return role == "Staff";
-      }
-      if (id == "home") return true;
-      if (id == "users") {
-        return role == "Super Admin" || role == "Administrator";
-      }
-      if (id == "sync") {
-        return role == "Administrator";
-      }
-      // Doctors, Patients, Medicines, Diagnosis
-      if ([
-        "doctors",
-        "patients",
-        "medicines",
-        "diagnosis",
-        "diseases",
-      ].contains(id)) {
-        return role != "Super Admin";
-      }
-      return true;
-    }).toList();
-
-    if (_selectedIndex >= filteredPages.length) {
+    if (_selectedIndex >= displayedPages.length) {
       _selectedIndex = 0;
     }
 
-    final currentPage = filteredPages[_selectedIndex];
+    final currentPage = displayedPages[_selectedIndex];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -180,10 +163,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Expanded(
                   child: ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: filteredPages.length,
+                    itemCount: displayedPages.length,
                     separatorBuilder: (ctx, i) => SizedBox(height: 4),
                     itemBuilder: (context, index) {
-                      final item = filteredPages[index];
+                      final item = displayedPages[index];
                       final isSelected = _selectedIndex == index;
                       return ListTile(
                         leading: Icon(
@@ -241,6 +224,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     dense: true,
                   ),
                 ),
+                if (widget.user.role == "Super Admin")
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 24.0,
+                      right: 24.0,
+                      bottom: 24.0,
+                    ),
+                    child: ListTile(
+                      leading: const Icon(
+                        LucideIcons.settings,
+                        color: Colors.grey,
+                        size: 22,
+                      ),
+                      title: const Text(
+                        "Dev Settings",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      onTap: _openSettings,
+                      dense: true,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -331,9 +335,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  List<String> _hiddenMenus = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadConfig();
+  }
+
+  void _loadConfig() async {
+    final hidden = await widget.apiService.getHiddenMenus();
+    if (mounted) setState(() => _hiddenMenus = hidden);
+  }
+
+  List<Map<String, dynamic>> _filteredPages(
+    List<Map<String, dynamic>> allPages,
+  ) {
+    return allPages.where((item) {
+      final id = item['id'] as String;
+      final role = widget.user.role;
+
+      // 1. Check Global Hidden Config
+      if (_hiddenMenus.contains(id)) {
+        return false;
+      }
+
+      // 2. Role Based Logic
+      if (id == "queue" || id == "registration") {
+        return role == "Staff";
+      }
+      if (id == "home") return true;
+      if (id == "users") {
+        return role == "Super Admin" || role == "Administrator";
+      }
+      if (id == "sync") {
+        return role == "Administrator";
+      }
+
+      // Default allow for others unless specific role restrictions exist
+      return true;
+    }).toList();
+  }
+
   void _logout() {
     Navigator.of(
       context,
     ).pushReplacement(MaterialPageRoute(builder: (context) => LoginScreen()));
+  }
+
+  void _openSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            MenuVisibilityScreen(apiService: widget.apiService),
+      ),
+    );
   }
 }

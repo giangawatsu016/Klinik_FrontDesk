@@ -74,11 +74,18 @@ The system covers:
 *   **REQ-MED-01**: **Bi-Directional Sync**: Pull Items from ERPNext / Push Local Creations to ERPNext.
 *   **REQ-MED-02**: Manual entry support.
 *   **REQ-MED-03**: **Concoctions (Racikan)**: Create combined medicines (Parent) from multiple ingredients (Children) with pricing logic.
-*   **REQ-MED-04**: Stock-based validation.
+*   **REQ-MED-04**: **Batch Management**: Track Stock by Batch Number and Expiry Date.
+*   **REQ-MED-05**: **Stock Logic**: Total Stock = Sum of all Batches.
 
 ### 3.7 Payment Module
 *   **REQ-PAY-01**: Support Multiple Methods (Cash, QRIS, Debit, Credit, Insurance).
 *   **REQ-PAY-02**: Calculate Total Bill (Consultation + Medicine + Admin Fee).
+*   **REQ-PAY-03**: **Insurance Details**: Capture Issuer, Card Number, and Notes.
+
+### 3.8 Comprehensive Testing (v2.7)
+*   **REQ-TEST-01**: **Security**: No hardcoded credentials (Bandit).
+*   **REQ-TEST-02**: **Performance**: Login < 500ms (Bcrypt Optimization).
+*   **REQ-TEST-03**: **Automation**: Self-healing scripts for Queue workflows.
 
 ### 3.8 Performance & Optimization
 *   **REQ-PERF-01**: Address API Caching.

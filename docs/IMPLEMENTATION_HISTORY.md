@@ -194,4 +194,50 @@ This document chronicles the entire development and implementation journey of th
 *   **Action:** Clean up interface.
 *   **Implementation:**
     -   Removed redundant "Sync" buttons from individual List screens (Doctor, Medicine) to force use of the centralized `SyncScreen`.
-    -   Added "Recent Activity" list to Dashboard for real-time visibility.
+
+---
+
+## Phase 10: Hotfixes & Simplification (v2.6)
+**Goal:** Address immediate user feedback and simplify the codebase by removing unused features.
+
+### 10.1 Password Bypass System
+*   **Action:** Fix login mechanism and enable Developer Mode bypass.
+*   **Implementation:**
+    -   Implemented "Developer Settings" toggles in `menu_settings.dart` to optionally bypass password checks for Admin/Staff.
+    -   Hardened `auth.py` to support case-insensitive Usernames (e.g., "Staff" vs "staff") and Roles.
+    -   Fixed `AppConfig` storage to reliably handle boolean values.
+
+### 10.2 Feature Removal
+*   **Action:** Remove "Medicine Concoctions" (Racikan) feature as requested.
+*   **Implementation:**
+    -   Removed `MedicineConcoction` model and schemas.
+    -   Deleted `createConcoction` endpoint and frontend dialogs.
+    -   Dropped `medicine_concoctions` table from database.
+
+### 10.3 UI Fixes
+*   **Action:** Fix layout inconsistencies.
+*   **Implementation:**
+    -   Updated **Doctor List** grid to display **5 items per row** (matching Patient List) by adjusting `maxCrossAxisExtent` to 180.
+
+---
+
+## Phase 11: Queue Automation & Stability (v2.7)
+**Goal:** Establish automated regression testing for critical queue workflows and fix UI/UX crashes.
+
+### 11.1 Queue Automation Framework
+*   **Action:** Build a self-healing test script for Doctor/Polyclinic Queues.
+*   **Implementation:**
+    -   Created `backend/tests/Queue_Automation.py` using Playwright.
+    -   Implemented **Auto-Seeding**: Script creates dummy patients/queues via API if none exist.
+    -   Implemented **Self-Healing**: Script detects and force-closes "stuck" consultations to ensure a clean test state.
+    -   **Report Generation**: Automatically produces a Word (.docx) report with screenshots of "Call Patient" and "Completed" actions.
+
+### 11.2 Critical Bug Fixes
+*   **Queue Monitor Logic**:
+    -   **Issue**: Automation timed out because UI waited for TTS (5+ seconds) before updating state.
+    -   **Fix**: Reordered logic in `queue_monitor.dart` to update UI *immediately* before speaking.
+*   **Dropdown Crashes**:
+    -   **Issue**: "Title" and "Polyclinic" dropdowns prevented editing Doctors if the database value didn't match the hardcoded list (e.g. "Poli Bedah" vs "Surgery").
+    -   **Fix**: Added robust validation to `doctor_list.dart`. Defaults to "General" or "Dr." if the value is invalid, preventing `AssertionError` crashes.
+*   **UI Tweaks**:
+    -   Reduced font size and padding of the "Current Patient" queue display by 50% per user request.

@@ -30,7 +30,10 @@ class FrappeClient:
                 print(f"Frappe Sync Failed ({response.status_code}): {response.text}")
                 return None
         except Exception as e:
-            print(f"Frappe Connection Error: {e}")
+            if "WinError 10061" in str(e):
+                 print(f"Frappe Connection Refused: Is the server running at {self.base_url}? Check your .env configuration.")
+            else:
+                 print(f"Frappe Connection Error: {e}")
             return None
 
     def create_patient(self, clinic_patient: dict):
@@ -50,7 +53,10 @@ class FrappeClient:
                         print(f"Patient with mobile {phone} already exists: {data[0]['name']}")
                         return {"data": data[0]} # Return existing record
             except Exception as e:
-                print(f"Error checking existing patient: {e}")
+                if "WinError 10061" in str(e):
+                     print(f"Frappe Connection Refused (Check Patient): Is the server running at {self.base_url}?")
+                else:
+                     print(f"Error checking existing patient: {e}")
 
         # 2. If not exists, sync to 'Patient' (Healthcare Module)
         data = {
@@ -96,7 +102,10 @@ class FrappeClient:
                 print(f"Frappe Get List Failed ({response.status_code}): {response.text}")
                 return []
         except Exception as e:
-            print(f"Frappe Connection Error: {e}")
+            if "WinError 10061" in str(e):
+                 print(f"Frappe Connection Refused: Is the server running at {self.base_url}? Check your .env configuration.")
+            else:
+                 print(f"Frappe Connection Error: {e}")
             return []
 
     def delete_document(self, doctype: str, name: str):
@@ -141,7 +150,10 @@ class FrappeClient:
                 return response.json().get("data", [])
             return []
         except Exception as e:
-            print(f"Frappe Get Practitioners Error: {e}")
+            if "WinError 10061" in str(e):
+                 print(f"Frappe Connection Refused (Get Practitioners): Is the server running at {self.base_url}?")
+            else:
+                 print(f"Frappe Get Practitioners Error: {e}")
             return []
 
     def get_patients(self, limit: int = 50):

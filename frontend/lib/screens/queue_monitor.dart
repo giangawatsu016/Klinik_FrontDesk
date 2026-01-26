@@ -150,17 +150,17 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
         // Status Monitor
         if (canComplete)
           Container(
-            padding: EdgeInsets.all(24),
-            margin: EdgeInsets.only(bottom: 24),
+            padding: EdgeInsets.all(12),
+            margin: EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.green.shade100, width: 2),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.green.shade100, width: 1),
               boxShadow: [
                 BoxShadow(
                   color: Colors.green.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: Offset(0, 10),
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
                 ),
               ],
             ),
@@ -171,41 +171,41 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                   style: TextStyle(
                     color: Colors.green[900],
                     fontWeight: FontWeight.w600,
-                    fontSize: 20,
+                    fontSize: 14,
                     fontFamily: 'Inter',
                   ),
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: 4),
                 Text(
                   currentConsult.numberQueue,
                   style: TextStyle(
-                    fontSize: 64,
+                    fontSize: 32,
                     fontWeight: FontWeight.w900,
                     color: Colors.green[900],
                     fontFamily: 'Inter',
-                    letterSpacing: -2,
+                    letterSpacing: -1,
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     "Status: ${currentConsult.status}",
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: Colors.green[800],
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: 8),
                 Text(
                   "${currentConsult.patient?.firstName} ${currentConsult.patient?.lastName}",
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.green[900],
                     fontFamily: 'Inter',
@@ -343,16 +343,20 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
         "In Consultation",
       );
 
-      // Speak Announcement
-      String name =
-          "${nextPatient.patient?.firstName ?? ''} ${nextPatient.patient?.lastName ?? ''}"
-              .trim();
-      if (name.isEmpty) name = "Pasien";
-      await flutterTts.speak(
-        "Antrian Saudara $name Silahkan Menuju ke resepsionis",
-      );
-
       _fetchQueue();
+
+      // Speak Announcement
+      // Reverted Logic: "Nomor Antrian [No] Silahkan Menuju [Poli]"
+      String queueNo = nextPatient.numberQueue;
+      // Spacing for better pronunciation (e.g. A-001 -> A Kosong Kosong Satu)
+      // For now, simple reading.
+      String destination = nextPatient.queueType == 'Doctor'
+          ? "Ruang Dokter"
+          : "Poliklinik";
+
+      await flutterTts.speak(
+        "Nomor Antrian $queueNo, Silahkan Menuju $destination",
+      );
     }
   }
 

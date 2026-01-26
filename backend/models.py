@@ -143,9 +143,6 @@ class Medicine(Base):
     notes = Column(Text, nullable=True) # Signa Text
     signa1 = Column(Integer, nullable=True) # Frequency
     signa2 = Column(Float, nullable=True) # Qty per dose
-
-    # Relationship for Racikan (Concoction)
-    ingredients = relationship("MedicineConcoction", back_populates="parent_medicine", foreign_keys="[MedicineConcoction.parent_medicine_id]")
     
     # Relationship for Batches
     batches = relationship("MedicineBatch", back_populates="medicine", cascade="all, delete-orphan")
@@ -162,16 +159,40 @@ class MedicineBatch(Base):
     medicine = relationship("Medicine", back_populates="batches")
 
 
-class MedicineConcoction(Base):
-    __tablename__ = "medicine_concoctions"
-    
+
+class Payment(Base):
+    __tablename__ = "payments"
+
     id = Column(Integer, primary_key=True, index=True)
-    parent_medicine_id = Column(Integer, ForeignKey("medicinecore.id")) # The Racikan
-    child_medicine_id = Column(Integer, ForeignKey("medicinecore.id")) # The Ingredient
-    qty_needed = Column(Float, default=1.0)
+    patient_id = Column(Integer, ForeignKey("patientcore.id"))
+    amount = Column(Integer, default=0)
+    method = Column(String(50)) # Cash, BPJS, Insurance, Debit, etc.
     
-    parent_medicine = relationship("Medicine", foreign_keys=[parent_medicine_id], back_populates="ingredients")
-    child_medicine = relationship("Medicine", foreign_keys=[child_medicine_id])
+    # Insurance Details
+    insuranceName = Column(String(100), nullable=True) # BPJS Kesehatan, Prudential, etc.
+    insuranceNumber = Column(String(100), nullable=True) # Card Number
+    claimStatus = Column(String(50), default="Pending") # Pending, Submitted, Paid, Rejected
+
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    patient = relationship("Patient")
+
+class Pharmacist(Base):
+    __tablename__ = "pharmacists"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100))
+    sip_no = Column(String(50)) # License Number
+    ihs_number = Column(String(100), nullable=True) # SatuSehat ID
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class AppConfig(Base):
+    __tablename__ = "app_config"
+    
+    key = Column(String(50), primary_key=True, index=True)
+    value = Column(Text) # JSON string or comma-separated values
 
 # Alias for backward compatibility or cleaner usage
 Doctor = DoctorEntity

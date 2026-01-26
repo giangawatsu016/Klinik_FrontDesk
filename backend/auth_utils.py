@@ -27,7 +27,8 @@ def verify_password(plain_password, hashed_password):
 
 def get_password_hash(password):
     # bcrypt.hashpw returns bytes, decode to store as string
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    # rounds=12 is standard, ~250ms on modern CPU. 
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=12)).decode('utf-8')
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
