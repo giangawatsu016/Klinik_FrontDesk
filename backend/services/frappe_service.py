@@ -77,10 +77,13 @@ class FrappeClient:
         }
         return self._post("Event", data)
 
-    def get_list(self, doctype: str, filters: dict = {}):
+    def get_list(self, doctype: str, filters: dict = {}, fields: list = None):
         url = f"{self.base_url}/api/resource/{doctype}"
+        if not fields:
+            fields = ["name"]
+        
         params = {
-            "fields": '["name"]',
+            "fields": json.dumps(fields),
             "filters": json.dumps(filters),
             "limit_page_length": 500
         }
@@ -115,8 +118,9 @@ class FrappeClient:
             "is_stock_item": 1,
             "is_sales_item": 1
         }
+        fields = ["name", "item_name", "stock_uom", "description", "standard_rate"]
         try:
-            return self.get_list("Item", filters=filters)
+            return self.get_list("Item", filters=filters, fields=fields)
         except Exception as e:
             print(f"Frappe Get Items Error: {e}")
             return []

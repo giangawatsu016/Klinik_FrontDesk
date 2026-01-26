@@ -1,0 +1,13 @@
+
+Performance Test Report
+======================
+Total Requests: 50
+Concurrency: 5
+Total Time: 0.59s
+RPS: 84.37
+Errors: 0
+
+Latency (ms):
+  Avg: 355.43
+  Max: 586.96
+  P95: 576.84

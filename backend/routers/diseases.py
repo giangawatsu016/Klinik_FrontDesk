@@ -22,7 +22,7 @@ class DiseaseCreate(DiseaseBase):
 class Disease(DiseaseBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 @router.get("", response_model=List[Disease])
 def get_diseases(search: str = "", skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):

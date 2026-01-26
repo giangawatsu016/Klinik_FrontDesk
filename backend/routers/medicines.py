@@ -208,3 +208,38 @@ def create_concoction(concoction: schemas.ConcoctionCreate, db: Session = Depend
     
     db.commit()
     return new_med
+
+# Batch Management
+@router.post("/{medicine_id}/batches", response_model=schemas.MedicineBatch)
+def create_batch(medicine_id: int, batch: schemas.MedicineBatchCreate, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
+    med = db.query(models.Medicine).get(medicine_id)
+    if not med:
+        raise HTTPException(status_code=404, detail="Medicine not found")
+    
+    new_batch = models.MedicineBatch(
+        medicine_id=medicine_id,
+        batchNumber=batch.batchNumber,
+        expiryDate=batch.expiryDate,
+        qty=batch.qty
+    )
+    db.add(new_batch)
+    
+    # Update total stock
+    med.qty += batch.qty
+    
+    db.commit()
+    db.refresh(new_batch)
+    return new_batch
+
+@router.delete("/batches/{batch_id}")
+def delete_batch(batch_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
+    batch = db.query(models.MedicineBatch).get(batch_id)
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    
+    med = batch.medicine
+    med.qty -= batch.qty
+    
+    db.delete(batch)
+    db.commit()
+    return {"message": "Batch deleted"}

@@ -412,6 +412,27 @@ class ApiService {
     }
   }
 
+  Future<MedicineBatch?> createMedicineBatch(
+    int medicineId,
+    MedicineBatch batch,
+  ) async {
+    final response = await _safePost(
+      '/medicines/$medicineId/batches',
+      jsonEncode(batch.toJson()),
+    );
+    if (response.statusCode == 200) {
+      return MedicineBatch.fromJson(jsonDecode(response.body));
+    }
+    return null;
+  }
+
+  Future<void> deleteMedicineBatch(int batchId) async {
+    final response = await _safeDelete('/medicines/batches/$batchId');
+    if (response.statusCode != 200) {
+      throw Exception("Failed to delete batch");
+    }
+  }
+
   Future<Medicine?> createConcoction(ConcoctionRequest concoction) async {
     final response = await _safePost(
       '/medicines/concoctions',
@@ -460,6 +481,7 @@ class ApiService {
         "password": password,
         "full_name": user.fullName,
         "role": user.role,
+        "email": user.email,
       }),
     );
     if (response.statusCode == 200) {
@@ -473,6 +495,7 @@ class ApiService {
       "username": user.username,
       "full_name": user.fullName,
       "role": user.role,
+      "email": user.email,
     };
     if (password != null && password.isNotEmpty) {
       body["password"] = password;

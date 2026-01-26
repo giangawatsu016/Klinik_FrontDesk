@@ -1,0 +1,13 @@
+
+Stress Test Report
+======================
+Total Requests: 500
+Concurrency: 50
+Total Time: 5.44s
+RPS: 91.83
+Errors: 0
+
+Latency (ms):
+  Avg: 2735.01
+  Max: 5403.28
+  P95: 5116.05

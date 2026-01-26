@@ -101,6 +101,54 @@ def sync_patients_push(db: Session = Depends(database.get_db)):
     db.commit()
     return {"status": "success", "count": synced_count}
 
+def sync_new_patient(patient_id: int):
+    from ..database import SessionLocal
+    db = SessionLocal()
+    try:
+        patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
+        if not patient: return
+
+        # 1. Sync to Frappe
+        try:
+            # Re-construct dict from model since we don't have the pydantic object here easily without simple mapping
+            # effectively same as patient.dict() but from ORM
+            patient_data = {
+                "first_name": patient.firstName,
+                "last_name": patient.lastName,
+                "sex": patient.gender,
+                "mobile": patient.phone,
+                "dob": str(patient.birthday) if patient.birthday else None,
+                "primary_address": patient.address  # Add other fields as needed for Frappe
+            }
+            
+            frappe_response = frappe_client.create_patient(patient_data)
+            if frappe_response and "data" in frappe_response:
+                 patient.frappeId = frappe_response["data"].get("name")
+        except Exception as e:
+            print(f"Background Frappe Sync Error: {e}")
+
+        # 2. Sync to Satu Sehat
+        try:
+            # Prepare data
+             patient_data_ss = {
+                "firstName": patient.firstName,
+                "lastName": patient.lastName,
+                "identityCard": patient.identityCard,
+                "phone": patient.phone,
+                "gender": patient.gender,
+                "birthday": patient.birthday,
+                "address": patient.address,
+                # Add other fields required for SS if any
+             }
+             ihs_number = satu_sehat_client.post_patient(patient_data_ss)
+             patient.ihs_number = ihs_number
+        except Exception as e:
+            print(f"Background Satu Sehat Sync Error: {e}")
+            
+        db.commit()
+    finally:
+        db.close()
+
 @router.post("", response_model=schemas.Patient)
 def create_patient(patient: schemas.PatientCreate, background_tasks: BackgroundTasks, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
     # Check if existing by ID Card
@@ -111,36 +159,20 @@ def create_patient(patient: schemas.PatientCreate, background_tasks: BackgroundT
     if db.query(models.Patient).filter(models.Patient.phone == patient.phone).first():
         raise HTTPException(status_code=400, detail="Patient with this Phone Number already exists")
     
-    # 1. Sync to Frappe (Synchronous)
-    frappe_id = None
-    try:
-        frappe_response = frappe_client.create_patient(patient.dict())
-        if frappe_response and "data" in frappe_response:
-             frappe_id = frappe_response["data"].get("name")
-    except Exception as e:
-        print(f"Frappe Sync Error: {e}")
-
-    # 2. Sync to Satu Sehat (Synchronous)
-    ihs_number = None
-    try:
-        ihs_number = satu_sehat_client.post_patient(patient.dict())
-    except Exception as e:
-        print(f"Satu Sehat Sync Error: {e}")
-
-    # 3. Create Local Patient
-    patient_data = patient.dict()
-    patient_data["frappe_id"] = frappe_id
-    patient_data["ihs_number"] = ihs_number
-
+    # Create Local Patient Immediately
+    new_patient = models.Patient(**patient.dict())
     
-    new_patient = models.Patient(**patient_data)
     try:
         db.add(new_patient)
         db.commit()
         db.refresh(new_patient)
+        
+        # Offload sync to background
+        background_tasks.add_task(sync_new_patient, new_patient.id)
+        
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"Patient with NIK {patient.identityCard} already exists.")
+        raise HTTPException(status_code=400, detail=f"Patient with NIK {patient.identityCard} already exists or other constraint failed.")
     except Exception as e:
         db.rollback()
         print(f"Database Error: {e}")
@@ -192,7 +224,8 @@ def search_patients(query: str, db: Session = Depends(database.get_db), current_
         (models.Patient.firstName.contains(query)) | 
         (models.Patient.lastName.contains(query)) | 
         (models.Patient.identityCard.contains(query)) |
-        (models.Patient.phone.contains(query))
+        (models.Patient.phone.contains(query)) |
+        (models.Patient.nomorRekamMedis.contains(query))
     ).all()
 
 @router.get("/{patient_id}", response_model=schemas.Patient)

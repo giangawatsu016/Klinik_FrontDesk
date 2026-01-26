@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
-import '../widgets/glass_container.dart';
 import '../widgets/animated_entrance.dart';
 
 class DoctorListScreen extends StatefulWidget {
@@ -110,47 +110,82 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddDoctorDialog,
-        backgroundColor: Colors.blue.shade900,
-        child: Icon(Icons.add, color: Colors.white),
+        backgroundColor: Theme.of(context).primaryColor,
+        child: Icon(LucideIcons.plus, color: Colors.white),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _doctors.isEmpty
-          ? Center(child: Text("No doctors found."))
+          ? Center(
+              child: Text(
+                "No doctors found.",
+                style: TextStyle(color: Colors.grey),
+              ),
+            )
           : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GlassContainer(
-                opacity: 0.8,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ListView.separated(
-                        itemCount: _doctors.length,
-                        separatorBuilder: (context, index) => Divider(),
-                        itemBuilder: (context, index) {
-                          final doctor = _doctors[index];
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.blue.shade100,
-                              child: Icon(
-                                Icons.medical_services,
-                                color: Colors.blue.shade800,
-                              ),
-                            ),
-                            title: Text(
-                              "${doctor.gelarDepan} ${doctor.namaDokter}",
-                            ),
-                            subtitle: Text(doctor.polyName),
-                            trailing: Icon(
-                              Icons.info_outline,
-                              color: Colors.grey,
-                            ),
-                            onTap: () => _showDoctorDetail(doctor),
-                          );
-                        },
-                      ),
+              padding: const EdgeInsets.all(24.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
                     ),
                   ],
+                ),
+                child: ListView.separated(
+                  padding: EdgeInsets.all(16),
+                  itemCount: _doctors.length,
+                  separatorBuilder: (context, index) =>
+                      Divider(color: Colors.grey.shade100, height: 1),
+                  itemBuilder: (context, index) {
+                    final doctor = _doctors[index];
+                    return ListTile(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      leading: CircleAvatar(
+                        backgroundColor: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.1),
+                        radius: 24,
+                        child: Icon(
+                          LucideIcons.stethoscope,
+                          color: Theme.of(context).primaryColor,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        "${doctor.gelarDepan} ${doctor.namaDokter}",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      subtitle: Text(
+                        doctor.polyName,
+                        style: TextStyle(fontFamily: 'Inter'),
+                      ),
+                      trailing: Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          LucideIcons.info,
+                          size: 16,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                      onTap: () => _showDoctorDetail(doctor),
+                    );
+                  },
                 ),
               ),
             ),

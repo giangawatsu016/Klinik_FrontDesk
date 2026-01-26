@@ -151,7 +151,7 @@ class PatientQueue(QueueBase):
 # Medicine Schemas
 class MedicineBase(BaseModel):
     erpnextItemCode: str = Field(validation_alias="erpnext_item_code")
-    medicineName: str
+    medicineName: Optional[str] = None
     medicineDescription: Optional[str] = None
     medicineLabel: Optional[str] = None
     medicinePrice: Optional[int] = 0
@@ -164,12 +164,28 @@ class MedicineBase(BaseModel):
     signa1: Optional[int] = None
     signa2: Optional[float] = None
 
+# Medicine Batch Schemas
+class MedicineBatchBase(BaseModel):
+    batchNumber: str
+    expiryDate: Optional[date] = None
+    qty: int = 0
+
+class MedicineBatchCreate(MedicineBatchBase):
+    pass
+
+class MedicineBatch(MedicineBatchBase):
+    id: int
+    medicine_id: int
+    class Config:
+        from_attributes = True
+
 class MedicineCreate(MedicineBase):
     pass
 
 class Medicine(MedicineBase):
     id: int
     erpnext_item_code: str
+    batches: List[MedicineBatch] = []
     class Config:
         from_attributes = True
 

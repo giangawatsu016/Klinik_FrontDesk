@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
-import '../widgets/glass_container.dart';
 import 'dart:async';
 
 class QueueMonitorScreen extends StatefulWidget {
@@ -41,11 +41,6 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
     try {
       final queue = await widget.apiService.getQueue();
       debugPrint("QUEUE DEBUG: Fetched ${queue.length} items");
-      for (var q in queue) {
-        debugPrint(
-          "QUEUE ITEM: ID=${q.id}, Type='${q.queueType}', Status='${q.status}', Time='${q.appointmentTime}'",
-        );
-      }
       setState(() {
         _queue = queue;
       });
@@ -60,11 +55,15 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
     final polyQueue = _queue.where((i) => i.queueType == 'Polyclinic').toList();
 
     return Padding(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(24),
       child: Row(
         children: [
           Expanded(child: _buildQueuePanel("Doctor Queue", docQueue, "Doctor")),
-          VerticalDivider(width: 40, thickness: 2),
+          VerticalDivider(
+            width: 40,
+            thickness: 1,
+            color: Colors.grey.withValues(alpha: 0.2),
+          ),
           Expanded(
             child: _buildQueuePanel(
               "Polyclinic Queue",
@@ -87,6 +86,8 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
         .firstOrNull;
     final canComplete = currentConsult != null;
 
+    final colorTheme = type == 'Doctor' ? Colors.blue : Colors.teal;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -95,14 +96,12 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: type == 'Doctor'
-                ? Colors.blue.shade900
-                : Colors.teal.shade900,
-            shadows: [Shadow(color: Colors.white, blurRadius: 2)],
+            fontFamily: 'Inter',
+            color: colorTheme.shade900,
           ),
           textAlign: TextAlign.center,
         ),
-        SizedBox(height: 20),
+        SizedBox(height: 24),
 
         // Controls
         Row(
@@ -112,85 +111,104 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                 onPressed: hasWaiting && !canComplete
                     ? () => _processCall(items)
                     : null,
-                icon: Icon(Icons.campaign),
+                icon: Icon(LucideIcons.megaphone, size: 20),
                 label: Text("Call Patient"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.withValues(alpha: 0.8),
+                  backgroundColor: Colors.green.shade600,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  elevation: 5,
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),
             ),
-            SizedBox(width: 10),
+            SizedBox(width: 16),
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: canComplete
                     ? () => _processComplete(currentConsult)
                     : null,
-                icon: Icon(Icons.check_circle),
+                icon: Icon(LucideIcons.checkCircle, size: 20),
                 label: Text("Completed"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueGrey.withValues(alpha: 0.8),
+                  backgroundColor: Colors.blueGrey.shade600,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  elevation: 5,
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),
             ),
           ],
         ),
-        SizedBox(height: 20),
+        SizedBox(height: 24),
 
         // Status Monitor
         if (canComplete)
-          GlassContainer(
-            color: Colors.green.withValues(alpha: 0.2),
-            margin: EdgeInsets.only(bottom: 20),
+          Container(
+            padding: EdgeInsets.all(24),
+            margin: EdgeInsets.only(bottom: 24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.green.shade100, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: Offset(0, 10),
+                ),
+              ],
+            ),
             child: Column(
               children: [
                 Text(
                   "Current Patient",
                   style: TextStyle(
                     color: Colors.green[900],
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 20,
+                    fontFamily: 'Inter',
                   ),
                 ),
+                SizedBox(height: 8),
                 Text(
                   currentConsult.numberQueue,
                   style: TextStyle(
-                    fontSize: 48, // Reduced from 64
+                    fontSize: 64,
                     fontWeight: FontWeight.w900,
                     color: Colors.green[900],
-                    shadows: [Shadow(color: Colors.white, blurRadius: 10)],
+                    fontFamily: 'Inter',
+                    letterSpacing: -2,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 4.0,
-                  ), // Reduced from 8.0
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                   child: Text(
                     "Status: ${currentConsult.status}",
                     style: TextStyle(
-                      fontSize: 16, // Reduced from 18
-                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                       color: Colors.green[800],
                     ),
                   ),
                 ),
+                SizedBox(height: 16),
                 Text(
                   "${currentConsult.patient?.firstName} ${currentConsult.patient?.lastName}",
                   style: TextStyle(
-                    fontSize: 20, // Reduced from 24
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.green[900],
+                    fontFamily: 'Inter',
                   ),
                 ),
               ],
@@ -199,86 +217,116 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
 
         // List
         Expanded(
-          child: ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              if (item.status == 'Completed') {
-                return SizedBox.shrink(); // Hide completed if they linger
-              }
-              if (item.status == 'In Consultation') {
-                return SizedBox.shrink(); // Shown in big box above
-              }
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ListView.separated(
+              padding: EdgeInsets.all(16),
+              itemCount: items.length,
+              separatorBuilder: (ctx, i) =>
+                  Divider(color: Colors.grey.shade100),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                if (item.status == 'Completed' ||
+                    item.status == 'In Consultation') {
+                  return SizedBox.shrink(); // Hide processed
+                }
 
-              return GestureDetector(
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text("Queue Details: ${item.numberQueue}"),
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Patient: ${item.patient?.firstName ?? '-'} ${item.patient?.lastName ?? ''}",
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            "Doctor: ${item.doctor?.gelarDepan ?? ''} ${item.doctor?.namaDokter ?? '-'}",
-                          ),
-                          SizedBox(height: 8),
-                          Text("Polyclinic: ${item.polyclinic ?? '-'}"),
-                          SizedBox(height: 8),
-                          Text("Status: ${item.status}"),
-                          if (item.isPriority)
+                return GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text("Queue Details: ${item.numberQueue}"),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              "Priority: YES",
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              "Patient: ${item.patient?.firstName ?? '-'} ${item.patient?.lastName ?? ''}",
                             ),
+                            SizedBox(height: 8),
+                            Text(
+                              "Doctor: ${item.doctor?.gelarDepan ?? ''} ${item.doctor?.namaDokter ?? '-'}",
+                            ),
+                            SizedBox(height: 8),
+                            Text("Polyclinic: ${item.polyclinic ?? '-'}"),
+                            SizedBox(height: 8),
+                            Text("Status: ${item.status}"),
+                            if (item.isPriority)
+                              Text(
+                                "Priority: YES",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            child: Text("Close"),
+                          ),
                         ],
                       ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(),
-                          child: Text("Close"),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: item.status == 'Waiting'
+                          ? colorTheme.shade50
+                          : Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                item.numberQueue,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorTheme.shade900,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            Text(
+                              item.status,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ],
                         ),
+                        if (item.isPriority)
+                          Icon(LucideIcons.star, color: Colors.amber, size: 20),
                       ],
                     ),
-                  );
-                },
-                child: GlassContainer(
-                  color: item.status == 'Waiting'
-                      ? (type == 'Doctor'
-                            ? Colors.blue.withValues(alpha: 0.1)
-                            : Colors.teal.withValues(alpha: 0.1))
-                      : Colors.grey.withValues(alpha: 0.1),
-                  margin: EdgeInsets.symmetric(vertical: 8),
-                  padding: EdgeInsets.zero,
-                  child: ListTile(
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    leading: Text(
-                      item.numberQueue,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade900,
-                      ),
-                    ),
-                    title: Text(item.status),
-                    trailing: item.isPriority
-                        ? Icon(Icons.star, color: Colors.amber, size: 32)
-                        : null,
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ],

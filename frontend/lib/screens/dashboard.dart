@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
 import 'registration.dart';
@@ -11,7 +12,7 @@ import 'diagnostic_reports.dart';
 import 'disease_list.dart';
 import 'medicine_inventory.dart';
 import 'sync_screen.dart';
-import 'dashboard_home.dart';
+import 'home_screen.dart'; // New Kiosk Home
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -35,44 +36,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final allPages = [
       {
         "id": "home",
-        "page": DashboardHomeScreen(apiService: widget.apiService),
-        "icon": Icons.analytics_outlined,
-        "selectedIcon": Icons.analytics,
+        "page": HomeScreen(apiService: widget.apiService), // New Screen
+        "icon": LucideIcons.layoutDashboard,
         "label": "Overview",
       },
       {
         "id": "queue",
         "page": QueueMonitorScreen(apiService: widget.apiService),
-        "icon": Icons.monitor_heart_outlined,
-        "selectedIcon": Icons.monitor_heart,
+        "icon": LucideIcons.monitorPlay,
         "label": "Queue Monitor",
       },
       {
         "id": "registration",
         "page": RegistrationScreen(apiService: widget.apiService),
-        "icon": Icons.person_add_outlined,
-        "selectedIcon": Icons.person_add,
+        "icon": LucideIcons.userPlus,
         "label": "Registration",
       },
       {
         "id": "doctors",
         "page": DoctorListScreen(apiService: widget.apiService),
-        "icon": Icons.medical_services_outlined,
-        "selectedIcon": Icons.medical_services,
+        "icon": LucideIcons.stethoscope,
         "label": "Doctors",
       },
       {
         "id": "patients",
         "page": PatientListScreen(apiService: widget.apiService),
-        "icon": Icons.people_outline,
-        "selectedIcon": Icons.people,
+        "icon": LucideIcons.users,
         "label": "Patients",
       },
       {
         "id": "medicines",
         "page": MedicineInventoryScreen(apiService: widget.apiService),
-        "icon": Icons.medication_outlined,
-        "selectedIcon": Icons.medication,
+        "icon": LucideIcons.pill,
         "label": "Medicines",
       },
       {
@@ -81,29 +76,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
           apiService: widget.apiService,
           currentUser: widget.user,
         ),
-        "icon": Icons.manage_accounts_outlined,
-        "selectedIcon": Icons.manage_accounts,
+        "icon": LucideIcons.userCog,
         "label": "Users",
       },
       {
         "id": "diagnosis",
         "page": DiagnosticReportsScreen(apiService: widget.apiService),
-        "icon": Icons.file_present_outlined,
-        "selectedIcon": Icons.file_present,
+        "icon": LucideIcons.fileText,
         "label": "Diagnosis",
       },
       {
         "id": "diseases",
         "page": DiseaseListScreen(apiService: widget.apiService),
-        "icon": Icons.coronavirus_outlined,
-        "selectedIcon": Icons.coronavirus,
+        "icon": LucideIcons.bug,
         "label": "Diseases",
       },
       {
         "id": "sync",
         "page": SyncScreen(apiService: widget.apiService),
-        "icon": Icons.sync_outlined,
-        "selectedIcon": Icons.sync,
+        "icon": LucideIcons.refreshCw,
         "label": "Sync Data",
       },
     ];
@@ -114,17 +105,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final role = widget.user.role;
 
       if (id == "queue" || id == "registration") {
-        return role == "Staff"; // Only Staff see practical tools
+        return role == "Staff";
       }
-
-      if (id == "home") {
-        return true;
-      }
-
-      if (id == "users" || id == "sync") {
+      if (id == "home") return true;
+      if (id == "users") {
         return role == "Super Admin" || role == "Administrator";
       }
-
+      if (id == "sync") {
+        return role == "Administrator";
+      }
       // Doctors, Patients, Medicines, Diagnosis
       if ([
         "doctors",
@@ -135,7 +124,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ].contains(id)) {
         return role != "Super Admin";
       }
-
       return true;
     }).toList();
 
@@ -146,6 +134,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final currentPage = filteredPages[_selectedIndex];
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Row(
         children: [
           // SIDEBAR
@@ -158,96 +147,98 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(32.0),
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade700,
-                          borderRadius: BorderRadius.circular(8),
+                          color: Theme.of(context).primaryColor,
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
-                          Icons.local_hospital,
+                          LucideIcons.activity,
                           color: Colors.white,
+                          size: 20,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          "Klinik Intimedicare",
+                          "Intimedicare",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            shadows: [
-                              Shadow(
-                                offset: Offset(2, 2),
-                                blurRadius: 4.0,
-                                color: Colors.black.withValues(alpha: 0.15),
-                              ),
-                            ],
+                            fontSize: 20,
+                            fontFamily: 'Inter',
+                            color: Colors.black87,
                           ),
-                          overflow: TextOverflow.visible,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Divider(height: 1),
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 12,
-                    ),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: filteredPages.length,
+                    separatorBuilder: (ctx, i) => SizedBox(height: 4),
                     itemBuilder: (context, index) {
                       final item = filteredPages[index];
                       final isSelected = _selectedIndex == index;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 4.0),
-                        child: ListTile(
-                          leading: Icon(
-                            isSelected
-                                ? (item['selectedIcon'] as IconData)
-                                : (item['icon'] as IconData),
-                            color: isSelected
-                                ? Colors.blue.shade700
-                                : Colors.grey.shade600,
-                          ),
-                          title: Text(
-                            item['label'] as String,
-                            style: TextStyle(
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                              color: isSelected
-                                  ? Colors.blue.shade700
-                                  : Colors.grey.shade700,
-                            ),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          tileColor: isSelected ? Colors.blue.shade50 : null,
-                          onTap: () => setState(() => _selectedIndex = index),
+                      return ListTile(
+                        leading: Icon(
+                          item['icon'] as IconData,
+                          size: 22,
+                          color: isSelected
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey.shade400,
                         ),
+                        title: Text(
+                          item['label'] as String,
+                          style: TextStyle(
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                            color: isSelected
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey.shade600,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        tileColor: isSelected
+                            ? Theme.of(
+                                context,
+                              ).primaryColor.withValues(alpha: 0.05)
+                            : null,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        onTap: () => setState(() => _selectedIndex = index),
                       );
                     },
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(24.0),
                   child: ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.red),
+                    leading: const Icon(
+                      LucideIcons.logOut,
+                      color: Colors.redAccent,
+                      size: 22,
+                    ),
                     title: const Text(
                       "Logout",
-                      style: TextStyle(color: Colors.red),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     onTap: _logout,
+                    dense: true,
                   ),
                 ),
               ],
@@ -258,50 +249,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Expanded(
             child: Column(
               children: [
-                // HEADER
+                // Minimal Header
                 Container(
-                  height: 64,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
-                    ),
-                  ),
+                  height: 80,
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  alignment: Alignment.centerLeft,
                   child: Row(
                     children: [
                       Text(
                         currentPage['label'] as String,
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          letterSpacing: -0.5,
                         ),
                       ),
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: 16,
+                          vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(30),
                           border: Border.all(color: Colors.grey.shade200),
                         ),
                         child: Row(
                           children: [
                             CircleAvatar(
-                              radius: 14,
-                              backgroundColor: Colors.blue.shade700,
+                              radius: 16,
+                              backgroundColor: Theme.of(context).primaryColor,
                               child: Text(
                                 widget.user.username[0].toUpperCase(),
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 12,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
@@ -310,14 +299,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   widget.user.username,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 12,
+                                    fontSize: 13,
                                   ),
                                 ),
                                 Text(
                                   widget.user.role,
                                   style: TextStyle(
                                     color: Colors.grey.shade500,
-                                    fontSize: 10,
+                                    fontSize: 11,
                                   ),
                                 ),
                               ],
@@ -330,9 +319,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 Expanded(
                   child: Container(
-                    color: Colors
-                        .grey
-                        .shade50, // Light gray background for content
+                    color: Colors.grey.shade50,
                     child: currentPage['page'] as Widget,
                   ),
                 ),

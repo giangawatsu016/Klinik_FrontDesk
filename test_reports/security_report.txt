@@ -1,0 +1,2 @@
+INFO: Swagger UI is accessible at /docs (Common in dev, should be disabled in strict prod).
+PASS: /patients/ endpoint is protected (401 Unauthorized).

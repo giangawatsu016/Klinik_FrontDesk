@@ -5,7 +5,7 @@ import statistics
 import os
 
 # Configuration
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:8001"
 SECURITY_REPORT_PATH = "test_reports/security_report.txt"
 PERF_REPORT_PATH = "test_reports/performance_report.txt"
 STRESS_REPORT_PATH = "test_reports/stress_report.txt"
@@ -45,7 +45,7 @@ async def run_load_test(name, count, concurrency, report_path):
         from jose import jwt
         from datetime import datetime, timedelta
         
-        SECRET_KEY = "9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3"
+        SECRET_KEY = "fallback_secret_only_for_dev_warning"
         ALGORITHM = "HS256"
         
         expire = datetime.utcnow() + timedelta(minutes=30)

@@ -103,150 +103,164 @@ class _SyncScreenState extends State<SyncScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.sync, size: 32, color: Colors.blue),
-              SizedBox(width: 16),
-              Text(
-                "ERPNext Data Synchronization",
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-            ],
-          ),
-          SizedBox(height: 24),
-          Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: [
-              _buildSyncCard(
-                "Doctors",
-                Icons.medical_services,
-                Colors.blue,
-                () => _runCombinedSync(
-                  "Doctors",
-                  widget.apiService.syncDoctors,
-                  widget.apiService.syncDoctorsPush,
-                ),
-              ),
-              _buildSyncCard(
-                "Medicines",
-                Icons.medication,
-                Colors.green,
-                () => _runCombinedSync(
-                  "Medicines",
-                  widget.apiService.syncMedicines,
-                  widget.apiService.syncMedicinesPush,
-                ),
-              ),
-              _buildSyncCard(
-                "Patients",
-                Icons.people,
-                Colors.orange,
-                () => _runCombinedSync(
-                  "Patients",
-                  widget.apiService.syncPatients,
-                  widget.apiService.syncPatientsPush,
-                ),
-              ),
-              _buildSyncCard(
-                "Diseases",
-                Icons.coronavirus,
-                Colors.purple,
-                () => _runCombinedSync(
-                  "Diseases",
-                  widget.apiService.syncDiseases,
-                  widget.apiService.syncDiseasesPush,
-                ),
-              ),
-
-              SizedBox(width: 40),
-
-              // Global Action
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                ),
-                onPressed: _isLoading ? null : _syncAll,
-                icon: _isLoading
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.sync, size: 32, color: Colors.blue),
+                      SizedBox(width: 16),
+                      Text(
+                        "ERPNext Data Synchronization",
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: [
+                      _buildSyncCard(
+                        "Doctors",
+                        Icons.medical_services,
+                        Colors.blue,
+                        () => _runCombinedSync(
+                          "Doctors",
+                          widget.apiService.syncDoctors,
+                          widget.apiService.syncDoctorsPush,
                         ),
-                      )
-                    : Icon(Icons.sync_alt),
-                label: Text("SYNC ALL DATA (Pull + Push)"),
-              ),
-            ],
-          ),
+                      ),
+                      _buildSyncCard(
+                        "Medicines",
+                        Icons.medication,
+                        Colors.green,
+                        () => _runCombinedSync(
+                          "Medicines",
+                          widget.apiService.syncMedicines,
+                          widget.apiService.syncMedicinesPush,
+                        ),
+                      ),
+                      _buildSyncCard(
+                        "Patients",
+                        Icons.people,
+                        Colors.orange,
+                        () => _runCombinedSync(
+                          "Patients",
+                          widget.apiService.syncPatients,
+                          widget.apiService.syncPatientsPush,
+                        ),
+                      ),
+                      _buildSyncCard(
+                        "Diseases",
+                        Icons.coronavirus,
+                        Colors.purple,
+                        () => _runCombinedSync(
+                          "Diseases",
+                          widget.apiService.syncDiseases,
+                          widget.apiService.syncDiseasesPush,
+                        ),
+                      ),
+                    ],
+                  ),
 
-          SizedBox(height: 32),
+                  SizedBox(height: 32),
 
-          // --- SatuSehat Section ---
-          Row(
-            children: [
-              Icon(Icons.health_and_safety, size: 32, color: Colors.green),
-              SizedBox(width: 16),
-              Text(
-                "SatuSehat Synchronization",
-                style: Theme.of(context).textTheme.headlineSmall,
+                  // --- SatuSehat Section ---
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.health_and_safety,
+                        size: 32,
+                        color: Colors.green,
+                      ),
+                      SizedBox(width: 16),
+                      Text(
+                        "SatuSehat Synchronization",
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: [
+                      _buildSyncCard(
+                        "SatuSehat Doctors",
+                        Icons.medical_services_outlined,
+                        Colors.teal,
+                        () => _runCombinedSync(
+                          "SatuSehat Doctors",
+                          widget.apiService.syncSatuSehatDoctors,
+                          widget.apiService.syncSatuSehatDoctorsPush,
+                        ),
+                      ),
+                      _buildSyncCard(
+                        "SatuSehat Patients",
+                        Icons.people_outline,
+                        Colors.orangeAccent,
+                        () => _runCombinedSync(
+                          "SatuSehat Patients",
+                          widget.apiService.syncSatuSehatPatients,
+                          widget.apiService.syncSatuSehatPatientsPush,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24),
+                ],
               ),
-            ],
+            ),
           ),
           SizedBox(height: 24),
-          Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: [
-              _buildSyncCard(
-                "SatuSehat Doctors",
-                Icons.medical_services_outlined,
-                Colors.teal,
-                () => _runCombinedSync(
-                  "SatuSehat Doctors",
-                  widget.apiService.syncSatuSehatDoctors,
-                  widget.apiService.syncSatuSehatDoctorsPush,
-                ),
+          // Global Sync Button
+          Center(
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               ),
-              _buildSyncCard(
-                "SatuSehat Patients",
-                Icons.people_outline,
-                Colors.orangeAccent,
-                () => _runCombinedSync(
-                  "SatuSehat Patients",
-                  widget.apiService.syncSatuSehatPatients,
-                  widget.apiService.syncSatuSehatPatientsPush,
-                ),
-              ),
-            ],
+              onPressed: _isLoading ? null : _syncAll,
+              icon: _isLoading
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Icon(Icons.sync_alt),
+              label: Text("SYNC ALL DATA (Pull + Push)"),
+            ),
           ),
-          Divider(height: 48),
+          SizedBox(height: 24),
+          Divider(height: 32),
           Text("Sync Logs", style: TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: 8),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ListView.builder(
-                itemCount: _logs.length,
-                itemBuilder: (ctx, i) {
-                  return Text(
-                    _logs[i],
-                    style: TextStyle(
-                      color: Colors.greenAccent,
-                      fontFamily: 'monospace',
-                    ),
-                  );
-                },
-              ),
+          Container(
+            height: 120,
+            width: double.infinity,
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ListView.builder(
+              itemCount: _logs.length,
+              itemBuilder: (ctx, i) {
+                return Text(
+                  _logs[i],
+                  style: TextStyle(
+                    color: Colors.greenAccent,
+                    fontFamily: 'monospace',
+                  ),
+                );
+              },
             ),
           ),
         ],

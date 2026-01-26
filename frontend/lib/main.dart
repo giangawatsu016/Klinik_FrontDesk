@@ -17,79 +17,63 @@ class KlinikAdminApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: Colors.white,
-        colorScheme: ColorScheme.light(
-          primary: Colors.black, // High contrast
-          secondary: Colors.blue.shade700,
+        primaryColor: const Color(0xFF0F766E),
+        scaffoldBackgroundColor: Colors.grey.shade50,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0F766E),
+          primary: const Color(0xFF0F766E),
+          secondary: Colors.teal.shade700,
           surface: Colors.white,
-          onSurface: Colors.black87,
-          outline: Colors.grey.shade300, // For borders
         ),
-        textTheme: GoogleFonts.poppinsTextTheme(),
+        textTheme: GoogleFonts.interTextTheme(),
         cardTheme: CardThemeData(
-          elevation: 0, // No shadows
+          elevation: 0,
           color: Colors.white,
           shape: RoundedRectangleBorder(
-            side: BorderSide(color: Colors.grey.shade300), // Border instead
-            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: Colors.grey.shade200),
+            borderRadius: BorderRadius.circular(16),
           ),
           margin: EdgeInsets.zero,
         ),
         appBarTheme: AppBarTheme(
           elevation: 0,
           backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          shape: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+          foregroundColor: Colors.black87,
+          scrolledUnderElevation: 0,
+          iconTheme: IconThemeData(color: const Color(0xFF0F766E)),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
+          contentPadding: const EdgeInsets.all(24),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(24),
+            borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(24),
+            borderSide: BorderSide(color: Colors.grey.shade200),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.black),
+            borderRadius: BorderRadius.circular(24),
+            borderSide: const BorderSide(color: Color(0xFF0F766E), width: 2),
           ),
-          floatingLabelBehavior:
-              FloatingLabelBehavior.always, // Prevent overlap
-          floatingLabelStyle: const TextStyle(
-            color: Colors.black,
-            backgroundColor: Colors.white,
-          ),
-        ),
-        dividerTheme: DividerThemeData(
-          color: Colors.grey.shade200,
-          thickness: 1,
+          hintStyle: TextStyle(color: Colors.grey.shade400),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             elevation: 0,
-            backgroundColor: Colors.black,
+            backgroundColor: const Color(0xFF0F766E),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(16),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.black,
-            side: BorderSide(color: Colors.grey.shade300),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            textStyle: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Inter',
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           ),
         ),
       ),

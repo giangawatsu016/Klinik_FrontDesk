@@ -146,6 +146,20 @@ class Medicine(Base):
 
     # Relationship for Racikan (Concoction)
     ingredients = relationship("MedicineConcoction", back_populates="parent_medicine", foreign_keys="[MedicineConcoction.parent_medicine_id]")
+    
+    # Relationship for Batches
+    batches = relationship("MedicineBatch", back_populates="medicine", cascade="all, delete-orphan")
+
+class MedicineBatch(Base):
+    __tablename__ = "medicine_batches"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    medicine_id = Column(Integer, ForeignKey("medicinecore.id"))
+    batchNumber = Column(String(50))
+    expiryDate = Column(Date, nullable=True)
+    qty = Column(Integer, default=0)
+    
+    medicine = relationship("Medicine", back_populates="batches")
 
 
 class MedicineConcoction(Base):

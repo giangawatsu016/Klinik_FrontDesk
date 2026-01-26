@@ -314,6 +314,7 @@ class Medicine {
   final String? notes; // Signa Text
   final int? signa1;
   final double? signa2;
+  final List<MedicineBatch> batches;
 
   Medicine({
     this.id,
@@ -330,6 +331,7 @@ class Medicine {
     this.notes,
     this.signa1,
     this.signa2,
+    this.batches = const [],
   });
 
   factory Medicine.fromJson(Map<String, dynamic> json) {
@@ -337,7 +339,7 @@ class Medicine {
       id: json['id'],
       erpnextItemCode:
           json['erpnextItemCode'] ?? json['erpnext_item_code'] ?? '',
-      medicineName: json['medicineName'],
+      medicineName: json['medicineName'] ?? '',
       medicineDescription: json['medicineDescription'],
       medicineLabel: json['medicineLabel'],
       medicinePrice: json['medicinePrice'] ?? 0,
@@ -351,6 +353,11 @@ class Medicine {
       signa2: json['signa2'] != null
           ? (json['signa2'] as num).toDouble()
           : null,
+      batches: json['batches'] != null
+          ? (json['batches'] as List)
+                .map((i) => MedicineBatch.fromJson(i))
+                .toList()
+          : [],
     );
   }
 
@@ -415,5 +422,37 @@ class ConcoctionRequest {
     "totalQty": totalQty,
     "unit": unit,
     "description": description,
+  };
+}
+
+class MedicineBatch {
+  final int id;
+  final int medicineId;
+  final String batchNumber;
+  final String? expiryDate;
+  final int qty;
+
+  MedicineBatch({
+    required this.id,
+    required this.medicineId,
+    required this.batchNumber,
+    this.expiryDate,
+    required this.qty,
+  });
+
+  factory MedicineBatch.fromJson(Map<String, dynamic> json) {
+    return MedicineBatch(
+      id: json['id'] ?? 0,
+      medicineId: json['medicine_id'] ?? 0,
+      batchNumber: json['batchNumber'] ?? '',
+      expiryDate: json['expiryDate'],
+      qty: json['qty'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'batchNumber': batchNumber,
+    'expiryDate': expiryDate,
+    'qty': qty,
   };
 }
