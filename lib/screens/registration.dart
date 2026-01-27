@@ -1,0 +1,1686 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../services/api_service.dart';
+import '../models/models.dart';
+import '../widgets/animated_entrance.dart';
+
+class RegistrationScreen extends StatefulWidget {
+  final ApiService apiService;
+  final bool isRegistrationOnly;
+  final Patient? patientToEdit;
+
+  const RegistrationScreen({
+    super.key,
+    required this.apiService,
+    this.isRegistrationOnly = false,
+    this.patientToEdit,
+  });
+
+  @override
+  State<RegistrationScreen> createState() => _RegistrationScreenState();
+}
+
+enum RegistrationStep { selectType, inputData, selectDoctor }
+
+enum PatientType { newPatient, existingPatient }
+
+class _RegistrationScreenState extends State<RegistrationScreen> {
+  RegistrationStep _currentStep = RegistrationStep.selectType;
+  PatientType? _patientType;
+  Patient? _verifiedPatient;
+
+  // Existing Patient Search
+  final TextEditingController _searchController = TextEditingController();
+  List<Patient> _searchResults = [];
+  bool _isSearching = false;
+
+  // New Patient Form Key
+  final _formKey = GlobalKey<FormState>();
+  final _doctorFormKey = GlobalKey<FormState>();
+
+  // New Patient Data
+  String firstName = '';
+  String lastName = '';
+  String phone = '';
+  String identityCard = '';
+  String gender = 'Male';
+  DateTime birthday = DateTime(2000, 1, 1);
+
+  // New Fields
+  String religion = 'Islam';
+  String profession = '';
+  String education = 'Bachelor';
+  String province = '';
+  String city = '';
+  String district = '';
+  String subdistrict = '';
+  String rt = '';
+  String rw = '';
+  String postalCode = '';
+  String addressDetails = '';
+
+  // New Fields Input
+  String nomorRekamMedis = '';
+  String simpleAddress = '';
+  int? height;
+  int? weight;
+
+  int issuerId = 1; // 1=General, 2=BPJS, 3=Insurance
+  String? insuranceName;
+  String noAssuransi = '';
+  int maritalStatusId = 1; // 1=Single, 2=Married, 3=Divorced, 4=Widowed
+
+  // Payment Sub-methods
+  String? _paymentSubMethod;
+  final TextEditingController _paymentAmountCtrl = TextEditingController();
+  final TextEditingController _paymentReceiptCtrl = TextEditingController();
+  final TextEditingController _paymentDetailsCtrl = TextEditingController();
+
+  // Doctor Selection
+  List<Doctor> doctors = [];
+  Doctor? selectedDoctor;
+  bool isPriority = false;
+  bool _isPolyclinic = false;
+  String? _selectedPolyclinic;
+
+  // Dynamic Address Data
+  List<Map<String, dynamic>> _provinces = [];
+  List<Map<String, dynamic>> _cities = [];
+  List<Map<String, dynamic>> _districts = [];
+  List<Map<String, dynamic>> _subdistricts = [];
+
+  String? _selectedProvinceId;
+  String? _selectedCityId;
+  String? _selectedDistrictId;
+  String? _selectedSubdistrictId;
+
+  final List<String> religions = [
+    'Islam',
+    'Kristen',
+    'Katolik',
+    'Hindu',
+    'Buddha',
+    'Konghucu',
+    'Lainnya',
+  ];
+  final List<String> educations = [
+    'SD',
+    'SMP',
+    'SMA',
+    'Diploma',
+    'Bachelor',
+    'Master',
+    'Doctorate',
+  ];
+
+  // Hardcoded replaced by dynamic
+  List<Issuer> _allIssuers = [];
+  String? _selectedIssuerCategory; // 'Umum', 'BPJS', 'Insurance'
+
+  final Map<int, String> maritalStatuses = {
+    1: 'Single',
+    2: 'Married',
+    3: 'Divorced',
+    4: 'Widowed',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDoctors();
+    _loadProvinces();
+    _loadIssuers(); // New fetch
+
+    if (widget.patientToEdit != null) {
+      _initializeEditMode(widget.patientToEdit!);
+    } else if (widget.isRegistrationOnly) {
+      _currentStep = RegistrationStep.inputData;
+      _patientType = PatientType.newPatient;
+    }
+  }
+
+  void _loadIssuers() async {
+    final res = await widget.apiService.getIssuers();
+    if (mounted) {
+      setState(() {
+        _allIssuers = res;
+
+        // Handle Edit Mode or existing selection
+        if (issuerId != 0) {
+          final match =
+              res.where((i) => i.issuerId == issuerId).firstOrNull ??
+              res
+                  .where((i) => i.issuer.contains('Umum'))
+                  .firstOrNull; // Fallback
+          if (match != null) {
+            _selectedIssuerCategory = match.issuer;
+          }
+        }
+
+        // Default to General if available and new patient
+        if (widget.patientToEdit == null && _selectedIssuerCategory == null) {
+          final general = res
+              .where(
+                (i) =>
+                    i.issuer.contains('Umum') || i.issuer.contains('General'),
+              )
+              .firstOrNull;
+          if (general != null) {
+            _selectedIssuerCategory = general.issuer;
+            issuerId = general.issuerId;
+          }
+        }
+      });
+    }
+  }
+
+  void _initializeEditMode(Patient p) {
+    _currentStep = RegistrationStep.inputData;
+    _patientType = PatientType.newPatient; // Re-use New Patient Form
+
+    firstName = p.firstName;
+    lastName = p.lastName;
+    phone = p.phone;
+    identityCard = p.identityCard;
+    gender = p.gender;
+    birthday = DateTime.tryParse(p.birthday) ?? DateTime(2000);
+
+    religion = p.religion;
+    profession = p.profession;
+    education = p.education;
+
+    // Address
+    province = p.province;
+    city = p.city;
+    district = p.district;
+    subdistrict = p.subdistrict;
+    rt = p.rt;
+    rw = p.rw;
+    postalCode = p.postalCode;
+    postalCode = p.postalCode;
+    addressDetails = p.addressDetails ?? '';
+
+    // New Fields
+    nomorRekamMedis = p.nomorRekamMedis ?? '';
+    simpleAddress = p.address ?? '';
+    height = p.height;
+    weight = p.weight;
+
+    issuerId = p.issuerId;
+    insuranceName = p.insuranceName;
+    noAssuransi = p.noAssuransi ?? '';
+    // maritalStatusId = p.maritalStatusId; // Assuming model has it or default
+  }
+
+  void _loadProvinces() async {
+    final res = await widget.apiService.getProvinces();
+    if (mounted) setState(() => _provinces = res);
+  }
+
+  void _onProvinceChanged(String? val) async {
+    if (val == null) return;
+    setState(() {
+      _selectedProvinceId = val;
+      _selectedCityId = null;
+      _selectedDistrictId = null;
+      _selectedSubdistrictId = null;
+      _cities = [];
+      _districts = [];
+      _subdistricts = [];
+
+      // Update Name for Submission
+      province = _provinces.firstWhere((e) => e['id'] == val)['name'];
+      city = '';
+      district = '';
+      subdistrict = '';
+    });
+
+    final res = await widget.apiService.getCities(val);
+    if (mounted) setState(() => _cities = res);
+  }
+
+  void _onCityChanged(String? val) async {
+    if (val == null) return;
+    setState(() {
+      _selectedCityId = val;
+      _selectedDistrictId = null;
+      _selectedSubdistrictId = null;
+      _districts = [];
+      _subdistricts = [];
+
+      city = _cities.firstWhere((e) => e['id'] == val)['name'];
+      district = '';
+      subdistrict = '';
+    });
+
+    final res = await widget.apiService.getDistricts(val);
+    if (mounted) setState(() => _districts = res);
+  }
+
+  void _onDistrictChanged(String? val) async {
+    if (val == null) return;
+    setState(() {
+      _selectedDistrictId = val;
+      _selectedSubdistrictId = null;
+      _subdistricts = [];
+
+      district = _districts.firstWhere((e) => e['id'] == val)['name'];
+      subdistrict = '';
+    });
+
+    final res = await widget.apiService.getSubdistricts(val);
+    if (mounted) setState(() => _subdistricts = res);
+  }
+
+  void _onSubdistrictChanged(String? val) {
+    if (val == null) return;
+    setState(() {
+      _selectedSubdistrictId = val;
+      subdistrict = _subdistricts.firstWhere((e) => e['id'] == val)['name'];
+    });
+  }
+
+  void _loadDoctors() async {
+    final docs = await widget.apiService.getDoctors();
+    if (!mounted) return;
+    setState(() {
+      doctors = docs;
+    });
+  }
+
+  void _searchPatient() async {
+    if (_searchController.text.isEmpty) return;
+    setState(() {
+      _isSearching = true;
+      _searchResults = [];
+    });
+
+    try {
+      final results = await widget.apiService.searchPatients(
+        _searchController.text,
+      );
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+        });
+        if (results.isEmpty) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('No patient found')));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Search Error: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isSearching = false);
+    }
+  }
+
+  void _selectExistingPatient(Patient patient) {
+    setState(() {
+      _verifiedPatient = patient;
+
+      // Load Payment Info into State for Step 3
+      issuerId = patient.issuerId;
+      insuranceName = patient.insuranceName;
+      noAssuransi = patient.noAssuransi ?? '';
+
+      if (widget.isRegistrationOnly) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Patient Selected Successfully"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        _currentStep = RegistrationStep.selectDoctor;
+      }
+    });
+  }
+
+  void _submitNewPatient() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      final newItem = Patient(
+        id: widget.patientToEdit?.id,
+        firstName: firstName,
+        lastName: lastName,
+        identityCard: identityCard,
+        phone: phone,
+        gender: gender,
+        birthday: birthday.toIso8601String().substring(0, 10),
+        religion: religion,
+        profession: profession,
+        education: education,
+        province: province,
+        city: city,
+        district: district,
+        subdistrict: subdistrict,
+        rt: rt,
+        rw: rw,
+        postalCode: postalCode,
+        addressDetails: addressDetails,
+        issuerId: issuerId,
+        insuranceName: insuranceName,
+        noAssuransi: noAssuransi,
+        maritalStatusId: maritalStatusId,
+        frappeId: widget.patientToEdit?.frappeId,
+        // New Fields
+        nomorRekamMedis: nomorRekamMedis,
+        address: addressDetails,
+        height: height,
+        weight: weight,
+      );
+
+      try {
+        if (widget.patientToEdit != null) {
+          await widget.apiService.updatePatient(
+            widget.patientToEdit!.id!,
+            newItem,
+          );
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Patient Updated Successfully"),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        } else {
+          final createdPatient = await widget.apiService.registerPatient(
+            newItem,
+          );
+          if (!mounted) return;
+
+          if (widget.isRegistrationOnly) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Patient Registered Successfully"),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Navigator.pop(context);
+            return;
+          }
+          setState(() {
+            _verifiedPatient = createdPatient;
+            _currentStep = RegistrationStep.selectDoctor;
+          });
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll("Exception: ", "")),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _submitToQueue() async {
+    try {
+      // Validate Doctor/Polyclinic Selection
+      if (!_doctorFormKey.currentState!.validate()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please select a Doctor or Polyclinic'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      _doctorFormKey.currentState!.save();
+
+      if (_verifiedPatient == null || _verifiedPatient!.id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error: Patient data is invalid. Please search again.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      // Update Patient Payment Info (Sync logic)
+      try {
+        // Capture General Payment Details
+        if ((_selectedIssuerCategory?.contains("Umum") ?? false) &&
+            _paymentSubMethod != null) {
+          insuranceName = "Payment: $_paymentSubMethod";
+          if (_paymentSubMethod == 'Cash') {
+            insuranceName = "$insuranceName - ${_paymentAmountCtrl.text}";
+          } else if (_paymentSubMethod == 'Debit' ||
+              _paymentSubMethod == 'CreditCard') {
+            insuranceName = "$insuranceName - Ref: ${_paymentReceiptCtrl.text}";
+          } else if (_paymentSubMethod == 'Transfer') {
+            insuranceName = "$insuranceName - ${_paymentDetailsCtrl.text}";
+          }
+          // For QRIS, just the method name is enough or confirmed status
+        }
+
+        final updatedPatient = Patient(
+          id: _verifiedPatient!.id,
+          firstName: _verifiedPatient!.firstName,
+          lastName: _verifiedPatient!.lastName,
+          identityCard: _verifiedPatient!.identityCard,
+          phone: _verifiedPatient!.phone,
+          gender: _verifiedPatient!.gender,
+          birthday: _verifiedPatient!.birthday,
+          religion: _verifiedPatient!.religion,
+          profession: _verifiedPatient!.profession,
+          education: _verifiedPatient!.education,
+          province: _verifiedPatient!.province,
+          city: _verifiedPatient!.city,
+          district: _verifiedPatient!.district,
+          subdistrict: _verifiedPatient!.subdistrict,
+          rt: _verifiedPatient!.rt,
+          rw: _verifiedPatient!.rw,
+          postalCode: _verifiedPatient!.postalCode,
+          addressDetails: _verifiedPatient!.addressDetails,
+          issuerId: issuerId, // Updated from formatted Step 3
+          insuranceName: insuranceName,
+          noAssuransi: noAssuransi,
+          maritalStatusId: _verifiedPatient!.maritalStatusId,
+          frappeId: _verifiedPatient!.frappeId,
+        );
+
+        // Call Update API to save payment info
+        await widget.apiService.updatePatient(
+          updatedPatient.id!,
+          updatedPatient,
+        );
+      } catch (e) {
+        // debugPrint("Failed to sync payment info: $e");
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update Payment Info: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      await widget.apiService.addToQueue(
+        patientId: _verifiedPatient!.id!,
+        doctorId: !_isPolyclinic
+            ? selectedDoctor!.medicalFacilityPolyDoctorId
+            : null,
+        isPriority: isPriority,
+        queueType: _isPolyclinic ? "Polyclinic" : "Doctor",
+        polyclinic: _isPolyclinic ? _selectedPolyclinic : null,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Patient Registered & Queued Successfully',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Reset
+      setState(() {
+        _currentStep = RegistrationStep.selectType;
+        _verifiedPatient = null;
+        _patientType = null;
+        _searchController.clear();
+        _searchResults = [];
+        selectedDoctor = null;
+        _selectedPolyclinic = null;
+        isPriority = false;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An unexpected error occurred: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  bool _isFetchingSatuSehat = false;
+
+  void _fetchSatuSehatData() async {
+    _formKey.currentState!.save();
+    if (identityCard.length != 16) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("NIK must be 16 digits")));
+      }
+      return;
+    }
+
+    setState(() => _isFetchingSatuSehat = true);
+
+    try {
+      final data = await widget.apiService.fetchPatientFromSatuSehat(
+        identityCard,
+      );
+
+      if (!mounted) return;
+
+      if (data != null) {
+        setState(() {
+          if (data['firstName'] != null) firstName = data['firstName'];
+          if (data['phone'] != null && data['phone'].toString().isNotEmpty) {
+            phone = data['phone'];
+          }
+          if (data['gender'] != null) {
+            gender = data['gender'].toString().toLowerCase() == 'male'
+                ? 'Male'
+                : 'Female';
+          }
+          if (data['birthday'] != null) {
+            try {
+              birthday = DateTime.parse(data['birthday']);
+            } catch (_) {}
+          }
+          if (data['address_details'] != null) {
+            addressDetails = data['address_details'];
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Data fetched from SatuSehat"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Patient not found in SatuSehat"),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error fetching data: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isFetchingSatuSehat = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // Build Header / Progress
+          _buildHeader(),
+          SizedBox(height: 20),
+          Expanded(child: _buildCurrentStep()),
+        ],
+      ),
+    );
+
+    if (widget.isRegistrationOnly) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.patientToEdit != null ? "Edit Patient" : "New Patient",
+          ),
+        ),
+        body: content,
+      );
+    }
+    return content;
+  }
+
+  Widget _buildHeader() {
+    return Text(
+      _currentStep == RegistrationStep.selectType
+          ? "Select Registration Type"
+          : _currentStep == RegistrationStep.inputData
+          ? (_patientType == PatientType.newPatient
+                ? (widget.patientToEdit != null
+                      ? "Edit Patient Details"
+                      : "New Patient Registration")
+                : "Find Existing Patient")
+          : "Assign Doctor",
+      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildCurrentStep() {
+    switch (_currentStep) {
+      case RegistrationStep.selectType:
+        return _buildSelectType();
+      case RegistrationStep.inputData:
+        return _patientType == PatientType.newPatient
+            ? _buildNewPatientForm()
+            : _buildExistingPatientSearch();
+      case RegistrationStep.selectDoctor:
+        return _buildDoctorSelection();
+    }
+  }
+
+  Widget _buildSelectType() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _typeCard("New Patient", Icons.person_add, PatientType.newPatient),
+        SizedBox(width: 20),
+        _typeCard(
+          "Existing Patient",
+          Icons.person_search,
+          PatientType.existingPatient,
+        ),
+      ],
+    );
+  }
+
+  Widget _typeCard(String title, IconData icon, PatientType type) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _patientType = type;
+          _currentStep = RegistrationStep.inputData;
+        });
+      },
+      child: Card(
+        elevation: 4,
+        child: Container(
+          width: 200,
+          height: 200,
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 64, color: Colors.blue),
+              SizedBox(height: 16),
+              Text(
+                title,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExistingPatientSearch() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                maxLength: 16,
+                decoration: InputDecoration(
+                  labelText: "Search by ID (NIK) or Phone",
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.search),
+                  counterText: "",
+                ),
+              ),
+            ),
+            SizedBox(width: 10),
+            ElevatedButton(
+              onPressed: _isSearching ? null : _searchPatient,
+              child: _isSearching
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : Text("Search"),
+            ),
+          ],
+        ),
+        SizedBox(height: 20),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _searchResults.length,
+            itemBuilder: (ctx, i) {
+              final p = _searchResults[i];
+              return Card(
+                child: ListTile(
+                  leading: CircleAvatar(child: Text(p.firstName[0])),
+                  title: Text("${p.firstName} ${p.lastName}"),
+                  subtitle: Text("ID: ${p.identityCard} | Phone: ${p.phone}"),
+                  trailing: ElevatedButton(
+                    onPressed: () => _selectExistingPatient(p),
+                    child: Text("Select"),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        TextButton(
+          onPressed: () =>
+              setState(() => _currentStep = RegistrationStep.selectType),
+          child: Text("Back"),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNewPatientForm() {
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildSectionTitle("Personal Information"),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "First Name",
+                    child: TextFormField(
+                      key: ValueKey("fname_$firstName"),
+                      initialValue: firstName,
+                      decoration: InputDecoration(hintText: 'Enter First Name'),
+                      onSaved: (v) => firstName = v!,
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "Last Name",
+                    child: TextFormField(
+                      initialValue: lastName,
+                      decoration: InputDecoration(hintText: 'Enter Last Name'),
+                      onSaved: (v) => lastName = v ?? '',
+                      validator: null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "ID Card (NIK)",
+                    child: TextFormField(
+                      initialValue: identityCard,
+                      decoration: InputDecoration(hintText: '16 digit NIK'),
+                      keyboardType: TextInputType.number,
+                      maxLength: 16,
+                      onChanged: (v) => identityCard = v, // Capture for button
+                      onSaved: (v) => identityCard = v!,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Required';
+                        if (v.length != 16) {
+                          return 'NIK must be exactly 16 digits';
+                        }
+                        if (!RegExp(r'^[0-9]+$').hasMatch(v)) {
+                          return 'Numeric only';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(width: 10),
+                Padding(
+                  padding: const EdgeInsets.only(top: 28.0), // Align with input
+                  child: ElevatedButton(
+                    onPressed: _isFetchingSatuSehat
+                        ? null
+                        : _fetchSatuSehatData,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    child: _isFetchingSatuSehat
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text("Fetch"),
+                  ),
+                ),
+              ],
+            ),
+            _buildLabeledField(
+              label: "Phone",
+              child: TextFormField(
+                key: ValueKey("phone_$phone"),
+                initialValue: phone,
+                decoration: InputDecoration(
+                  hintText: '08xxxxxxxx',
+                  counterText: "",
+                ),
+                maxLength: 14,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(14),
+                ],
+                onSaved: (v) => phone = v!,
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+            ),
+            _buildDatePicker(),
+            SizedBox(height: 16),
+            _buildSectionTitle("Medical & Profiling"),
+            _buildLabeledField(
+              label: "Medical Record No.",
+              child: TextFormField(
+                initialValue: nomorRekamMedis,
+                decoration: InputDecoration(hintText: 'Enter MRN'),
+                onSaved: (v) => nomorRekamMedis = v ?? '',
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "Height (cm)",
+                    child: TextFormField(
+                      initialValue: height?.toString(),
+                      decoration: InputDecoration(hintText: '0'),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onSaved: (v) => height = int.tryParse(v ?? ''),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "Weight (kg)",
+                    child: TextFormField(
+                      initialValue: weight?.toString(),
+                      decoration: InputDecoration(hintText: '0'),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onSaved: (v) => weight = int.tryParse(v ?? ''),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "Gender",
+                    child: DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
+                      value: gender,
+                      decoration: InputDecoration(hintText: 'Select Gender'),
+                      items: ['Male', 'Female']
+                          .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(e)),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() => gender = v!),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "Religion",
+                    child: DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
+                      value: religion,
+                      decoration: InputDecoration(hintText: 'Select Religion'),
+                      items: religions
+                          .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(e)),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() => religion = v!),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            _buildLabeledField(
+              label: "Marital Status",
+              child: DropdownButtonFormField<int>(
+                // ignore: deprecated_member_use
+                value: maritalStatusId,
+                decoration: InputDecoration(hintText: 'Select Status'),
+                items: maritalStatuses.entries
+                    .map(
+                      (e) =>
+                          DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => maritalStatusId = v!),
+              ),
+            ),
+
+            _buildSectionTitle("Background"),
+            _buildLabeledField(
+              label: "Profession",
+              child: TextFormField(
+                initialValue: profession,
+                decoration: InputDecoration(hintText: 'Enter Profession'),
+                onSaved: (v) => profession = v!,
+              ),
+            ),
+            _buildLabeledField(
+              label: "Education",
+              child: DropdownButtonFormField<String>(
+                // ignore: deprecated_member_use
+                value: education,
+                decoration: InputDecoration(hintText: 'Select Education'),
+                items: educations
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (v) => setState(() => education = v!),
+              ),
+            ),
+
+            _buildSectionTitle("Address"),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "Province",
+                    child: DropdownButtonFormField<String>(
+                      key: ValueKey("prov_$_selectedProvinceId"),
+                      initialValue:
+                          _selectedProvinceId ??
+                          (province.isNotEmpty ? null : null),
+                      decoration: InputDecoration(
+                        hintText: 'Reselect to update',
+                      ),
+                      hint: province.isNotEmpty ? Text(province) : null,
+                      items: _provinces
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e['id'] as String,
+                              child: Text(e['name']),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: _onProvinceChanged,
+                      validator: (v) =>
+                          (v == null && province.isEmpty) ? 'Required' : null,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "City",
+                    child: DropdownButtonFormField<String>(
+                      key: ValueKey("city_$_selectedCityId"),
+                      initialValue: _selectedCityId,
+                      decoration: InputDecoration(hintText: 'Select City'),
+                      hint: city.isNotEmpty ? Text(city) : null,
+                      items: _cities
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e['id'] as String,
+                              child: Text(e['name']),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: _onCityChanged,
+                      validator: (v) =>
+                          (v == null && city.isEmpty) ? 'Required' : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "District",
+                    child: DropdownButtonFormField<String>(
+                      key: ValueKey("dist_$_selectedDistrictId"),
+                      initialValue: _selectedDistrictId,
+                      decoration: InputDecoration(hintText: 'Select District'),
+                      hint: district.isNotEmpty ? Text(district) : null,
+                      items: _districts
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e['id'] as String,
+                              child: Text(e['name']),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: _onDistrictChanged,
+                      validator: (v) =>
+                          (v == null && district.isEmpty) ? 'Required' : null,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "Subdistrict",
+                    child: DropdownButtonFormField<String>(
+                      key: ValueKey("sub_$_selectedSubdistrictId"),
+                      initialValue: _selectedSubdistrictId,
+                      decoration: InputDecoration(
+                        hintText: 'Select Subdistrict',
+                      ),
+                      hint: subdistrict.isNotEmpty ? Text(subdistrict) : null,
+                      items: _subdistricts
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e['id'] as String,
+                              child: Text(e['name']),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: _onSubdistrictChanged,
+                      validator: (v) => (v == null && subdistrict.isEmpty)
+                          ? 'Required'
+                          : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "RT",
+                    child: TextFormField(
+                      initialValue: rt,
+                      decoration: InputDecoration(hintText: '000'),
+                      onSaved: (v) => rt = v!,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "RW",
+                    child: TextFormField(
+                      initialValue: rw,
+                      decoration: InputDecoration(hintText: '000'),
+                      onSaved: (v) => rw = v!,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: _buildLabeledField(
+                    label: "Postal Code",
+                    child: TextFormField(
+                      initialValue: postalCode,
+                      decoration: InputDecoration(hintText: '12345'),
+                      onSaved: (v) => postalCode = v!,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            _buildLabeledField(
+              label: "Full Address",
+              child: TextFormField(
+                key: ValueKey("addr_$addressDetails"),
+                initialValue: addressDetails,
+                decoration: InputDecoration(hintText: 'Street, Number, etc.'),
+                onSaved: (v) => addressDetails = v!,
+              ),
+            ),
+
+            if (widget.isRegistrationOnly) ...[
+              _buildSectionTitle("Pembayaran"),
+              // 1. Category Dropdown
+              DropdownButtonFormField<String>(
+                key: ValueKey(
+                  'category_reg_${_allIssuers.length}_$_selectedIssuerCategory',
+                ),
+                initialValue: _selectedIssuerCategory,
+                hint: _allIssuers.isEmpty ? Text("Loading...") : null,
+                decoration: InputDecoration(labelText: 'Tipe Pembayaran'),
+                items: _allIssuers
+                    .map((e) => e.issuer)
+                    .toSet() // Unique categories
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (v) {
+                  setState(() {
+                    _selectedIssuerCategory = v;
+                    // Auto-select if only 1 option or specific logic
+                    final options = _allIssuers
+                        .where((i) => i.issuer == v)
+                        .toList();
+                    if (options.length == 1) {
+                      issuerId = options.first.issuerId;
+                      insuranceName = null;
+                    } else {
+                      // Reset selection to force user to pick sub-item
+                      // Or try to pick first? No, force selection.
+                      // But we need a valid int for issuerId.
+                      // Check invalid state handling.
+                      issuerId = options
+                          .first
+                          .issuerId; // Default to first temporarily
+                      insuranceName = null;
+                      noAssuransi = '';
+                    }
+                  });
+                },
+              ),
+
+              // 2. Sub-Item Dropdown (if applicable)
+              // Logic: Show if the selected category has items with 'nama' != null
+              if (_selectedIssuerCategory != null &&
+                  _allIssuers.any(
+                    (i) =>
+                        i.issuer == _selectedIssuerCategory && i.nama != null,
+                  ))
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: DropdownButtonFormField<int>(
+                    key: ValueKey('detail_reg_${_allIssuers.length}_$issuerId'),
+                    initialValue:
+                        _allIssuers.any(
+                          (i) =>
+                              i.issuerId == issuerId &&
+                              i.issuer == _selectedIssuerCategory,
+                        )
+                        ? issuerId
+                        : null,
+                    decoration: InputDecoration(
+                      labelText: 'Detail $_selectedIssuerCategory',
+                    ),
+                    items: _allIssuers
+                        .where((i) => i.issuer == _selectedIssuerCategory)
+                        .map(
+                          (e) => DropdownMenuItem(
+                            value: e.issuerId,
+                            child: Text(e.nama ?? e.issuer),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() {
+                      issuerId = v!;
+                      // Update insuranceName for legacy/display purposes
+                      final selected = _allIssuers.firstWhere(
+                        (i) => i.issuerId == v,
+                      );
+                      insuranceName = selected.nama;
+                    }),
+                    validator: (v) =>
+                        v == null ? 'Please select specific provider' : null,
+                  ),
+                ),
+
+              // 3. Insurance Number (Only if not General/Umum)
+              // Assumption: 'Umum' contains 'Umum' or 'General' string
+              if (_selectedIssuerCategory != null &&
+                  !_selectedIssuerCategory!.contains("Umum") &&
+                  !_selectedIssuerCategory!.contains("General"))
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: TextFormField(
+                    initialValue: noAssuransi,
+                    decoration: InputDecoration(
+                      labelText: 'Nomor Kartu / BPJS',
+                    ),
+                    onSaved: (v) => noAssuransi = v ?? '',
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                  ),
+                ),
+            ],
+
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _submitNewPatient,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                backgroundColor: widget.isRegistrationOnly
+                    ? Colors.green.shade700
+                    : Colors.blue,
+              ),
+              child: Text(
+                widget.isRegistrationOnly
+                    ? (widget.patientToEdit != null
+                          ? "Update Patient"
+                          : "Register Patient")
+                    : "Register & Proceed",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+            TextButton(
+              onPressed: () =>
+                  setState(() => _currentStep = RegistrationStep.selectType),
+              child: Text("Back"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.blueGrey,
+        ),
+      ),
+    );
+  }
+
+  // Wrapper for consistency
+  Widget _buildDatePicker() {
+    return _buildLabeledField(label: "Birthday", child: _datePickerInternal());
+  }
+
+  Widget _datePickerInternal() {
+    return InkWell(
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: birthday,
+          firstDate: DateTime(1900),
+          lastDate: DateTime.now(),
+        );
+        if (picked != null) setState(() => birthday = picked);
+      },
+      child: InputDecorator(
+        decoration: InputDecoration(labelText: 'Birthday'),
+        child: Text("${birthday.day}/${birthday.month}/${birthday.year}"),
+      ),
+    );
+  }
+
+  Widget _buildDoctorSelection() {
+    // Extract unique polyclinics from doctors
+    final Set<String> polyclinics = doctors.map((d) => d.polyName).toSet();
+
+    return Form(
+      key: _doctorFormKey,
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_verifiedPatient != null)
+                    Card(
+                      color: Colors.green.shade50,
+                      child: ListTile(
+                        title: Text(
+                          "Patient: ${_verifiedPatient!.firstName} ${_verifiedPatient!.lastName}",
+                        ),
+                        subtitle: Text("ID: ${_verifiedPatient!.identityCard}"),
+                        leading: Icon(Icons.check_circle, color: Colors.green),
+                      ),
+                    ),
+                  SizedBox(height: 20),
+
+                  // Toggle Type
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => setState(() => _isPolyclinic = false),
+                          child: Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: !_isPolyclinic
+                                  ? Colors.blue
+                                  : Colors.grey[200],
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(8),
+                                bottomLeft: Radius.circular(8),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                "Select Doctor",
+                                style: TextStyle(
+                                  color: !_isPolyclinic
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => setState(() => _isPolyclinic = true),
+                          child: Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _isPolyclinic
+                                  ? Colors.blue
+                                  : Colors.grey[200],
+                              borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(8),
+                                bottomRight: Radius.circular(8),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                "Go to Polyclinic",
+                                style: TextStyle(
+                                  color: _isPolyclinic
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+
+                  if (!_isPolyclinic)
+                    _buildLabeledField(
+                      label: "Select Doctor",
+                      child: DropdownButtonFormField<Doctor>(
+                        decoration: InputDecoration(
+                          hintText: 'Choose a Doctor',
+                          border: OutlineInputBorder(),
+                        ),
+                        initialValue: selectedDoctor,
+                        items: doctors
+                            .map(
+                              (d) => DropdownMenuItem(
+                                value: d,
+                                child: Text(
+                                  "${d.gelarDepan} ${d.namaDokter} (${d.polyName})",
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() => selectedDoctor = v),
+                        validator: (v) =>
+                            v == null ? 'Please select a Doctor' : null,
+                      ),
+                    )
+                  else
+                    _buildLabeledField(
+                      label: "Select Polyclinic",
+                      child: DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          hintText: 'Choose Polyclinic',
+                          border: OutlineInputBorder(),
+                        ),
+                        initialValue: _selectedPolyclinic,
+                        items: polyclinics
+                            .map(
+                              (p) => DropdownMenuItem(value: p, child: Text(p)),
+                            )
+                            .toList(),
+                        onChanged: (v) =>
+                            setState(() => _selectedPolyclinic = v),
+                        validator: (v) =>
+                            v == null ? 'Please select a Polyclinic' : null,
+                      ),
+                    ),
+
+                  SizedBox(height: 20),
+                  _buildSectionTitle("Pembayaran"),
+                  // 1. Category Dropdown
+                  DropdownButtonFormField<String>(
+                    key: ValueKey(
+                      'category_step3_${_allIssuers.length}_$_selectedIssuerCategory',
+                    ),
+                    initialValue: _selectedIssuerCategory,
+                    hint: _allIssuers.isEmpty ? Text("Loading...") : null,
+                    decoration: InputDecoration(labelText: 'Tipe Pembayaran'),
+                    items: _allIssuers
+                        .map((e) => e.issuer)
+                        .toSet()
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (v) {
+                      setState(() {
+                        _selectedIssuerCategory = v;
+                        final options = _allIssuers
+                            .where((i) => i.issuer == v)
+                            .toList();
+                        if (options.length == 1) {
+                          issuerId = options.first.issuerId;
+                          insuranceName = null;
+                        } else {
+                          issuerId = options.first.issuerId;
+                          insuranceName = null;
+                          noAssuransi = '';
+                        }
+                      });
+                    },
+                  ),
+
+                  // 2. Sub-methods (If Umum)
+                  if (_selectedIssuerCategory?.contains("Umum") ?? false) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: _buildLabeledField(
+                        label: "Payment Method",
+                        child: DropdownButtonFormField<String>(
+                          key: ValueKey("pay_$_paymentSubMethod"),
+                          initialValue: _paymentSubMethod,
+                          decoration: InputDecoration(hintText: 'Select Type'),
+                          items:
+                              [
+                                    'Cash',
+                                    'QRIS',
+                                    'Debit',
+                                    'Transfer',
+                                    'CreditCard',
+                                  ]
+                                  .map(
+                                    (e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(e),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (v) => setState(() {
+                            _paymentSubMethod = v;
+                            _paymentAmountCtrl.clear();
+                            _paymentReceiptCtrl.clear();
+                            _paymentDetailsCtrl.clear();
+                          }),
+                          validator: (v) =>
+                              v == null ? 'Select Payment Method' : null,
+                        ),
+                      ),
+                    ),
+                    if (_paymentSubMethod == 'Cash')
+                      _buildLabeledField(
+                        label: "Amount Received",
+                        child: TextFormField(
+                          controller: _paymentAmountCtrl,
+                          decoration: InputDecoration(hintText: 'Enter Amount'),
+                          keyboardType: TextInputType.number,
+                          validator: (v) => v!.isEmpty ? 'Required' : null,
+                        ),
+                      ),
+                    if (_paymentSubMethod == 'QRIS')
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.qr_code, color: Colors.blue),
+                        title: Text("Scan & Verify"),
+                        subtitle: Text("Ensure payment success on device"),
+                      ),
+                    if (_paymentSubMethod == 'Debit' ||
+                        _paymentSubMethod == 'CreditCard')
+                      _buildLabeledField(
+                        label: "Receipt / Ref Number",
+                        child: TextFormField(
+                          controller: _paymentReceiptCtrl,
+                          decoration: InputDecoration(
+                            hintText: 'Enter Receipt / Ref #',
+                          ),
+                          validator: (v) => v!.isEmpty ? 'Required' : null,
+                        ),
+                      ),
+                    if (_paymentSubMethod == 'Transfer')
+                      _buildLabeledField(
+                        label: "Transfer Details",
+                        child: TextFormField(
+                          controller: _paymentDetailsCtrl,
+                          decoration: InputDecoration(
+                            hintText: 'Enter Details',
+                          ),
+                          validator: (v) => v!.isEmpty ? 'Required' : null,
+                        ),
+                      ),
+                  ],
+
+                  // 3. Sub-Item Dropdown (if applicable)
+                  if (_selectedIssuerCategory != null &&
+                      _allIssuers.any(
+                        (i) =>
+                            i.issuer == _selectedIssuerCategory &&
+                            i.nama != null,
+                      ))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: DropdownButtonFormField<int>(
+                        key: ValueKey(
+                          'detail_step3_${_allIssuers.length}_$issuerId',
+                        ),
+                        initialValue:
+                            _allIssuers.any(
+                              (i) =>
+                                  i.issuerId == issuerId &&
+                                  i.issuer == _selectedIssuerCategory,
+                            )
+                            ? issuerId
+                            : null,
+                        decoration: InputDecoration(
+                          labelText: 'Detail $_selectedIssuerCategory',
+                        ),
+                        items: _allIssuers
+                            .where((i) => i.issuer == _selectedIssuerCategory)
+                            .map(
+                              (e) => DropdownMenuItem(
+                                value: e.issuerId,
+                                child: Text(e.nama ?? e.issuer),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() {
+                          issuerId = v!;
+                          final selected = _allIssuers.firstWhere(
+                            (i) => i.issuerId == v,
+                          );
+                          insuranceName = selected.nama;
+                        }),
+                        validator: (v) => v == null
+                            ? 'Please select specific provider'
+                            : null,
+                      ),
+                    ),
+
+                  // 4. Number (If not Umum)
+                  if (_selectedIssuerCategory != null &&
+                      !_selectedIssuerCategory!.contains("Umum") &&
+                      !_selectedIssuerCategory!.contains("General"))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: TextFormField(
+                        initialValue: noAssuransi,
+                        decoration: InputDecoration(
+                          labelText: 'Nomor Kartu / BPJS',
+                        ),
+                        onChanged: (v) => noAssuransi = v,
+                        onSaved: (v) => noAssuransi = v!,
+                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      ),
+                    ),
+                  SizedBox(height: 16),
+
+                  CheckboxListTile(
+                    title: Text("Priority Patient"),
+                    value: isPriority,
+                    onChanged: (v) => setState(() => isPriority = v!),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: () =>
+                    setState(() => _currentStep = RegistrationStep.inputData),
+                child: Text("Back"),
+              ),
+              ElevatedButton(
+                onPressed: _submitToQueue,
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                ),
+                child: Text("Assign to Queue"),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabeledField({required String label, required Widget child}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AnimatedEntrance(
+          offsetHelper: 20,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Colors.grey[700],
+            ),
+          ),
+        ),
+        SizedBox(height: 8),
+        AnimatedEntrance(
+          offsetHelper: 10,
+          delay: Duration(milliseconds: 100),
+          child: child,
+        ),
+        SizedBox(height: 16),
+      ],
+    );
+  }
+}
