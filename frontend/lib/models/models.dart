@@ -476,3 +476,54 @@ class Payment {
     };
   }
 }
+
+class Issuer {
+  final int issuerId;
+  final String issuer;
+  final String? nama;
+
+  Issuer({required this.issuerId, required this.issuer, this.nama});
+
+  factory Issuer.fromJson(Map<String, dynamic> json) {
+    return Issuer(
+      issuerId: json['issuerId'],
+      issuer: json['issuer'],
+      nama: json['nama'],
+    );
+  }
+}
+
+class Appointment {
+  final int id;
+  final String nikPatient;
+  final int? doctorId;
+  final String? doctorName;
+  final String appointmentDate;
+  final String appointmentTime;
+  final String status;
+  final String? notes;
+
+  Appointment({
+    required this.id,
+    required this.nikPatient,
+    this.doctorId,
+    this.doctorName,
+    required this.appointmentDate,
+    required this.appointmentTime,
+    required this.status,
+    this.notes,
+  });
+
+  factory Appointment.fromJson(Map<String, dynamic> json) {
+    return Appointment(
+      id: json['id'],
+      nikPatient: json['nik_patient'] ?? '',
+      doctorId: json['doctor_id'],
+      doctorName: json['doctor_name'],
+      appointmentDate: json['appointment_date'],
+      appointmentTime: json['appointment_time'],
+      status: json['status'],
+      notes: json['notes'],
+    );
+  }
+}

@@ -233,3 +233,30 @@ class AppConfig(BaseModel):
     
     class Config:
         from_attributes = True
+
+# Appointment Schemas
+class AppointmentBase(BaseModel):
+    nik_patient: str
+    doctor_id: Optional[int] = None
+    doctor_name: Optional[str] = None
+    appointment_date: date
+    appointment_time: str
+    notes: Optional[str] = None
+
+class AppointmentCreate(AppointmentBase):
+    pass
+
+class Appointment(AppointmentBase):
+    id: int
+    status: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class AppointmentExternalCreate(BaseModel):
+    nik: str
+    doctor_id: Optional[int] = None
+    appointment_date: date
+    appointment_time: datetime
+    notes: Optional[str] = None

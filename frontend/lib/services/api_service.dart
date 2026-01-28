@@ -704,4 +704,22 @@ class ApiService {
   Future<void> setHiddenMenus(List<String> hiddenMenus) async {
     await saveAppConfig("hidden_menus", hiddenMenus);
   }
+
+  Future<List<Issuer>> getIssuers() async {
+    final response = await _safeGet('/master/issuers');
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Issuer.fromJson(json)).toList();
+    }
+    return [];
+  }
+
+  Future<List<Appointment>> getAppointments() async {
+    final response = await _safeGet('/appointments');
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Appointment.fromJson(json)).toList();
+    }
+    return [];
+  }
 }

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from .routers import auth, patients, queue, master_data, medicines, users, integration, doctors, diseases, dashboard, payments, pharmacists, config
+from .routers import auth, patients, queue, master_data, medicines, users, integration, doctors, diseases, dashboard, payments, pharmacists, config, appointments
 import os
 from dotenv import load_dotenv
 from slowapi import _rate_limit_exceeded_handler
@@ -25,14 +25,30 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Flexible CORS for Development (Allows any localhost port)
 # In production, you might want to switch back to strict allow_origins from env
+# Flexible CORS for Development
 app.add_middleware(
     CORSMiddleware,
-    # Allow any localhost/127.0.0.1 port
     allow_origins=["*"],
-    allow_credentials=False, # Must be False if allow_origins is [*]
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def cors_middleware(request: Request, call_next):
+    if request.method == "OPTIONS":
+        from fastapi.responses import Response
+        response = Response()
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
+        return response
+    
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
+    return response
 
 # Include Routers
 app.include_router(auth.router)
@@ -48,6 +64,7 @@ app.include_router(dashboard.router)
 app.include_router(payments.router)
 app.include_router(pharmacists.router)
 app.include_router(config.router)
+app.include_router(appointments.router)
 
 @app.get("/")
 def read_root():

@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import 'registration.dart';
 import 'queue_monitor.dart';
 import 'login.dart';
+import 'package:intl/intl.dart';
 import 'doctor_list.dart';
 import 'patient_list.dart';
 import 'user_management.dart';
@@ -15,6 +16,7 @@ import 'pharmacist_list.dart';
 import 'sync_screen.dart';
 import 'home_screen.dart'; // New Kiosk Home
 import 'menu_settings.dart';
+import 'appointment_list.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -47,6 +49,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "page": QueueMonitorScreen(apiService: widget.apiService),
         "icon": LucideIcons.monitorPlay,
         "label": "Queue Monitor",
+      },
+      {
+        "id": "appointments",
+        "page": AppointmentListScreen(apiService: widget.apiService),
+        "icon": LucideIcons.calendarClock,
+        "label": "Janji Temu",
       },
       {
         "id": "registration",
@@ -307,6 +315,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 ),
                                 Text(
+                                  DateFormat(
+                                    'EEEE, d MMM yyyy',
+                                    'id_ID',
+                                  ).format(DateTime.now()), // Localized Date
+                                  style: TextStyle(
+                                    color: Colors.teal.shade700,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
                                   widget.user.role,
                                   style: TextStyle(
                                     color: Colors.grey.shade500,
@@ -356,13 +375,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final role = widget.user.role;
 
       // 1. Check Global Hidden Config
+      debugPrint("Dashboard Filter: ID=$id, Role=$role, Hidden=$_hiddenMenus");
       if (_hiddenMenus.contains(id)) {
         return false;
       }
 
       // 2. Role Based Logic
-      if (id == "queue" || id == "registration") {
-        return role == "Staff";
+      if (id == "queue" || id == "registration" || id == "appointments") {
+        return role == "Staff" ||
+            role == "Super Admin" ||
+            role == "Administrator";
       }
       if (id == "home") return true;
       if (id == "users") {

@@ -25,7 +25,7 @@ class Issuer(Base):
     
     issuerId = Column(Integer, primary_key=True, index=True)
     issuer = Column(String(50)) # e.g., BPJS, General, Insurance
-    nama = Column(JSON) # Storing sub-issuers as JSON array as implied by nama[]
+    nama = Column(String(200)) # Specific Provider Name (e.g. Allianz, BPJS Kesehatan)
 
 class Disease(Base):
     __tablename__ = "diseases"
@@ -196,3 +196,16 @@ class AppConfig(Base):
 
 # Alias for backward compatibility or cleaner usage
 Doctor = DoctorEntity
+
+class Appointment(Base):
+    __tablename__ = "appointments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nik_patient = Column(String(20), index=True) # Nik Patient
+    doctor_id = Column(Integer, nullable=True) # id doctor
+    doctor_name = Column(String(100), nullable=True) # Nama Doctor
+    appointment_date = Column(Date) # Date Appoitment
+    appointment_time = Column(String(20)) # Time Appoitment (e.g. "10:00")
+    notes = Column(Text, nullable=True) # Notes
+    status = Column(String(20), default="Scheduled")
+    created_at = Column(DateTime, default=datetime.utcnow)
