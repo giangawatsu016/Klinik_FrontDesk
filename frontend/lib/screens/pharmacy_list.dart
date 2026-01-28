@@ -139,6 +139,48 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
             },
             child: const Text('Save'),
           ),
+          if (pharmacist != null)
+            TextButton(
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: dialogContext,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text("Confirm Delete"),
+                    content: Text("Delete ${pharmacist.name}?"),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text("No"),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text(
+                          "Yes",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true) {
+                  try {
+                    await widget.apiService.deletePharmacist(pharmacist.id!);
+                    if (!dialogContext.mounted) return;
+                    Navigator.pop(dialogContext);
+                    _loadPharmacists();
+                  } catch (e) {
+                    if (dialogContext.mounted) {
+                      ScaffoldMessenger.of(
+                        dialogContext,
+                      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+                    }
+                  }
+                }
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
         ],
       ),
     );
@@ -173,43 +215,87 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                   ? const Center(child: CircularProgressIndicator())
                   : _pharmacists.isEmpty
                   ? const Center(child: Text("No pharmacists found."))
-                  : ListView.builder(
+                  : GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4, // 4 columns as per screenshot
+                            childAspectRatio: 0.8,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
                       itemCount: _pharmacists.length,
                       itemBuilder: (context, index) {
                         final p = _pharmacists[index];
                         return Card(
-                          child: ListTile(
-                            leading: const CircleAvatar(
-                              child: Icon(LucideIcons.user),
-                            ),
-                            title: Text(p.name),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("SIP: ${p.sipNo}"),
-                                if (p.ihsNumber != null)
-                                  Text("IHS: ${p.ihsNumber}"),
-                                if (p.erpEmployeeId != null)
-                                  Text("ERP: ${p.erpEmployeeId}"),
-                              ],
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () async {
-                                // Confirm Delete
-                                try {
-                                  await widget.apiService.deletePharmacist(
-                                    p.id!,
-                                  );
-                                  _loadPharmacists();
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text("Error: $e")),
-                                    );
-                                  }
-                                }
-                              },
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: InkWell(
+                            onTap: () => _showPharmacistDialog(
+                              pharmacist: p,
+                            ), // Edit on tap
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 30,
+                                    backgroundColor: Colors.teal.shade50,
+                                    child: Icon(
+                                      LucideIcons.user,
+                                      size: 30,
+                                      color: Colors.teal,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    p.name,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "SIP: ${p.sipNo}",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: p.isActive
+                                          ? Colors.green.shade50
+                                          : Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      p.isActive ? "Active" : "Inactive",
+                                      style: TextStyle(
+                                        color: p.isActive
+                                            ? Colors.green
+                                            : Colors.grey,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );
