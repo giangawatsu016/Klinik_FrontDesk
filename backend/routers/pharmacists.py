@@ -16,6 +16,7 @@ def get_pharmacists(skip: int = 0, limit: int = 100, db: Session = Depends(datab
 def create_pharmacist(pharmacist: schemas.PharmacistCreate, db: Session = Depends(database.get_db)):
     db_pharmacist = models.Pharmacist(
         name=pharmacist.name,
+        nik=pharmacist.nik,
         sip_no=pharmacist.sip_no,
         ihs_number=pharmacist.ihs_number,
         erp_employee_id=pharmacist.erp_employee_id,
@@ -33,6 +34,7 @@ def update_pharmacist(pharmacist_id: int, pharmacist: schemas.PharmacistCreate, 
         raise HTTPException(status_code=404, detail="Pharmacist not found")
     
     db_pharmacist.name = pharmacist.name
+    db_pharmacist.nik = pharmacist.nik
     db_pharmacist.sip_no = pharmacist.sip_no
     db_pharmacist.ihs_number = pharmacist.ihs_number
     db_pharmacist.erp_employee_id = pharmacist.erp_employee_id
