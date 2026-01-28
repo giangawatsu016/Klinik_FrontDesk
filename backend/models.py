@@ -185,6 +185,7 @@ class Pharmacist(Base):
     name = Column(String(100))
     sip_no = Column(String(50)) # License Number
     ihs_number = Column(String(100), nullable=True) # SatuSehat ID
+    erp_employee_id = Column(String(100), nullable=True) # ERPNext Employee ID
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

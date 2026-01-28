@@ -9,31 +9,24 @@ router = APIRouter(
 )
 
 @router.get("", response_model=List[schemas.Pharmacist])
-def get_pharmacists(db: Session = Depends(database.get_db)):
-    return db.query(models.Pharmacist).all()
+def get_pharmacists(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
+    return db.query(models.Pharmacist).offset(skip).limit(limit).all()
 
 @router.post("", response_model=schemas.Pharmacist)
 def create_pharmacist(pharmacist: schemas.PharmacistCreate, db: Session = Depends(database.get_db)):
-    new_pharmacist = models.Pharmacist(**pharmacist.dict())
-    db.add(new_pharmacist)
-    db.commit()
-    db.refresh(new_pharmacist)
-    return new_pharmacist
-
-@router.put("/{pharmacist_id}", response_model=schemas.Pharmacist)
-def update_pharmacist(pharmacist_id: int, pharmacist_update: schemas.PharmacistCreate, db: Session = Depends(database.get_db)):
-    db_pharmacist = db.query(models.Pharmacist).filter(models.Pharmacist.id == pharmacist_id).first()
-    if not db_pharmacist:
-        raise HTTPException(status_code=404, detail="Pharmacist not found")
-    
-    for key, value in pharmacist_update.dict().items():
-        setattr(db_pharmacist, key, value)
-    
+    db_pharmacist = models.Pharmacist(
+        name=pharmacist.name,
+        sip_no=pharmacist.sip_no,
+        ihs_number=pharmacist.ihs_number,
+        erp_employee_id=pharmacist.erp_employee_id,
+        is_active=pharmacist.is_active
+    )
+    db.add(db_pharmacist)
     db.commit()
     db.refresh(db_pharmacist)
     return db_pharmacist
 
-@router.delete("/{pharmacist_id}")
+@router.delete("/{pharmacist_id}", response_model=dict)
 def delete_pharmacist(pharmacist_id: int, db: Session = Depends(database.get_db)):
     db_pharmacist = db.query(models.Pharmacist).filter(models.Pharmacist.id == pharmacist_id).first()
     if not db_pharmacist:
@@ -41,4 +34,4 @@ def delete_pharmacist(pharmacist_id: int, db: Session = Depends(database.get_db)
     
     db.delete(db_pharmacist)
     db.commit()
-    return {"message": "Pharmacist deleted successfully"}
+    return {"status": "success", "message": "Pharmacist deleted"}

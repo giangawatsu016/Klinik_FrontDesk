@@ -530,3 +530,43 @@ class Appointment {
     );
   }
 }
+
+class Pharmacist {
+  final int? id;
+  final String name;
+  final String sipNo;
+  final String? ihsNumber;
+  final String? erpEmployeeId;
+  final bool isActive;
+
+  Pharmacist({
+    this.id,
+    required this.name,
+    required this.sipNo,
+    this.ihsNumber,
+    this.erpEmployeeId,
+    this.isActive = true,
+  });
+
+  factory Pharmacist.fromJson(Map<String, dynamic> json) {
+    return Pharmacist(
+      id: json['id'],
+      name: json['name'],
+      sipNo: json['sip_no'],
+      ihsNumber: json['ihs_number'],
+      erpEmployeeId: json['erp_employee_id'],
+      isActive: json['is_active'] ?? true,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
+      'name': name,
+      'sip_no': sipNo,
+      'ihs_number': ihsNumber,
+      'erp_employee_id': erpEmployeeId,
+      'is_active': isActive,
+    };
+  }
+}

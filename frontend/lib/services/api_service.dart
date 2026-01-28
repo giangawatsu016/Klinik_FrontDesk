@@ -719,4 +719,37 @@ class ApiService {
     }
     return [];
   }
+
+  // Pharmacist Methods
+  Future<List<Pharmacist>> getPharmacists() async {
+    final response = await _safeGet('/pharmacists');
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Pharmacist.fromJson(json)).toList();
+    }
+    return [];
+  }
+
+  Future<Pharmacist> createPharmacist(Pharmacist pharmacist) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/pharmacists"),
+      headers: _headers,
+      body: jsonEncode(pharmacist.toJson()),
+    );
+    if (response.statusCode == 200) {
+      return Pharmacist.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to create pharmacist: ${response.body}');
+    }
+  }
+
+  Future<void> deletePharmacist(int id) async {
+    final response = await http.delete(
+      Uri.parse("$baseUrl/pharmacists/$id"),
+      headers: _headers,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete pharmacist: ${response.body}');
+    }
+  }
 }

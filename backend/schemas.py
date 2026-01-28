@@ -216,6 +216,7 @@ class PharmacistBase(BaseModel):
     name: str
     sip_no: str
     ihs_number: Optional[str] = None
+    erp_employee_id: Optional[str] = None
     is_active: bool = True
 
 class PharmacistCreate(PharmacistBase):

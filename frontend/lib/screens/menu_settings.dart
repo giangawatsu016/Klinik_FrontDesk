@@ -17,7 +17,7 @@ class _MenuVisibilityScreenState extends State<MenuVisibilityScreen> {
     "diagnosis": "Diagnosis",
     "diseases": "Diseases",
     "medicines": "Medicines",
-    "pharmacists": "Pharmacy",
+    "pharmacists": "Pharmacist",
   };
 
   List<String> _hiddenMenus = [];

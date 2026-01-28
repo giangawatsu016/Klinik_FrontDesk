@@ -72,7 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "id": "pharmacists",
         "page": PharmacistListScreen(apiService: widget.apiService),
         "icon": LucideIcons.contact,
-        "label": "Pharmacy",
+        "label": "Pharmacist",
       },
       {
         "id": "patients",
