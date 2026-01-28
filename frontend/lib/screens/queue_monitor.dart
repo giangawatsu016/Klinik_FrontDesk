@@ -42,6 +42,7 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
     try {
       final queue = await widget.apiService.getQueue();
       debugPrint("QUEUE DEBUG: Fetched ${queue.length} items");
+      if (!mounted) return;
       setState(() {
         _queue = queue;
       });

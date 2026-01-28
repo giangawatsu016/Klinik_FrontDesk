@@ -57,7 +57,12 @@ def get_appointments(
     status: str = None,
     db: Session = Depends(database.get_db)
 ):
+    today = date.today()
     query = db.query(models.Appointment, models.Patient).outerjoin(models.Patient, models.Appointment.nik_patient == models.Patient.identityCard)
+    
+    # Filter: Show only upcoming appointments (today onwards)
+    query = query.filter(models.Appointment.appointment_date >= today)
+
     if status:
         query = query.filter(models.Appointment.status == status)
         
