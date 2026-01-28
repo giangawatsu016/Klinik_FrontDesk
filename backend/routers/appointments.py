@@ -26,8 +26,7 @@ def get_appointments(
     skip: int = 0, 
     limit: int = 100, 
     status: str = None,
-    db: Session = Depends(database.get_db), 
-    current_user: models.User = Depends(dependencies.get_current_user)
+    db: Session = Depends(database.get_db)
 ):
     query = db.query(models.Appointment)
     if status:
@@ -37,8 +36,7 @@ def get_appointments(
 
 @router.get("/today", response_model=List[schemas.Appointment])
 def get_today_appointments(
-    db: Session = Depends(database.get_db), 
-    current_user: models.User = Depends(dependencies.get_current_user)
+    db: Session = Depends(database.get_db)
 ):
     today = date.today()
     return db.query(models.Appointment).filter(models.Appointment.appointment_date == today).all()

@@ -1,50 +1,40 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request, Response
 from .database import engine, Base
 from .routers import auth, patients, queue, master_data, medicines, users, integration, doctors, diseases, dashboard, payments, pharmacists, config, appointments
 import os
 from dotenv import load_dotenv
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from .limiter import limiter
-
 from pathlib import Path
 
 env_path = Path(__file__).parent / '.env'
 load_dotenv(dotenv_path=env_path)
-
 
 # Create Tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Klinik Admin API")
 
-# Rate Limiter Configuration
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-# Flexible CORS for Development (Allows any localhost port)
-# In production, you might want to switch back to strict allow_origins from env
-# Flexible CORS for Development
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 @app.middleware("http")
-async def add_cors_header(request: Request, call_next):
+async def cors_handler(request: Request, call_next):
+    # Log incoming request
+    print(f"Request: {request.method} {request.url}")
+    
     if request.method == "OPTIONS":
-        from fastapi.responses import Response
-        response = Response()
+        response = Response(status_code=204)
         response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Max-Age"] = "86400"
         return response
-    response = await call_next(request)
+
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        print(f"Error handling request: {e}")
+        response = Response(content="Internal Server Error", status_code=500)
+
     response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
     return response
 
 # Include Routers
