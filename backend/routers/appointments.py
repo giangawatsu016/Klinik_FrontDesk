@@ -57,18 +57,40 @@ def get_appointments(
     status: str = None,
     db: Session = Depends(database.get_db)
 ):
-    query = db.query(models.Appointment)
+    query = db.query(models.Appointment, models.Patient).outerjoin(models.Patient, models.Appointment.nik_patient == models.Patient.identityCard)
     if status:
         query = query.filter(models.Appointment.status == status)
         
-    return query.order_by(models.Appointment.appointment_date.asc(), models.Appointment.appointment_time.asc()).offset(skip).limit(limit).all()
+    results = query.order_by(models.Appointment.appointment_date.asc(), models.Appointment.appointment_time.asc()).offset(skip).limit(limit).all()
+    
+    response = []
+    for apt, patient in results:
+        apt_dict = apt.__dict__
+        if patient:
+             apt_dict['patient_name'] = f"{patient.firstName} {patient.lastName or ''}".strip()
+        else:
+             apt_dict['patient_name'] = "Unknown Patient"
+        response.append(schemas.Appointment(**apt_dict))
+        
+    return response
 
 @router.get("/today", response_model=List[schemas.Appointment])
 def get_today_appointments(
     db: Session = Depends(database.get_db)
 ):
     today = date.today()
-    return db.query(models.Appointment).filter(models.Appointment.appointment_date == today).all()
+    results = db.query(models.Appointment, models.Patient).outerjoin(models.Patient, models.Appointment.nik_patient == models.Patient.identityCard).filter(models.Appointment.appointment_date == today).all()
+    
+    response = []
+    for apt, patient in results:
+        apt_dict = apt.__dict__
+        if patient:
+             apt_dict['patient_name'] = f"{patient.firstName} {patient.lastName or ''}".strip()
+        else:
+             apt_dict['patient_name'] = "Unknown Patient"
+        response.append(schemas.Appointment(**apt_dict))
+        
+    return response
 
 @router.put("/{appointment_id}/status", response_model=schemas.Appointment)
 def update_appointment_status(

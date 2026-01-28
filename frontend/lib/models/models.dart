@@ -496,6 +496,7 @@ class Issuer {
 class Appointment {
   final int id;
   final String nikPatient;
+  final String? patientName; // Added
   final int? doctorId;
   final String? doctorName;
   final String appointmentDate;
@@ -506,6 +507,7 @@ class Appointment {
   Appointment({
     required this.id,
     required this.nikPatient,
+    this.patientName,
     this.doctorId,
     this.doctorName,
     required this.appointmentDate,
@@ -518,6 +520,7 @@ class Appointment {
     return Appointment(
       id: json['id'],
       nikPatient: json['nik_patient'] ?? '',
+      patientName: json['patient_name'],
       doctorId: json['doctor_id'],
       doctorName: json['doctor_name'],
       appointmentDate: json['appointment_date'],

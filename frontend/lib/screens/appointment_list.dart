@@ -96,7 +96,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                         ),
                       ),
                       title: Text(
-                        "Patient NIK: ${appointment.nikPatient}",
+                        "Nama: ${appointment.patientName ?? appointment.nikPatient}",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       subtitle: Column(

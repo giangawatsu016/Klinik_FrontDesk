@@ -242,6 +242,7 @@ class AppointmentBase(BaseModel):
     appointment_date: date
     appointment_time: str
     notes: Optional[str] = None
+    patient_name: Optional[str] = None
 
 class AppointmentCreate(AppointmentBase):
     pass
