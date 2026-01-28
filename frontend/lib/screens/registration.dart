@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../widgets/animated_entrance.dart';
-import '../services/insurance_providers.dart';
 
 class RegistrationScreen extends StatefulWidget {
   final ApiService apiService;
@@ -114,12 +113,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     'Doctorate',
   ];
 
-  // Hardcoded for demo, normally from backend
-  final Map<int, String> issuers = {
-    1: 'Umum (General)',
-    2: 'BPJS',
-    3: 'Asuransi (Insurance)',
-  };
+  // Hardcoded replaced by dynamic
+  List<Issuer> _allIssuers = [];
+  String? _selectedIssuerCategory; // 'Umum', 'BPJS', 'Insurance'
+
   final Map<int, String> maritalStatuses = {
     1: 'Single',
     2: 'Married',
@@ -132,12 +129,48 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     super.initState();
     _loadDoctors();
     _loadProvinces();
+    _loadIssuers(); // New fetch
 
     if (widget.patientToEdit != null) {
       _initializeEditMode(widget.patientToEdit!);
     } else if (widget.isRegistrationOnly) {
       _currentStep = RegistrationStep.inputData;
       _patientType = PatientType.newPatient;
+    }
+  }
+
+  void _loadIssuers() async {
+    final res = await widget.apiService.getIssuers();
+    if (mounted) {
+      setState(() {
+        _allIssuers = res;
+
+        // Handle Edit Mode or existing selection
+        if (issuerId != 0) {
+          final match =
+              res.where((i) => i.issuerId == issuerId).firstOrNull ??
+              res
+                  .where((i) => i.issuer.contains('Umum'))
+                  .firstOrNull; // Fallback
+          if (match != null) {
+            _selectedIssuerCategory = match.issuer;
+          }
+        }
+
+        // Default to General if available and new patient
+        if (widget.patientToEdit == null && _selectedIssuerCategory == null) {
+          final general = res
+              .where(
+                (i) =>
+                    i.issuer.contains('Umum') || i.issuer.contains('General'),
+              )
+              .firstOrNull;
+          if (general != null) {
+            _selectedIssuerCategory = general.issuer;
+            issuerId = general.issuerId;
+          }
+        }
+      });
     }
   }
 
@@ -420,7 +453,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       // Update Patient Payment Info (Sync logic)
       try {
         // Capture General Payment Details
-        if (issuerId == 1 && _paymentSubMethod != null) {
+        if ((_selectedIssuerCategory?.contains("Umum") ?? false) &&
+            _paymentSubMethod != null) {
           insuranceName = "Payment: $_paymentSubMethod";
           if (_paymentSubMethod == 'Cash') {
             insuranceName = "$insuranceName - ${_paymentAmountCtrl.text}";
@@ -1119,60 +1153,98 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
             if (widget.isRegistrationOnly) ...[
               _buildSectionTitle("Pembayaran"),
-              DropdownButtonFormField<int>(
-                // ignore: deprecated_member_use
-                value: issuerId,
-                decoration: InputDecoration(labelText: 'Metode Pembayaran'),
-                items: issuers.entries
-                    .map(
-                      (e) =>
-                          DropdownMenuItem(value: e.key, child: Text(e.value)),
-                    )
+              // 1. Category Dropdown
+              DropdownButtonFormField<String>(
+                initialValue: _selectedIssuerCategory,
+                decoration: InputDecoration(labelText: 'Tipe Pembayaran'),
+                items: _allIssuers
+                    .map((e) => e.issuer)
+                    .toSet() // Unique categories
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
                 onChanged: (v) {
                   setState(() {
-                    issuerId = v!;
-                    insuranceName = null; // Reset sub-selection
+                    _selectedIssuerCategory = v;
+                    // Auto-select if only 1 option or specific logic
+                    final options = _allIssuers
+                        .where((i) => i.issuer == v)
+                        .toList();
+                    if (options.length == 1) {
+                      issuerId = options.first.issuerId;
+                      insuranceName = null;
+                    } else {
+                      // Reset selection to force user to pick sub-item
+                      // Or try to pick first? No, force selection.
+                      // But we need a valid int for issuerId.
+                      // Check invalid state handling.
+                      issuerId = options
+                          .first
+                          .issuerId; // Default to first temporarily
+                      insuranceName = null;
+                      noAssuransi = '';
+                    }
                   });
                 },
               ),
-              if (issuerId == 2) // BPJS
+
+              // 2. Sub-Item Dropdown (if applicable)
+              // Logic: Show if the selected category has items with 'nama' != null
+              if (_selectedIssuerCategory != null &&
+                  _allIssuers.any(
+                    (i) =>
+                        i.issuer == _selectedIssuerCategory && i.nama != null,
+                  ))
                 Padding(
                   padding: const EdgeInsets.only(top: 16.0),
-                  child: DropdownButtonFormField<String>(
-                    initialValue: insuranceName,
-                    decoration: InputDecoration(labelText: 'BPJS Type'),
-                    items: ['BPJS Kesehatan', 'BPJS Ketenagakerjaan']
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
-                    onChanged: (v) => setState(() => insuranceName = v),
-                    validator: (v) =>
-                        v == null ? 'Please select BPJS Type' : null,
-                  ),
-                ),
-              if (issuerId == 3) // Insurance
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: DropdownButtonFormField<String>(
-                    initialValue: insuranceName,
+                  child: DropdownButtonFormField<int>(
+                    initialValue:
+                        _allIssuers.any(
+                          (i) =>
+                              i.issuerId == issuerId &&
+                              i.issuer == _selectedIssuerCategory,
+                        )
+                        ? issuerId
+                        : null,
                     decoration: InputDecoration(
-                      labelText: 'Insurance Provider',
+                      labelText: 'Detail $_selectedIssuerCategory',
                     ),
-                    items: ['Allianz', 'Prudential', 'Manulife']
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    items: _allIssuers
+                        .where((i) => i.issuer == _selectedIssuerCategory)
+                        .map(
+                          (e) => DropdownMenuItem(
+                            value: e.issuerId,
+                            child: Text(e.nama ?? e.issuer),
+                          ),
+                        )
                         .toList(),
-                    onChanged: (v) => setState(() => insuranceName = v),
+                    onChanged: (v) => setState(() {
+                      issuerId = v!;
+                      // Update insuranceName for legacy/display purposes
+                      final selected = _allIssuers.firstWhere(
+                        (i) => i.issuerId == v,
+                      );
+                      insuranceName = selected.nama;
+                    }),
                     validator: (v) =>
-                        v == null ? 'Please select Provider' : null,
+                        v == null ? 'Please select specific provider' : null,
                   ),
                 ),
-              if (issuerId != 1)
-                TextFormField(
-                  initialValue: noAssuransi,
-                  decoration: InputDecoration(labelText: 'Insurance Number'),
-                  onSaved: (v) => noAssuransi = v!,
-                  validator: (v) =>
-                      v!.isEmpty ? 'Required for Insurance' : null,
+
+              // 3. Insurance Number (Only if not General/Umum)
+              // Assumption: 'Umum' contains 'Umum' or 'General' string
+              if (_selectedIssuerCategory != null &&
+                  !_selectedIssuerCategory!.contains("Umum") &&
+                  !_selectedIssuerCategory!.contains("General"))
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: TextFormField(
+                    initialValue: noAssuransi,
+                    decoration: InputDecoration(
+                      labelText: 'Nomor Kartu / BPJS',
+                    ),
+                    onSaved: (v) => noAssuransi = v ?? '',
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                  ),
                 ),
             ],
 
@@ -1337,8 +1409,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           hintText: 'Choose a Doctor',
                           border: OutlineInputBorder(),
                         ),
-                        // ignore: deprecated_member_use
-                        value: selectedDoctor,
+                        initialValue: selectedDoctor,
                         items: doctors
                             .map(
                               (d) => DropdownMenuItem(
@@ -1362,8 +1433,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           hintText: 'Choose Polyclinic',
                           border: OutlineInputBorder(),
                         ),
-                        // ignore: deprecated_member_use
-                        value: _selectedPolyclinic,
+                        initialValue: _selectedPolyclinic,
                         items: polyclinics
                             .map(
                               (p) => DropdownMenuItem(value: p, child: Text(p)),
@@ -1378,30 +1448,35 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
                   SizedBox(height: 20),
                   _buildSectionTitle("Pembayaran"),
-                  _buildLabeledField(
-                    label: "Metode Pembayaran",
-                    child: DropdownButtonFormField<int>(
-                      // ignore: deprecated_member_use
-                      value: issuerId,
-                      decoration: InputDecoration(hintText: 'Select Method'),
-                      items: issuers.entries
-                          .map(
-                            (e) => DropdownMenuItem(
-                              value: e.key,
-                              child: Text(e.value),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) {
-                        setState(() {
-                          issuerId = v!;
+                  // 1. Category Dropdown
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedIssuerCategory,
+                    decoration: InputDecoration(labelText: 'Tipe Pembayaran'),
+                    items: _allIssuers
+                        .map((e) => e.issuer)
+                        .toSet()
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (v) {
+                      setState(() {
+                        _selectedIssuerCategory = v;
+                        final options = _allIssuers
+                            .where((i) => i.issuer == v)
+                            .toList();
+                        if (options.length == 1) {
+                          issuerId = options.first.issuerId;
                           insuranceName = null;
-                        });
-                      },
-                      onSaved: (v) => issuerId = v!,
-                    ),
+                        } else {
+                          issuerId = options.first.issuerId;
+                          insuranceName = null;
+                          noAssuransi = '';
+                        }
+                      });
+                    },
                   ),
-                  if (issuerId == 1) ...[
+
+                  // 2. Sub-methods (If Umum)
+                  if (_selectedIssuerCategory?.contains("Umum") ?? false) ...[
                     Padding(
                       padding: const EdgeInsets.only(top: 16.0),
                       child: _buildLabeledField(
@@ -1427,7 +1502,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   .toList(),
                           onChanged: (v) => setState(() {
                             _paymentSubMethod = v;
-                            // Clear fields on change
                             _paymentAmountCtrl.clear();
                             _paymentReceiptCtrl.clear();
                             _paymentDetailsCtrl.clear();
@@ -1478,53 +1552,67 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         ),
                       ),
                   ],
-                  if (issuerId == 2) // BPJS
+
+                  // 3. Sub-Item Dropdown (if applicable)
+                  if (_selectedIssuerCategory != null &&
+                      _allIssuers.any(
+                        (i) =>
+                            i.issuer == _selectedIssuerCategory &&
+                            i.nama != null,
+                      ))
                     Padding(
                       padding: const EdgeInsets.only(top: 16.0),
-                      child: DropdownButtonFormField<String>(
-                        initialValue: insuranceName,
-                        decoration: InputDecoration(labelText: 'BPJS Type'),
-                        items: ['BPJS Kesehatan', 'BPJS Ketenagakerjaan']
-                            .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                      child: DropdownButtonFormField<int>(
+                        initialValue:
+                            _allIssuers.any(
+                              (i) =>
+                                  i.issuerId == issuerId &&
+                                  i.issuer == _selectedIssuerCategory,
                             )
-                            .toList(),
-                        onChanged: (v) => setState(() => insuranceName = v),
-                        onSaved: (v) => insuranceName = v,
-                        validator: (v) =>
-                            v == null ? 'Please select BPJS Type' : null,
-                      ),
-                    ),
-                  if (issuerId == 3) // Insurance
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: DropdownButtonFormField<String>(
-                        initialValue: insuranceName,
+                            ? issuerId
+                            : null,
                         decoration: InputDecoration(
-                          labelText: 'Insurance Provider',
+                          labelText: 'Detail $_selectedIssuerCategory',
                         ),
-                        items: InsuranceProviders.all
+                        items: _allIssuers
+                            .where((i) => i.issuer == _selectedIssuerCategory)
                             .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                              (e) => DropdownMenuItem(
+                                value: e.issuerId,
+                                child: Text(e.nama ?? e.issuer),
+                              ),
                             )
                             .toList(),
-                        onChanged: (v) => setState(() => insuranceName = v),
-                        onSaved: (v) => insuranceName = v,
-                        validator: (v) =>
-                            v == null ? 'Please select Provider' : null,
+                        onChanged: (v) => setState(() {
+                          issuerId = v!;
+                          final selected = _allIssuers.firstWhere(
+                            (i) => i.issuerId == v,
+                          );
+                          insuranceName = selected.nama;
+                        }),
+                        validator: (v) => v == null
+                            ? 'Please select specific provider'
+                            : null,
                       ),
                     ),
-                  if (issuerId != 1)
-                    TextFormField(
-                      initialValue: noAssuransi,
-                      decoration: InputDecoration(
-                        labelText: 'Insurance Number',
+
+                  // 4. Number (If not Umum)
+                  if (_selectedIssuerCategory != null &&
+                      !_selectedIssuerCategory!.contains("Umum") &&
+                      !_selectedIssuerCategory!.contains("General"))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: TextFormField(
+                        initialValue: noAssuransi,
+                        decoration: InputDecoration(
+                          labelText: 'Nomor Kartu / BPJS',
+                        ),
+                        onChanged: (v) => noAssuransi = v,
+                        onSaved: (v) => noAssuransi = v!,
+                        validator: (v) => v!.isEmpty ? 'Required' : null,
                       ),
-                      onChanged: (v) => noAssuransi = v,
-                      onSaved: (v) => noAssuransi = v!,
-                      validator: (v) =>
-                          v!.isEmpty ? 'Required for Insurance' : null,
                     ),
+                  SizedBox(height: 16),
 
                   CheckboxListTile(
                     title: Text("Priority Patient"),

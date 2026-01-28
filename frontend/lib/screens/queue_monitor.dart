@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import 'dart:async';
+import 'package:intl/intl.dart';
 
 class QueueMonitorScreen extends StatefulWidget {
   final ApiService apiService;
@@ -213,6 +214,38 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                 ),
               ],
             ),
+          )
+        else
+          Container(
+            padding: EdgeInsets.all(12),
+            margin: EdgeInsets.only(bottom: 12),
+            height: 148, // Match approx height of active card for symmetry
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200, width: 1),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    LucideIcons.armchair,
+                    size: 32,
+                    color: Colors.grey.shade300,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "Waiting for Patient",
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
 
         // List
@@ -231,15 +264,14 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
             ),
             child: ListView.separated(
               padding: EdgeInsets.all(16),
-              itemCount: items.length,
+              itemCount: items.where((i) => i.status == 'Waiting').length,
               separatorBuilder: (ctx, i) =>
                   Divider(color: Colors.grey.shade100),
               itemBuilder: (context, index) {
-                final item = items[index];
-                if (item.status == 'Completed' ||
-                    item.status == 'In Consultation') {
-                  return SizedBox.shrink(); // Hide processed
-                }
+                final waitingItems = items
+                    .where((i) => i.status == 'Waiting')
+                    .toList();
+                final item = waitingItems[index];
 
                 return GestureDetector(
                   onTap: () {
@@ -262,6 +294,10 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                             Text("Polyclinic: ${item.polyclinic ?? '-'}"),
                             SizedBox(height: 8),
                             Text("Status: ${item.status}"),
+                            SizedBox(height: 8),
+                            Text(
+                              "Created: ${DateFormat('dd MMM yyyy HH:mm').format(DateTime.parse(item.appointmentTime).add(Duration(hours: 7)))}",
+                            ),
                             if (item.isPriority)
                               Text(
                                 "Priority: YES",

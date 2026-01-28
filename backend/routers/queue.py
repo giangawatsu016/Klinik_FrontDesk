@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import List
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 from .. import models, schemas, database, dependencies
 from ..services.frappe_service import frappe_client
 
@@ -12,19 +12,21 @@ router = APIRouter(
 
 @router.post("", response_model=schemas.PatientQueue)
 def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTasks, db: Session = Depends(database.get_db), current_user: models.User = Depends(dependencies.get_current_user)):
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Timezone Handling (Asia/Jakarta)
+    # We want 'today' to be relative to the clinic's local time (GMT+7)
+    # 00:00 WIB = 17:00 UTC (Yesterday)
     
-    # Determine Prefix
-    if queue_data.queueType == "Polyclinic":
-        prefix = "PP" if queue_data.isPriority else "P"
-    else:
-        prefix = "DP" if queue_data.isPriority else "D"
+    # Simple fixed offset for now (Asia/Jakarta is UTC+7)
+    utc_now = datetime.utcnow()
+    local_now = utc_now + timedelta(hours=7)
+    today_local = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start_utc = today_local - timedelta(hours=7)
 
     # Lazy Cleanup: Auto-complete old active queues (yesterday or older)
     old_queues = db.query(models.PatientQueue).filter(
         models.PatientQueue.userId == queue_data.userId,
         models.PatientQueue.status.in_(["Waiting", "In Consultation"]),
-        models.PatientQueue.appointmentTime < today_start
+        models.PatientQueue.appointmentTime < today_start_utc
     ).all()
 
     for old_q in old_queues:
@@ -34,18 +36,24 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
         db.commit()
 
     # Check for existing active queue for this patient (TODAY ONLY)
+    # Check for existing active queue for this patient (TODAY ONLY)
     existing_queue = db.query(models.PatientQueue).filter(
         models.PatientQueue.userId == queue_data.userId,
         models.PatientQueue.status.in_(["Waiting", "In Consultation"]),
-        models.PatientQueue.appointmentTime >= today_start
+        models.PatientQueue.appointmentTime >= today_start_utc
     ).first()
 
     if existing_queue:
         raise HTTPException(status_code=400, detail="Patient already has an active queue for today")
 
+    # Determine Prefix (e.g. D = Doctor, P = Polyclinic, DP = Doctor Priority)
+    base_code = "P" if queue_data.queueType == "Polyclinic" else "D"
+    prio_code = "P" if queue_data.isPriority else ""
+    prefix = f"{base_code}{prio_code}"
+
     # Get last number for this specific type and priority
     last_queue = db.query(models.PatientQueue).filter(
-        models.PatientQueue.appointmentTime >= today_start,
+        models.PatientQueue.appointmentTime >= today_start_utc,
         models.PatientQueue.queueType == queue_data.queueType,
         models.PatientQueue.isPriority == queue_data.isPriority
     ).order_by(models.PatientQueue.id.desc()).first()
@@ -92,9 +100,13 @@ def add_to_queue(queue_data: schemas.QueueCreate, background_tasks: BackgroundTa
 
 @router.get("", response_model=List[schemas.PatientQueue])
 def get_queue(db: Session = Depends(database.get_db)):
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    utc_now = datetime.utcnow()
+    local_now = utc_now + timedelta(hours=7)
+    today_local = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start_utc = today_local - timedelta(hours=7)
+
     return db.query(models.PatientQueue).filter(
-        models.PatientQueue.appointmentTime >= today_start
+        models.PatientQueue.appointmentTime >= today_start_utc
     ).order_by(models.PatientQueue.isPriority.desc(), models.PatientQueue.appointmentTime.asc()).all()
 
 @router.put("/{queue_id}/status", response_model=schemas.PatientQueue)

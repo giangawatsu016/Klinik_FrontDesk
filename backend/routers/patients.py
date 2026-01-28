@@ -180,8 +180,15 @@ def create_patient(patient: schemas.PatientCreate, background_tasks: BackgroundT
 
     return new_patient
 
+def sync_update_patient_background(frappe_id: str, data: dict):
+    from ..services.frappe_service import frappe_client
+    try:
+        frappe_client.update_patient(frappe_id, data)
+    except Exception as e:
+        print(f"Failed to sync update to ERPNext: {e}")
+
 @router.put("/{patient_id}", response_model=schemas.Patient)
-def update_patient(patient_id: int, patient_update: schemas.PatientCreate, db: Session = Depends(database.get_db)):
+def update_patient(patient_id: int, patient_update: schemas.PatientCreate, background_tasks: BackgroundTasks, db: Session = Depends(database.get_db)):
     # Note: Using PatientCreate schema allows updating all fields
     db_patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
     if not db_patient:
@@ -195,21 +202,16 @@ def update_patient(patient_id: int, patient_update: schemas.PatientCreate, db: S
     db.commit()
     db.refresh(db_patient)
     
-    # Sync to ERPNext
+    # Sync to ERPNext (Background)
     if db_patient.frappe_id:
-        try:
-            from ..services.frappe_service import frappe_client
-            # Map fields
-            erp_data = {
-                "first_name": patient_update.firstName,
-                "last_name": patient_update.lastName,
-                "sex": patient_update.gender,
-                "mobile": patient_update.phone,
-                "dob": str(patient_update.birthday) if patient_update.birthday else None,
-            }
-            frappe_client.update_patient(db_patient.frappe_id, erp_data)
-        except Exception as e:
-            print(f"Failed to sync update to ERPNext: {e}")
+        erp_data = {
+            "first_name": patient_update.firstName,
+            "last_name": patient_update.lastName,
+            "sex": patient_update.gender,
+            "mobile": patient_update.phone,
+            "dob": str(patient_update.birthday) if patient_update.birthday else None,
+        }
+        background_tasks.add_task(sync_update_patient_background, db_patient.frappe_id, erp_data)
             
     return db_patient
 

@@ -1,0 +1,10 @@
+api-clinic
+clinicAdmin
+clinicDoctor
+clinicFrontdesk
+clinicNurse
+clinicPharmacy
+clinicPos
+telemedicineDoctor
+telemedicinePharmacy
+clinicmasterdata
