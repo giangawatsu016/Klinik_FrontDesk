@@ -45,7 +45,7 @@ class MaritalStatus(MaritalStatusBase):
 
 class IssuerBase(BaseModel):
     issuer: str
-    nama: List[str] # Assuming simple list of strings for sub-issuers
+    nama: Optional[str] = None
 
 class Issuer(IssuerBase):
     issuerId: int
