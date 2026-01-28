@@ -183,6 +183,7 @@ class Pharmacist(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100))
+    nik = Column(String(16), nullable=True) # Added for SatuSehat Sync
     sip_no = Column(String(50)) # License Number
     ihs_number = Column(String(100), nullable=True) # SatuSehat ID
     erp_employee_id = Column(String(100), nullable=True) # ERPNext Employee ID

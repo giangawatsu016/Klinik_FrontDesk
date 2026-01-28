@@ -214,6 +214,7 @@ class Payment(PaymentBase):
 # Pharmacist Schemas
 class PharmacistBase(BaseModel):
     name: str
+    nik: Optional[str] = None
     sip_no: str
     ihs_number: Optional[str] = None
     erp_employee_id: Optional[str] = None

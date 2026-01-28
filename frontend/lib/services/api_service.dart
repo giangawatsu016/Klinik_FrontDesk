@@ -756,6 +756,18 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> syncPharmacistsPush() async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/integration/satusehat/pharmacists/push"),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to push pharmacists: ${response.body}');
+    }
+  }
+
   Future<void> deletePharmacist(int id) async {
     final response = await http.delete(
       Uri.parse("$baseUrl/pharmacists/$id"),

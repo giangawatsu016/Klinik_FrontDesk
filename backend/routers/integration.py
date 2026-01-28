@@ -241,3 +241,47 @@ def sync_patients_push(
     except Exception as e:
         print(f"Push Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/satusehat/pharmacists/push")
+def sync_pharmacists_push(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Push: Create Pharmacists on SatuSehat (as Practitioners) if they don't exist.
+    """
+    try:
+        # Get pharmacists with NIK but NO IHS
+        pharmacists = db.query(models.Pharmacist).filter(
+            models.Pharmacist.nik != None,
+            models.Pharmacist.ihs_number == None
+        ).all()
+        
+        count = 0
+        for p in pharmacists:
+            if len(p.nik) != 16: continue
+            
+            # Helper to split name
+            parts = p.name.replace("Apt.", "").replace("S.Farm", "").strip().split(" ")
+            first_name = parts[0]
+            last_name = " ".join(parts[1:]) if len(parts) > 1 else first_name
+            # Fallback if first name too short?
+            
+            # Map to doctor_data format expected by service
+            p_data = {
+                "identityCard": p.nik,
+                "namaDokter": p.name,
+                "firstName": first_name,
+                "lastName": last_name
+            }
+            
+            # Pharmacists are Practitioners too
+            new_ihs = satu_sehat_client.create_practitioner_on_satusehat(p_data)
+            if new_ihs:
+                p.ihs_number = new_ihs
+                count += 1
+                
+        db.commit()
+        return {"status": "success", "message": f"Created {count} new pharmacists/practitioners on SatuSehat.", "count": count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

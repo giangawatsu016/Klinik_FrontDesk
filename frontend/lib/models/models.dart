@@ -534,6 +534,7 @@ class Appointment {
 class Pharmacist {
   final int? id;
   final String name;
+  final String? nik;
   final String sipNo;
   final String? ihsNumber;
   final String? erpEmployeeId;
@@ -542,6 +543,7 @@ class Pharmacist {
   Pharmacist({
     this.id,
     required this.name,
+    this.nik,
     required this.sipNo,
     this.ihsNumber,
     this.erpEmployeeId,
@@ -552,6 +554,7 @@ class Pharmacist {
     return Pharmacist(
       id: json['id'],
       name: json['name'],
+      nik: json['nik'],
       sipNo: json['sip_no'],
       ihsNumber: json['ihs_number'],
       erpEmployeeId: json['erp_employee_id'],
@@ -563,6 +566,7 @@ class Pharmacist {
     return {
       if (id != null) 'id': id,
       'name': name,
+      'nik': nik,
       'sip_no': sipNo,
       'ihs_number': ihsNumber,
       'erp_employee_id': erpEmployeeId,

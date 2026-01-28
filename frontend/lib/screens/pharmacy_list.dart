@@ -43,6 +43,7 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
   void _showPharmacistDialog({Pharmacist? pharmacist}) {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(text: pharmacist?.name ?? '');
+    final nikController = TextEditingController(text: pharmacist?.nik ?? '');
     final sipController = TextEditingController(text: pharmacist?.sipNo ?? '');
     final ihsController = TextEditingController(
       text: pharmacist?.ihsNumber ?? '',
@@ -65,6 +66,13 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                   controller: nameController,
                   decoration: const InputDecoration(labelText: 'Name'),
                   validator: (val) => val!.isEmpty ? 'Required' : null,
+                ),
+                TextFormField(
+                  controller: nikController,
+                  decoration: const InputDecoration(labelText: 'NIK (KTP)'),
+                  validator: (val) => val!.isNotEmpty && val.length != 16
+                      ? 'Must be 16 digits'
+                      : null,
                 ),
                 TextFormField(
                   controller: sipController,
@@ -98,6 +106,9 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                 final newPharmacist = Pharmacist(
                   id: pharmacist?.id,
                   name: nameController.text,
+                  nik: nikController.text.isNotEmpty
+                      ? nikController.text
+                      : null,
                   sipNo: sipController.text,
                   ihsNumber: ihsController.text.isNotEmpty
                       ? ihsController.text
@@ -202,6 +213,35 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
             Row(
               children: [
                 const Spacer(),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    try {
+                      final result = await widget.apiService
+                          .syncPharmacistsPush();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(result['message'] ?? 'Sync Complete'),
+                          ),
+                        );
+                        _loadPharmacists();
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Sync Error: $e')),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(LucideIcons.refreshCw),
+                  label: const Text("Sync to SatuSehat"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 ElevatedButton.icon(
                   onPressed: () => _showPharmacistDialog(),
                   icon: const Icon(Icons.add),
