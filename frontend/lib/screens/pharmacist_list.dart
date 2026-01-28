@@ -207,35 +207,6 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
             children: [
               const Spacer(),
               ElevatedButton.icon(
-                onPressed: () async {
-                  try {
-                    final result = await widget.apiService
-                        .syncPharmacistsPush();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(result['message'] ?? 'Sync Complete'),
-                        ),
-                      );
-                      _loadPharmacists();
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text('Sync Error: $e')));
-                    }
-                  }
-                },
-                icon: const Icon(LucideIcons.refreshCw),
-                label: const Text("Sync to SatuSehat"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
                 onPressed: () => _showPharmacistDialog(),
                 icon: const Icon(Icons.add),
                 label: const Text("Add Pharmacist"),

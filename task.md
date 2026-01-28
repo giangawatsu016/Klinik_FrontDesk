@@ -17,7 +17,7 @@
 - [x] Install Frappe Bench & ERPNext
 - [x] Connect Backend to ERPNext
 - [x] Install Healthcare Module
-- [x] Sync Existing Data
+- [x] Pindahkan tombol Sync Pharmacist ke menu Admin Sync Data
 - [x] Resolve Port Conflict (8000 -> 8001)
 
 ## 4. Feature Enhancements

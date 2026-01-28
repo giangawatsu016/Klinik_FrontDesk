@@ -107,6 +107,11 @@ class _SyncScreenState extends State<SyncScreen> {
         widget.apiService.syncSatuSehatPatients,
         widget.apiService.syncSatuSehatPatientsPush,
       );
+      await _runCombinedSync(
+        "SS Pharmacists",
+        () async => {"message": "No Pull for Pharmacists"},
+        widget.apiService.syncPharmacistsPush,
+      );
 
       _addLog("=== FULL SYNC COMPLETE ===");
     } catch (e) {
@@ -255,6 +260,18 @@ class _SyncScreenState extends State<SyncScreen> {
                           "SS Patients",
                           widget.apiService.syncSatuSehatPatients,
                           widget.apiService.syncSatuSehatPatientsPush,
+                        ),
+                      ),
+                      _buildSyncCard(
+                        "SS Pharmacists",
+                        Icons.local_pharmacy_outlined,
+                        Colors.tealAccent.shade700,
+                        () => _runCombinedSync(
+                          "SS Pharmacists",
+                          () async => {
+                            "message": "No Pull for Pharmacists",
+                          }, // No Pull available/needed yet
+                          widget.apiService.syncPharmacistsPush,
                         ),
                       ),
                     ],
