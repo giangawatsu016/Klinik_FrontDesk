@@ -89,7 +89,7 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                       leading: CircleAvatar(
                         backgroundColor: Theme.of(
                           context,
-                        ).primaryColor.withOpacity(0.1),
+                        ).primaryColor.withValues(alpha: 0.1),
                         child: Icon(
                           LucideIcons.calendar,
                           color: Theme.of(context).primaryColor,
