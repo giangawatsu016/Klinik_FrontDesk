@@ -21,6 +21,35 @@ def create_appointment(appointment: schemas.AppointmentCreate, db: Session = Dep
     db.refresh(new_appointment)
     return new_appointment
 
+@router.post("/external", response_model=schemas.Appointment)
+def create_external_appointment(
+    appointment: schemas.AppointmentExternalCreate, 
+    db: Session = Depends(database.get_db)
+):
+    # Lookup Doctor Name
+    doctor_name = "Unknown"
+    if appointment.doctor_id:
+        doctor = db.query(models.DoctorEntity).filter(models.DoctorEntity.medicalFacilityPolyDoctorId == appointment.doctor_id).first()
+        if doctor:
+            doctor_name = doctor.namaDokter
+
+    # Format Time from Datetime to HH:MM
+    formatted_time = appointment.appointment_time.strftime("%H:%M")
+
+    new_appointment = models.Appointment(
+        nik_patient=appointment.nik,
+        doctor_id=appointment.doctor_id,
+        doctor_name=doctor_name,
+        appointment_date=appointment.appointment_date,
+        appointment_time=formatted_time,
+        notes=appointment.notes,
+        status="Scheduled"
+    )
+    db.add(new_appointment)
+    db.commit()
+    db.refresh(new_appointment)
+    return new_appointment
+
 @router.get("", response_model=List[schemas.Appointment])
 def get_appointments(
     skip: int = 0, 
