@@ -70,9 +70,14 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                 TextFormField(
                   controller: nikController,
                   decoration: const InputDecoration(labelText: 'NIK (KTP)'),
-                  validator: (val) => val!.isNotEmpty && val.length != 16
-                      ? 'Must be 16 digits'
-                      : null,
+                  validator: (val) {
+                    if (val == null || val.isEmpty) return 'Required';
+                    if (val.length != 16)
+                      return 'NIK must be exactly 16 digits';
+                    if (!RegExp(r'^[0-9]+$').hasMatch(val))
+                      return 'Numeric only';
+                    return null;
+                  },
                 ),
                 TextFormField(
                   controller: sipController,
@@ -274,28 +279,8 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                                   ),
                                 ),
                                 const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: p.isActive
-                                        ? Colors.green.shade50
-                                        : Colors.grey.shade100,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    p.isActive ? "Active" : "Inactive",
-                                    style: TextStyle(
-                                      color: p.isActive
-                                          ? Colors.green
-                                          : Colors.grey,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+
+                                // Active Status removed by request
                               ],
                             ),
                           ),
