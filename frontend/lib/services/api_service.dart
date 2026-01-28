@@ -756,6 +756,34 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> syncPharmacists() async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/pharmacists/sync"),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(
+        'Failed to pull pharmacists from ERPNext: ${response.body}',
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> syncPharmacistsERPNextPush() async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/pharmacists/sync/push"),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(
+        'Failed to push pharmacists to ERPNext: ${response.body}',
+      );
+    }
+  }
+
   Future<Map<String, dynamic>> syncPharmacistsPush() async {
     final response = await http.post(
       Uri.parse("$baseUrl/integration/satusehat/pharmacists/push"),

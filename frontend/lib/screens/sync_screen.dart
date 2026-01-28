@@ -94,6 +94,11 @@ class _SyncScreenState extends State<SyncScreen> {
         widget.apiService.syncDiseases,
         widget.apiService.syncDiseasesPush,
       );
+      await _runCombinedSync(
+        "Pharmacists",
+        widget.apiService.syncPharmacists,
+        widget.apiService.syncPharmacistsERPNextPush,
+      );
 
       // 2. SatuSehat
       _addLog("--- Phase 2: SatuSehat ---");
@@ -226,6 +231,16 @@ class _SyncScreenState extends State<SyncScreen> {
                           "Diseases",
                           widget.apiService.syncDiseases,
                           widget.apiService.syncDiseasesPush,
+                        ),
+                      ),
+                      _buildSyncCard(
+                        "Pharmacists",
+                        Icons.local_pharmacy,
+                        Colors.teal,
+                        () => _runCombinedSync(
+                          "Pharmacists",
+                          widget.apiService.syncPharmacists,
+                          widget.apiService.syncPharmacistsERPNextPush,
                         ),
                       ),
                     ],
