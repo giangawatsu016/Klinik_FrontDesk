@@ -16,6 +16,7 @@ import 'pharmacist_list.dart';
 import 'sync_screen.dart';
 import 'home_screen.dart'; // New Kiosk Home
 import 'menu_settings.dart';
+import 'appointment_list.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -48,6 +49,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "page": QueueMonitorScreen(apiService: widget.apiService),
         "icon": LucideIcons.monitorPlay,
         "label": "Queue Monitor",
+      },
+      {
+        "id": "appointments",
+        "page": AppointmentListScreen(apiService: widget.apiService),
+        "icon": LucideIcons.calendarClock,
+        "label": "Janji Temu",
       },
       {
         "id": "registration",
@@ -374,7 +381,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       // 2. Role Based Logic
-      if (id == "queue" || id == "registration") {
+      if (id == "queue" || id == "registration" || id == "appointments") {
         return role == "Staff" ||
             role == "Super Admin" ||
             role == "Administrator";

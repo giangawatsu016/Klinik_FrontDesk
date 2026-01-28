@@ -1155,11 +1155,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               _buildSectionTitle("Pembayaran"),
               // 1. Category Dropdown
               DropdownButtonFormField<String>(
-                key: ValueKey(
-                  'category_reg_${_allIssuers.length}_$_selectedIssuerCategory',
-                ),
                 initialValue: _selectedIssuerCategory,
-                hint: _allIssuers.isEmpty ? Text("Loading...") : null,
                 decoration: InputDecoration(labelText: 'Tipe Pembayaran'),
                 items: _allIssuers
                     .map((e) => e.issuer)
@@ -1201,7 +1197,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 16.0),
                   child: DropdownButtonFormField<int>(
-                    key: ValueKey('detail_reg_${_allIssuers.length}_$issuerId'),
                     initialValue:
                         _allIssuers.any(
                           (i) =>
@@ -1455,11 +1450,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   _buildSectionTitle("Pembayaran"),
                   // 1. Category Dropdown
                   DropdownButtonFormField<String>(
-                    key: ValueKey(
-                      'category_step3_${_allIssuers.length}_$_selectedIssuerCategory',
-                    ),
                     initialValue: _selectedIssuerCategory,
-                    hint: _allIssuers.isEmpty ? Text("Loading...") : null,
                     decoration: InputDecoration(labelText: 'Tipe Pembayaran'),
                     items: _allIssuers
                         .map((e) => e.issuer)
@@ -1572,9 +1563,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     Padding(
                       padding: const EdgeInsets.only(top: 16.0),
                       child: DropdownButtonFormField<int>(
-                        key: ValueKey(
-                          'detail_step3_${_allIssuers.length}_$issuerId',
-                        ),
                         initialValue:
                             _allIssuers.any(
                               (i) =>

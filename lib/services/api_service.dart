@@ -5,11 +5,10 @@ import '../models/models.dart';
 
 class ApiService {
   // Try localhost first, then 127.0.0.1, then Android Emulator 10.0.2.2
-  static const String _localUrl =
-      "http://127.0.0.1:8001"; // Changed default to IP for speed
-  static const String _ipUrl = "http://localhost:8001";
+  static const String _localUrl = "http://localhost:8001";
+  static const String _ipUrl = "http://127.0.0.1:8001";
   static const String _androidUrl = "http://10.0.2.2:8001";
-  String baseUrl = _localUrl; // Default start
+  String baseUrl = _localUrl;
 
   String? _authToken;
 
@@ -21,14 +20,12 @@ class ApiService {
   void _switchUrl() {
     if (baseUrl == _localUrl) {
       baseUrl = _ipUrl;
-      debugPrint("Switched API URL to IP: $baseUrl");
     } else if (baseUrl == _ipUrl) {
-      baseUrl = _androidUrl; // Try Android Emulator host IP
-      debugPrint("Switched API URL to Android Emulator: $baseUrl");
+      baseUrl = _androidUrl;
     } else {
       baseUrl = _localUrl;
-      debugPrint("Switched API URL to Localhost: $baseUrl");
     }
+    debugPrint("Switched API URL to: $baseUrl");
   }
 
   Map<String, String> get _headers {
@@ -105,9 +102,7 @@ class ApiService {
       debugPrint("GET Failed on $baseUrl: $e");
       _switchUrl();
       debugPrint("Retrying GET on $baseUrl");
-      return await http
-          .get(Uri.parse('$baseUrl$endpoint'), headers: _headers)
-          .timeout(const Duration(seconds: 10));
+      return await http.get(Uri.parse('$baseUrl$endpoint'), headers: _headers);
     }
   }
 
@@ -123,9 +118,11 @@ class ApiService {
       debugPrint("POST Failed on $baseUrl: $e");
       _switchUrl();
       debugPrint("Retrying POST on $baseUrl");
-      return await http
-          .post(Uri.parse('$baseUrl$endpoint'), headers: _headers, body: body)
-          .timeout(const Duration(seconds: 10));
+      return await http.post(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: _headers,
+        body: body,
+      );
     }
   }
 
@@ -710,6 +707,15 @@ class ApiService {
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => Issuer.fromJson(json)).toList();
+    }
+    return [];
+  }
+
+  Future<List<Appointment>> getAppointments() async {
+    final response = await _safeGet('/appointments');
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Appointment.fromJson(json)).toList();
     }
     return [];
   }

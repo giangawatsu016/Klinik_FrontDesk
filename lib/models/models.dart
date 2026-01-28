@@ -492,3 +492,41 @@ class Issuer {
     );
   }
 }
+
+class Appointment {
+  final int id;
+  final String nikPatient;
+  final String? patientName; // Added
+  final int? doctorId;
+  final String? doctorName;
+  final String appointmentDate;
+  final String appointmentTime;
+  final String status;
+  final String? notes;
+
+  Appointment({
+    required this.id,
+    required this.nikPatient,
+    this.patientName,
+    this.doctorId,
+    this.doctorName,
+    required this.appointmentDate,
+    required this.appointmentTime,
+    required this.status,
+    this.notes,
+  });
+
+  factory Appointment.fromJson(Map<String, dynamic> json) {
+    return Appointment(
+      id: json['id'],
+      nikPatient: json['nik_patient'] ?? '',
+      patientName: json['patient_name'],
+      doctorId: json['doctor_id'],
+      doctorName: json['doctor_name'],
+      appointmentDate: json['appointment_date'],
+      appointmentTime: json['appointment_time'],
+      status: json['status'],
+      notes: json['notes'],
+    );
+  }
+}
