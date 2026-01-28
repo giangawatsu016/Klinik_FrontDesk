@@ -743,6 +743,19 @@ class ApiService {
     }
   }
 
+  Future<Pharmacist> updatePharmacist(int id, Pharmacist pharmacist) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/pharmacists/$id"),
+      headers: _headers,
+      body: jsonEncode(pharmacist.toJson()),
+    );
+    if (response.statusCode == 200) {
+      return Pharmacist.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to update pharmacist: ${response.body}');
+    }
+  }
+
   Future<void> deletePharmacist(int id) async {
     final response = await http.delete(
       Uri.parse("$baseUrl/pharmacists/$id"),

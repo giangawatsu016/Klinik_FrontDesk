@@ -120,11 +120,10 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                   if (pharmacist == null) {
                     await widget.apiService.createPharmacist(newPharmacist);
                   } else {
-                    // TODO: Implement Update
-                    ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      SnackBar(content: Text("Update not yet implemented")),
+                    await widget.apiService.updatePharmacist(
+                      pharmacist.id!,
+                      newPharmacist,
                     );
-                    return;
                   }
 
                   if (!dialogContext.mounted) return;
@@ -204,9 +203,11 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                                   );
                                   _loadPharmacists();
                                 } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text("Error: $e")),
-                                  );
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("Error: $e")),
+                                    );
+                                  }
                                 }
                               },
                             ),
