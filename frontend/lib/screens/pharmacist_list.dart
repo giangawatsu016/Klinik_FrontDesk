@@ -72,10 +72,12 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                   decoration: const InputDecoration(labelText: 'NIK (KTP)'),
                   validator: (val) {
                     if (val == null || val.isEmpty) return 'Required';
-                    if (val.length != 16)
+                    if (val.length != 16) {
                       return 'NIK must be exactly 16 digits';
-                    if (!RegExp(r'^[0-9]+$').hasMatch(val))
+                    }
+                    if (!RegExp(r'^[0-9]+$').hasMatch(val)) {
                       return 'Numeric only';
+                    }
                     return null;
                   },
                 ),
