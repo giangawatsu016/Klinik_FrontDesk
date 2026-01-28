@@ -199,151 +199,141 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Pharmacist List",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                const Spacer(),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    try {
-                      final result = await widget.apiService
-                          .syncPharmacistsPush();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(result['message'] ?? 'Sync Complete'),
-                          ),
-                        );
-                        _loadPharmacists();
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Sync Error: $e')),
-                        );
-                      }
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Spacer(),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  try {
+                    final result = await widget.apiService
+                        .syncPharmacistsPush();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(result['message'] ?? 'Sync Complete'),
+                        ),
+                      );
+                      _loadPharmacists();
                     }
-                  },
-                  icon: const Icon(LucideIcons.refreshCw),
-                  label: const Text("Sync to SatuSehat"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                  ),
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Sync Error: $e')));
+                    }
+                  }
+                },
+                icon: const Icon(LucideIcons.refreshCw),
+                label: const Text("Sync to SatuSehat"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
                 ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: () => _showPharmacistDialog(),
-                  icon: const Icon(Icons.add),
-                  label: const Text("Add Pharmacist"),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _pharmacists.isEmpty
-                  ? const Center(child: Text("No pharmacists found."))
-                  : GridView.builder(
-                      padding: const EdgeInsets.all(16),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4, // 4 columns as per screenshot
-                            childAspectRatio: 0.8,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                      itemCount: _pharmacists.length,
-                      itemBuilder: (context, index) {
-                        final p = _pharmacists[index];
-                        return Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: InkWell(
-                            onTap: () => _showPharmacistDialog(
-                              pharmacist: p,
-                            ), // Edit on tap
-                            borderRadius: BorderRadius.circular(16),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 30,
-                                    backgroundColor: Colors.teal.shade50,
-                                    child: Icon(
-                                      LucideIcons.user,
-                                      size: 30,
-                                      color: Colors.teal,
-                                    ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () => _showPharmacistDialog(),
+                icon: const Icon(Icons.add),
+                label: const Text("Add Pharmacist"),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _pharmacists.isEmpty
+                ? const Center(child: Text("No pharmacists found."))
+                : GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4, // 4 columns as per screenshot
+                          childAspectRatio: 0.8,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                    itemCount: _pharmacists.length,
+                    itemBuilder: (context, index) {
+                      final p = _pharmacists[index];
+                      return Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: InkWell(
+                          onTap: () => _showPharmacistDialog(pharmacist: p),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircleAvatar(
+                                  radius: 30,
+                                  backgroundColor: Colors.teal.shade50,
+                                  child: Icon(
+                                    LucideIcons.user,
+                                    size: 30,
+                                    color: Colors.teal,
                                   ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    p.name,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  p.name,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "SIP: ${p.sipNo}",
-                                    textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "SIP: ${p.sipNo}",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: p.isActive
+                                        ? Colors.green.shade50
+                                        : Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    p.isActive ? "Active" : "Inactive",
                                     style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
                                       color: p.isActive
-                                          ? Colors.green.shade50
-                                          : Colors.grey.shade100,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      p.isActive ? "Active" : "Inactive",
-                                      style: TextStyle(
-                                        color: p.isActive
-                                            ? Colors.green
-                                            : Colors.grey,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                          ? Colors.green
+                                          : Colors.grey,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
