@@ -267,3 +267,9 @@ This document chronicles the entire development and implementation journey of th
     -   **Filter Past Appointments**: Updated `routers/appointments.py` to query only `date >= today`, hiding historical data from the "Janji Temu" screen.
     -   **Payment Issuers**: Fixed Schema Mismatch (`schema.py` List vs String) and seeded Master Data (BPJS, Allianz, Cash) so the Payment Type dropdown populates correctly.
     -   **Queue Monitor Fix**: Added `mounted` check to `_fetchQueue` to prevent `setState() called after dispose()` memory leaks.
+
+### 12.4 Verification & Testing
+*   **Queue Workflow**: Verified via API simulation and Logic Audit.
+    *   **Registration**: Confirmed `addToQueue` pushes data to `patient_queue` table.
+    *   **Monitor**: Confirmed `getQueue` filters correctly for "Today" (GMT+7 aware) and displays records with status "Waiting" and "In Consultation".
+    *   **Result**: Queue data appears correctly on Queue Monitor when created.
