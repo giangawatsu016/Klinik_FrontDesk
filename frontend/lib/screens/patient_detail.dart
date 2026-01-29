@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../widgets/glass_container.dart';
-import 'payment_screen.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final Patient patient;
@@ -38,21 +37,6 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             icon: Icon(Icons.edit),
             onPressed: widget.onEdit,
             tooltip: "Edit Patient",
-          ),
-          IconButton(
-            icon: Icon(Icons.payment),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PaymentScreen(
-                    patient: widget.patient,
-                    apiService: widget.apiService,
-                  ),
-                ),
-              );
-            },
-            tooltip: "Process Payment",
           ),
         ],
       ),
