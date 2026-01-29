@@ -40,3 +40,8 @@
 - [x] Performance & Stress Test (Locust)
 - [x] Fix Identified Issues (Routes, 500 Error, Auth, Port Conflict)
 - [x] Generate Test Reports
+
+## 7. Deployment
+- [x] Push to GitHub (Klinik_FrontDesk)
+- [x] Push Frontend to GitLab (app-clinic-frontdesk)
+- [x] Push Backend to GitLab (api-clinic/clinicfrontdesk)
