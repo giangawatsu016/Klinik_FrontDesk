@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from sqlalchemy.orm import Session
-from datetime import date
+from datetime import date, datetime
+from sqlalchemy import or_, and_
 from .. import models, schemas, database, dependencies
 
 router = APIRouter(
@@ -58,10 +59,20 @@ def get_appointments(
     db: Session = Depends(database.get_db)
 ):
     today = date.today()
+    current_time_str = datetime.now().strftime("%H:%M")
+
     query = db.query(models.Appointment, models.Patient).outerjoin(models.Patient, models.Appointment.nik_patient == models.Patient.identityCard)
     
-    # Filter: Show only upcoming appointments (today onwards)
-    query = query.filter(models.Appointment.appointment_date >= today)
+    # Filter: Show only upcoming appointments (future dates OR today with future time)
+    query = query.filter(
+        or_(
+            models.Appointment.appointment_date > today,
+            and_(
+                models.Appointment.appointment_date == today,
+                models.Appointment.appointment_time >= current_time_str
+            )
+        )
+    )
 
     if status:
         query = query.filter(models.Appointment.status == status)
