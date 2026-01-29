@@ -1,8 +1,8 @@
 # Complete Implementation History
 **Project:** Klinik Intimedicare System
-**Date Generated:** 2026-01-20
+**Date Generated:** 2026-01-29
 
-This document chronicles the entire development and implementation journey of the Klinik Intimedicare application, from initial refactoring to the current stable release (v2.3).
+This document chronicles the entire development and implementation journey of the Klinik Intimedicare application, from initial refactoring to the current stable release (v2.8).
 
 ---
 
@@ -241,3 +241,29 @@ This document chronicles the entire development and implementation journey of th
     -   **Fix**: Added robust validation to `doctor_list.dart`. Defaults to "General" or "Dr." if the value is invalid, preventing `AssertionError` crashes.
 *   **UI Tweaks**:
     -   Reduced font size and padding of the "Current Patient" queue display by 50% per user request.
+
+---
+
+## Phase 12: Deployment & Features Finalization (v2.8)
+**Goal:** Final feature requests, strict data validation, and automated deployment.
+
+### 12.1 Deployment Pipeline
+*   **Action:** Streamline deployment to external GitLab repositories.
+*   **Implementation:**
+    -   Created `deploy_gitlab.ps1` PowerShell script.
+    -   Implemented **Smart Clean/Reuse** logic: If temp folder is locked, script resets git state instead of force-deleting, resolving "Access Denied" and "Merge Conflict" errors.
+    -   Synced Frontend (`app-clinic-frontdesk`) and Backend (`api-clinic`) subdirectories automatically.
+
+### 12.2 Advanced Validation & UI Logic (Staff/Role Based)
+*   **Action:** Restrict sensitive menus and ensure strict data entry.
+*   **Implementation:**
+    -   **Role Visibility**: Modified `dashboard.dart` to hide "Overview", "Queue Monitor", and "Registration" for Admins/Super Admins. These are now **Staff Only**.
+    -   **NIK 16-Digit**: Enforced strict validation (exactly 16 numeric characters) in Registration and Pharmacist forms.
+    -   **Pharmacist UI**: Removed "Active/Inactive" status chip as requested.
+
+### 12.3 Appointment & Payment Modules
+*   **Action:** Fix "Janji Temu" flow and Payment options.
+*   **Implementation:**
+    -   **Filter Past Appointments**: Updated `routers/appointments.py` to query only `date >= today`, hiding historical data from the "Janji Temu" screen.
+    -   **Payment Issuers**: Fixed Schema Mismatch (`schema.py` List vs String) and seeded Master Data (BPJS, Allianz, Cash) so the Payment Type dropdown populates correctly.
+    -   **Queue Monitor Fix**: Added `mounted` check to `_fetchQueue` to prevent `setState() called after dispose()` memory leaks.

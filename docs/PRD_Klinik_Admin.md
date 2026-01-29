@@ -1,75 +1,65 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
 **Project Name:** Klinik Intimedicare System
-**Date:** 2026-01-22
-**Version:** 2.5 (Bi-directional Sync & Dashboard Logic)
+**Date:** 2026-01-29
+**Version:** 2.8 (Deployment Automation, Role Filtering, & Validation)
 
 ---
 
 ## 1. Executive Summary
-The Klinik Intimedicare System is designed to modernize clinic operations by providing a unified interface for patient management, medical records, and inventory. Version 2.3 specifically upgrades the system to meet Indonesian Health Ministry regulations (**SatuSehat**) and integrates with **ERPNext** for back-office accounting, while introducing advanced features like **Medicine Concoctions**.
+The Klinik Intimedicare System is designed to modernize clinic operations by providing a unified interface for patient management, medical records, and inventory. Version 2.8 focuses on **security, data integrity, and operational streamlining** by enforcing role-based access restrictions, strict data validation (NIK), and automating deployment workflows to GitLab.
 
 ## 2. Problem Statement
-*   **Regulatory Compliance:** Clinics are mandated to sync patient and practitioner data with the SatuSehat national platform.
-*   **Complex Prescriptions:** Basic inventory systems cannot handle "Racikan" (Concoctions) where one sold item reduces stock of multiple raw ingredients.
-*   **Data Silos:** Patient data often exists locally but not in the central HQ ERP.
+*   **Data Integrity:** Invalid NIK entries (wrong length, non-numeric) cause sync failures with SatuSehat.
+*   **Operational Clarity:** Admins cluttered with day-to-day operational menus (Queue, Registration) and vice-versa.
+*   **Deployment:** Manual deployment to multiple repositories (GitHub, GitLab Frontend, GitLab Backend) is error-prone.
+*   **User Experience:** "Janji Temu" (Appointments) screen cluttered with past appointments.
 
 ## 3. Product Goals
-1.  **Compliance:** Achieve seamless synchronization with SatuSehat (Sandbox/Prod).
-2.  **Integration:** Ensure real-time or background consistency between Local Admin and ERPNext.
-3.  **Efficiency:** Reduce check-in time via NIK search and autofill.
-4.  **Accuracy:** Automate stock deduction for compound medicines (Racikan).
+1.  **Operational Focus:** Show users only what they need via strict Role-Based Visibility (Staff vs Admin).
+2.  **Data Quality:** Prevent bad data entry at the source (16-digit NIK enforcement).
+3.  **DevOps Efficiency:** One-click deployment script for multi-repo synchronization.
+4.  **Usability:** Auto-filter historical data to keep views relevant (Appointments).
 
 ## 4. Key Features & Requirements
 
-### 4.1 SatuSehat Integration
-*   **Authentication:** Auto-renew OAuth2 tokens.
-*   **Practitioner Sync:** Map local Doctors to `Practitioner` resources using IHS IDs.
-*   **Patient Sync:** Map local Patients to `Patient` resources. Store `ihs_number`.
-*   **Location Sync:** Map Clinic Location ID.
+### 4.1 Role-Based Visibility (v2.8)
+*   **Staff Only:** "Overview", "Queue Monitor", and "Registration" menus are visible ONLY to Staff.
+*   **Admin/Super Admin:** Restricted to Management (Users, Inventory, Master Data) and Reports.
 
-### 4.2 ERPNext Integration
-*   **Two-Way Sync:** Bi-directional synchronization for Users, Patients, Medicines, and Doctors (Pull & Push).
-*   **Unified Interface:** Single "Sync Data" screen with combined Pull/Push actions.
-*   **Queue-to-Event:** Queues appear on the ERPNext Calendar.
+### 4.2 Enhanced Validation (v2.8)
+*   **NIK Enforcement:** Strict check for exactly 16 numeric digits in Registration and Pharmacist forms.
+*   **Validation Feedback:** Clear error messages ("Must be 16 digits").
 
-### 4.3 Advanced Inventory (Concoctions)
-*   **Definition:** Ability to define a "Parent" medicine (e.g., "Racikan Batuk Anak") composed of "Child" medicines (e.g., Paracetamol, CTM).
-*   **Pricing:** Auto-calculation based on ingredient COGS + Service Fee.
-*   **Dispensing:** (Future) Deducting child stock when parent is dispensed.
+### 4.3 Appointment Management
+*   **Scheduling:** Create and view appointments.
+*   **Filtering:** Automatically hide appointments from previous dates.
 
-### 4.4 Queue Management
-*   **Daily Reset:** Auto-archive old queues at midnight to ensure clean slate.
-*   **Priority Handling:** Distinct numbering (P-xxx vs AP-xxx) for Priority patients.
+### 4.4 One-Click Deployment
+*   **Automation:** PowerShell script (`deploy_gitlab.ps1`) to:
+    *   Clone GitLab repos.
+    *   Reset/Clean to avoid conflicts.
+    *   Sync local changes options to specific subdirectories.
+    *   Push updates automatically.
 
-### 4.5 Security
-*   **Authentication:** JWT-based access.
-*   **Port Config:** Non-standard ports (8001) to avoid conflicts.
-*   **Audit:** Regular scanning for common vulnerabilities (Bandit).
+### 4.5 Pharmacist Management
+*   **CRUD:** Manage Pharmacist data (SIP, NIK, IHS).
+*   **UI:** Clean card interface without redundant status indicators.
 
-### 4.6 Payment & Insurance (v2.6)
-*   **Billing:** Calculate Total (Consultation + Medicine).
-*   **Methods:** Cash, BPJS, Private Insurance.
-*   **Claims:** Record Insurance Number and Claim Status.
-
-### 4.7 Medicine Batches (v2.6)
-*   **Tracking:** Manage multiple batches per medicine with distinct Expiry Dates.
-*   **FEFO:** First-Expired-First-Out logic (Manual selection for now).
-
-### 4.8 Testing Framework (v2.7)
-*   **Automation:** End-to-End testing for Queue flows (`Queue_Automation.py`).
-*   **Performance:** Load testing for 50+ concurrent users (`locust`).
-*   **Security:** Static Analysis (`bandit`) for vulnerability scanning.
+### 4.6 Core Features (Maintained)
+*   **SatuSehat Integration:** OAuth2 & Patient/Practitioner Sync.
+*   **ERPNext Sync:** Bi-directional data flow.
+*   **Queue Management:** Daily cleanup and TTS calling.
+*   **Inventory:** Batch management and expiration tracking.
 
 ## 5. Metrics for Success
-*   **Sync Rate:** 99% of new patients successfully synced to ERPNext.
-*   **System Uptime:** 99.9% during clinic hours.
-*   **Load Capacity:** Support 10+ concurrent users with <200ms API latency.
+*   **Error Rate:** 0% invalid NIK submissions to SatuSehat.
+*   **Deployment Time:** < 1 minute to sync all repositories.
+*   **User Satisfaction:** Staff experience less clutter in dashboard menus.
 
 ## 6. Roadmap
-*   **v2.1:** Core Patient & Queue (Completed).
-*   **v2.2:** ERPNext Sync (Completed).
-*   **v2.3:** SatuSehat & Concoctions (Completed).
-*   **v2.4:** UI/UX Polish, Animations, & Dashboard Logic (Completed).
+*   **v2.1 - v2.3:** Core Patient, Queue, SatuSehat, & Concoctions (Completed).
+*   **v2.4:** UI/UX Polish & Dashboard Logic (Completed).
 *   **v2.5:** Bi-directional Sync & Logic Refinements (Completed).
 *   **v2.6:** Medicine Batch Management & Payment Integration (Completed).
 *   **v2.7:** Comprehensive Testing & Security Hardening (Completed).
+*   **v2.8:** Deployment Automation, Role-Based Visibility, & Strict Validation (Completed).

@@ -1,5 +1,5 @@
 # Entity Relationship Diagram (ERD) - Klinik Intimedicare
-**Version:** 2.5 (Matches `backend/models.py`)
+**Version:** 2.8 (Matches `backend/models.py`)
 
 ```mermaid
 erDiagram
@@ -25,7 +25,7 @@ erDiagram
     Issuer {
         int issuerId PK
         string issuer "BPJS, Insurance, General"
-        json nama "Sub-issuers (e.g. Allianz)"
+        string nama "Specific Provider (e.g. Allianz)"
     }
 
     %% Master Data: Doctors
@@ -45,6 +45,24 @@ erDiagram
         boolean is_available
     }
 
+    %% Master Data: Pharmacist
+    Pharmacist {
+        int id PK
+        string name
+        string nik "16 Digit"
+        string sip_no "License"
+        string ihs_number
+        string erp_employee_id
+        boolean is_active
+        datetime created_at
+    }
+
+    %% Config
+    AppConfig {
+        string key PK
+        string value "JSON/Text"
+    }
+
     %% Core: Medicine
     Medicine {
         int id PK
@@ -55,7 +73,6 @@ erDiagram
         int medicinePrice "Buy Price"
         int medicineRetailPrice "Sell Price"
         int qty "Stock"
-        string unit "uom"
         string unit "uom"
         string dosage_form
         string howToConsume
@@ -71,14 +88,6 @@ erDiagram
         string batchNumber
         date expiryDate
         int qty
-    }
-
-    %% Core: Medicine Concoction (Racikan)
-    MedicineConcoction {
-        int id PK
-        int parent_medicine_id FK "The Racikan"
-        int child_medicine_id FK "The Ingredient"
-        float qty_needed
     }
 
     %% Core: Patient
@@ -111,6 +120,19 @@ erDiagram
         int issuerId FK
         string insuranceName
         string noAssuransi
+    }
+
+    %% Core: Appointment (Janji Temu)
+    Appointment {
+        int id PK
+        string nik_patient "Indexed"
+        int doctor_id
+        string doctor_name
+        date appointment_date
+        string appointment_time
+        string notes
+        string status "Scheduled, etc."
+        datetime created_at
     }
 
     %% Core: Queue
@@ -146,8 +168,6 @@ erDiagram
     Patient ||--o{ PatientQueue : "requests"
     Patient ||--o{ Payment : "makes"
     DoctorEntity ||--o{ PatientQueue : "assigned to"
-    Medicine ||--o{ MedicineConcoction : "composed of"
-    Medicine ||--o{ MedicineConcoction : "is ingredient in"
     Medicine ||--o{ MedicineBatch : "has batches"
-
+    
 ```
