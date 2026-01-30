@@ -22,12 +22,19 @@
 
 ## 4. Feature Enhancements
 - [x] Daily Queue Cleanup (Filter & Lazy Reset)
+- [x] Verify Queue Monitor Visibility (Debug & Test Injection)
 - [x] Implement Medicine Concoctions (Racikan) Feature
 - [x] Integrate Kafka (KRaft Mode setup)
 - [x] Refactor Table Names (*core suffix) & Migrate Data
 - [x] Seed Patient Vitals (Height/Weight)
 - [x] Update Dependencies (flutter_tts ^4.2.5)
 - [x] Implement General Payment Sub-methods (Cash, QRIS, etc.)
+- [x] Refactor UI for Frontdesk Focus (Remove Admin Menus)
+- [x] Remove Super Admin & Dev Settings (Frontend & Backend)
+- [x] Cleanup Sync Menu (Remove logic for deleted menus)
+- [x] Refine Menu Visibility (Remove Sync, Restrict Admin)
+- [x] Create PRD V3.0 (Bahasa Indonesia)
+- [x] Update Application to GitLab (Frontend & Backend)
 - [x] Sync Patients to SatuSehat (Sandbox)
 - [x] Sync Doctors to SatuSehat (Practitioner)
 

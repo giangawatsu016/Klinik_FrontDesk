@@ -6,16 +6,9 @@ import 'registration.dart';
 import 'queue_monitor.dart';
 import 'login.dart';
 import 'package:intl/intl.dart';
-import 'doctor_list.dart';
-import 'patient_list.dart';
+
 import 'user_management.dart';
-import 'diagnostic_reports.dart';
-import 'disease_list.dart';
-import 'medicine_inventory.dart';
-import 'pharmacist_list.dart';
-import 'sync_screen.dart';
-import 'home_screen.dart'; // New Kiosk Home
-import 'menu_settings.dart';
+
 import 'appointment_list.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -39,12 +32,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final allPages = [
       {
-        "id": "home",
-        "page": HomeScreen(apiService: widget.apiService), // New Screen
-        "icon": LucideIcons.layoutDashboard,
-        "label": "Overview",
-      },
-      {
         "id": "queue",
         "page": QueueMonitorScreen(apiService: widget.apiService),
         "icon": LucideIcons.monitorPlay,
@@ -63,31 +50,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "label": "Registration",
       },
       {
-        "id": "doctors",
-        "page": DoctorListScreen(apiService: widget.apiService),
-        "icon": LucideIcons.stethoscope,
-        "label": "Doctors",
-      },
-      {
-        "id": "pharmacists",
-        "page": PharmacistListScreen(apiService: widget.apiService),
-        "icon": LucideIcons.contact,
-        "label": "Pharmacist",
-      },
-      {
-        "id": "patients",
-        "page": PatientListScreen(apiService: widget.apiService),
-        "icon": LucideIcons.users,
-        "label": "Patients",
-      },
-      {
-        "id": "medicines",
-        "page": MedicineInventoryScreen(apiService: widget.apiService),
-        "icon": LucideIcons.pill,
-        "label": "Medicines",
-      },
-
-      {
         "id": "users",
         "page": UserManagementScreen(
           apiService: widget.apiService,
@@ -95,24 +57,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         "icon": LucideIcons.userCog,
         "label": "Users",
-      },
-      {
-        "id": "diagnosis",
-        "page": DiagnosticReportsScreen(apiService: widget.apiService),
-        "icon": LucideIcons.fileText,
-        "label": "Diagnosis",
-      },
-      {
-        "id": "diseases",
-        "page": DiseaseListScreen(apiService: widget.apiService),
-        "icon": LucideIcons.bug,
-        "label": "Diseases",
-      },
-      {
-        "id": "sync",
-        "page": SyncScreen(apiService: widget.apiService),
-        "icon": LucideIcons.refreshCw,
-        "label": "Sync Data",
       },
     ];
 
@@ -232,27 +176,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     dense: true,
                   ),
                 ),
-                if (widget.user.role == "Super Admin")
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 24.0,
-                      right: 24.0,
-                      bottom: 24.0,
-                    ),
-                    child: ListTile(
-                      leading: const Icon(
-                        LucideIcons.settings,
-                        color: Colors.grey,
-                        size: 22,
-                      ),
-                      title: const Text(
-                        "Dev Settings",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      onTap: _openSettings,
-                      dense: true,
-                    ),
-                  ),
               ],
             ),
           ),
@@ -380,35 +303,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return false;
       }
 
-      // 2. Role Based Logic
-      // Request: Overview, Queue, Registration ONLY for Staff
-      if (id == "home" || id == "queue" || id == "registration") {
-        return role.toLowerCase() == "staff";
+      // 2. Strict Role Logic
+      if (role == "Administrator") {
+        return id == "users";
       }
 
-      // Keep appointments logic or default
-      if (id == "appointments") {
-        // Assuming similar logic or keep existing permissive for admins?
-        // User didn't specify appointments, but usually goes with registration.
-        // Existing code allowed all. I will keep it allowed for all for now unless implied otherwise.
-        // Actually existing code grouped it with queue/reg.
-        // Let's keep it visible for now or maybe restrict it too?
-        // The prompt specifically listed "overview", "queue monitor", "registration".
-        // I will leave "appointments" accessible to admins for now to avoid over-blocking,
-        // unless it falls into "default allow".
-        return true;
+      if (role == "Staff") {
+        return id != "users";
       }
 
-      if (id == "users") {
-        return role == "Super Admin" || role == "Administrator";
-      }
-      if (id == "sync") {
-        return role == "Administrator" ||
-            role == "Super Admin"; // Ensure Super Admin sees sync too if needed
-      }
-
-      // Default allow
-      return true;
+      return false;
     }).toList();
   }
 
@@ -416,15 +320,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Navigator.of(
       context,
     ).pushReplacement(MaterialPageRoute(builder: (context) => LoginScreen()));
-  }
-
-  void _openSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            MenuVisibilityScreen(apiService: widget.apiService),
-      ),
-    );
   }
 }

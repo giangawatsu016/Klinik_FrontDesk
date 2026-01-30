@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 .env
 backend/.env
+temp_backend_clone/
+temp_git_frontend/
+temp_backend_deploy/
+temp_frontend_deploy/

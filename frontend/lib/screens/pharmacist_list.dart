@@ -231,7 +231,7 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 4, // 4 columns as per screenshot
-                          childAspectRatio: 0.8,
+                          childAspectRatio: 1.3,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                         ),
@@ -252,11 +252,11 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 CircleAvatar(
-                                  radius: 30,
+                                  radius: 24,
                                   backgroundColor: Colors.teal.shade50,
                                   child: Icon(
                                     LucideIcons.user,
-                                    size: 30,
+                                    size: 24,
                                     color: Colors.teal,
                                   ),
                                 ),
@@ -266,9 +266,9 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                    fontSize: 14,
                                   ),
-                                  maxLines: 2,
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 4),
@@ -277,12 +277,11 @@ class _PharmacistListScreenState extends State<PharmacistListScreen> {
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: Colors.grey.shade600,
-                                    fontSize: 12,
+                                    fontSize: 11,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                const Spacer(),
-
-                                // Active Status removed by request
                               ],
                             ),
                           ),

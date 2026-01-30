@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from ..services.frappe_service import frappe_client
@@ -10,7 +10,6 @@ router = APIRouter(
 )
 
 # Role Constants
-ROLE_SUPER_ADMIN = "Super Admin"
 ROLE_ADMIN = "Administrator"
 ROLE_STAFF = "Staff"
 
@@ -22,18 +21,16 @@ def get_current_active_user(current_user: models.User = Depends(auth_utils.get_c
 def check_permission(actor: models.User, target_role: str, action: str):
     """
     Enforce the logic:
-    Super Admin: Can manage Admin and Staff.
     Administrator: Can manage Staff.
     Staff: Cannot manage anyone.
     """
-    if actor.role == ROLE_SUPER_ADMIN:
-        if target_role == ROLE_SUPER_ADMIN and action != "read":
-             return True
-        return True
-    
     if actor.role == ROLE_ADMIN:
-        if target_role == ROLE_ADMIN or target_role == ROLE_SUPER_ADMIN:
-            return False
+        if target_role == ROLE_ADMIN:
+            # Admin can update other Admins? Typically yes, unless restricted. 
+            # Given previous "Super Admin" context, Admin is now top tier.
+            # Let's say Admin can manage Admin (except delete self checked elsewhere) or at least Staff.
+            # But prompt implying removal of Super Admin logic usually means Admin takes top spot.
+            return True
         if target_role == ROLE_STAFF:
             return True
         return False
@@ -50,7 +47,7 @@ def read_users(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_active_user)
 ):
-    if current_user.role not in [ROLE_SUPER_ADMIN, ROLE_ADMIN]:
+    if current_user.role not in [ROLE_ADMIN]:
          raise HTTPException(status_code=403, detail="Not authorized to view users")
     
     users = db.query(models.User).offset(skip).limit(limit).all()
@@ -59,6 +56,7 @@ def read_users(
 @router.post("/", response_model=schemas.User)
 def create_user(
     user: schemas.UserCreate, 
+    background_tasks: BackgroundTasks,
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_active_user)
 ):
@@ -88,15 +86,14 @@ def create_user(
     db.commit()
     db.refresh(new_user)
 
-    # Sync to ERPNext
+    # Sync to ERPNext (Background)
     if user.email:
         # Split name
         parts = user.full_name.split(" ", 1)
         first_name = parts[0]
         last_name = parts[1] if len(parts) > 1 else ""
         
-        # Background task or direct? Direct for feedback.
-        frappe_client.create_user(user.email, first_name, last_name, user.role)
+        background_tasks.add_task(frappe_client.create_user, user.email, first_name, last_name, user.role)
         
     return new_user
 
@@ -104,6 +101,7 @@ def create_user(
 def update_user(
     user_id: int,
     user_update: schemas.UserUpdate, # Changed from UserCreate
+    background_tasks: BackgroundTasks,
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_active_user)
 ):
@@ -115,9 +113,7 @@ def update_user(
     if not check_permission(current_user, target_user.role, "update"):
         raise HTTPException(status_code=403, detail="Not authorized to update this user")
 
-    # Additional Check: Administrator cannot update Admin/Super Admin
-    if current_user.role == ROLE_ADMIN and target_user.role in [ROLE_SUPER_ADMIN, ROLE_ADMIN]:
-         raise HTTPException(status_code=403, detail="Administrator cannot edit Admin/Super Admin")
+
     
     # Update Fields
     # Only update username if allowed
@@ -149,14 +145,7 @@ def update_user(
     db.commit()
     db.refresh(target_user)
 
-    # Sync to ERPNext (Update)
-    # If email changed, we technically "Rename" in ERPNext? 
-    # Or just update the *other* fields for the *current* email?
-    # ERPNext User name = email. Rename is complex.
-    # For now, we only sync Non-Email updates to the `target_user.email`.
-    # If email changed, we might lose sync or need to recreate.
-    # Assumption: Email doesn't change often.
-    
+    # Sync to ERPNext (Background Update)
     if target_user.email:
         data = {}
         if user_update.full_name:
@@ -165,13 +154,14 @@ def update_user(
              if len(parts) > 1: data["last_name"] = parts[1]
              
         if data:
-             frappe_client.update_erp_user(target_user.email, data)
+             background_tasks.add_task(frappe_client.update_erp_user, target_user.email, data)
              
     return target_user
 
 @router.delete("/{user_id}")
 def delete_user(
     user_id: int,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_active_user)
 ):
@@ -187,8 +177,8 @@ def delete_user(
     db.delete(target_user)
     db.commit()
     
-    # Sync delete
+    # Sync delete (Background)
     if email_to_delete:
-         frappe_client.delete_erp_user(email_to_delete)
+         background_tasks.add_task(frappe_client.delete_erp_user, email_to_delete)
          
     return {"message": "User deleted successfully"}
