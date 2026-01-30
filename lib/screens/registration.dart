@@ -822,9 +822,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     label: "ID Card (NIK)",
                     child: TextFormField(
                       initialValue: identityCard,
-                      decoration: InputDecoration(hintText: '16 digit NIK'),
+                      decoration: InputDecoration(
+                        hintText: '16 digit NIK',
+                        filled: widget.patientToEdit != null,
+                        fillColor: widget.patientToEdit != null
+                            ? Colors.grey.shade200
+                            : null,
+                      ),
                       keyboardType: TextInputType.number,
                       maxLength: 16,
+                      enabled:
+                          widget.patientToEdit == null, // Disable if editing
                       onChanged: (v) => identityCard = v, // Capture for button
                       onSaved: (v) => identityCard = v!,
                       validator: (v) {

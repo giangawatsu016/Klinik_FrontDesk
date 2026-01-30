@@ -29,6 +29,23 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   Future<void> _loadUsers() async {
     try {
       final users = await widget.apiService.getUsers();
+
+      // Custom Sort: Administrator (1) > Staff (2) > Others
+      users.sort((a, b) {
+        int getPriority(String role) {
+          switch (role) {
+            case 'Administrator':
+              return 1;
+            case 'Staff':
+              return 2;
+            default:
+              return 3;
+          }
+        }
+
+        return getPriority(a.role).compareTo(getPriority(b.role));
+      });
+
       setState(() {
         _users = users;
         _isLoading = false;
@@ -57,16 +74,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
     // Determine allowed roles to create/edit
     List<String> allowedRoles = [];
-    if (widget.currentUser.role == 'Super Admin') {
-      allowedRoles = ['Administrator', 'Staff']; // Super Admin can create these
-      // If editing, preserve current role unless changed
-      if (isEditing && user.role == 'Super Admin') {
-        allowedRoles = [
-          'Super Admin',
-        ]; // Can't change Super Admin role to something else easily
-      }
-    } else if (widget.currentUser.role == 'Administrator') {
-      allowedRoles = ['Staff'];
+    if (widget.currentUser.role == 'Administrator') {
+      allowedRoles = [
+        'Staff',
+        'Administrator',
+      ]; // Admin can create Admin or Staff
     }
 
     showDialog(
@@ -270,16 +282,20 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                         bool canEdit = false;
                         bool canDelete = false;
 
-                        if (widget.currentUser.role == 'Super Admin') {
-                          canEdit = true;
-                          canDelete = true;
-                          // Assuming "Tidak bisa... super admin" applies to Administrator, but Super Admin can edit others.
-                          // But can Super Admin delete Super Admin? Usually no.
-                          if (user.role == 'Super Admin') canDelete = false;
-                        } else if (widget.currentUser.role == 'Administrator') {
-                          if (user.role == 'Staff') {
+                        if (widget.currentUser.role == 'Administrator') {
+                          // Allow Admin to manage everyone except maybe themselves fully?
+                          // Or standard logic: Admin can manage Staff.
+                          // Prompt said "Super Admin delete, Admin manage Staff".
+                          // Now only Admin exists. Admin manages Staff and other Admins?
+                          // Usually Admin manages Staff.
+                          if (user.role == 'Staff' ||
+                              user.role == 'Administrator') {
                             canEdit = true;
                             canDelete = true;
+                          }
+                          // Prevent self-delete usually
+                          if (user.username == widget.currentUser.username) {
+                            canDelete = false;
                           }
                         }
 
@@ -295,11 +311,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: user.role == 'Super Admin'
-                                      ? Colors.red.shade100
-                                      : (user.role == 'Administrator'
-                                            ? Colors.orange.shade100
-                                            : Colors.blue.shade100),
+                                  color: user.role == 'Administrator'
+                                      ? Colors.orange.shade100
+                                      : Colors.blue.shade100,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
