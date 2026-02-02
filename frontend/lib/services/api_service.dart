@@ -8,7 +8,9 @@ class ApiService {
   static const String _localUrl = "http://localhost:8001";
   static const String _ipUrl = "http://127.0.0.1:8001";
   static const String _androidUrl = "http://10.0.2.2:8001";
-  String baseUrl = _localUrl;
+  String baseUrl = kIsWeb
+      ? _localUrl
+      : _androidUrl; // Default to localhost for web, Android for mobile emulator
 
   String? _authToken;
 
@@ -18,6 +20,16 @@ class ApiService {
 
   // Debugging Helper: Switch URL if connection failed
   void _switchUrl() {
+    if (kIsWeb) {
+      if (baseUrl == _localUrl) {
+        baseUrl = _ipUrl;
+      } else {
+        baseUrl = _localUrl;
+      }
+      debugPrint("Switched API URL (Web) to: $baseUrl");
+      return;
+    }
+
     if (baseUrl == _localUrl) {
       baseUrl = _ipUrl;
     } else if (baseUrl == _ipUrl) {

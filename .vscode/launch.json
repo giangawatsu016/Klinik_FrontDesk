@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Klinik Frontend (Fast Dev)",
+            "request": "launch",
+            "type": "dart",
+            "program": "frontend/lib/main.dart",
+            "args": [
+                "--web-renderer",
+                "html",
+                "--web-port",
+                "64172"
+            ]
+        }
+    ]
+}

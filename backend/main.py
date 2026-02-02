@@ -11,31 +11,17 @@ load_dotenv(dotenv_path=env_path)
 # Create Tables
 Base.metadata.create_all(bind=engine)
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="Klinik Admin API")
 
-@app.middleware("http")
-async def cors_handler(request: Request, call_next):
-    # Log incoming request
-    print(f"Request: {request.method} {request.url}")
-    
-    if request.method == "OPTIONS":
-        response = Response(status_code=204)
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Max-Age"] = "86400"
-        return response
-
-    try:
-        response = await call_next(request)
-    except Exception as e:
-        print(f"Error handling request: {e}")
-        response = Response(content="Internal Server Error", status_code=500)
-
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    return response
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include Routers
 app.include_router(auth.router)

@@ -1,65 +1,57 @@
 $ErrorActionPreference = "Stop"
 
 $repoUrl = "https://gitlab.com/frappe-klinik/app-clinic-frontdesk.git"
-$localDir = "frontend"
-$tempDir = "temp_git_frontend"
+$branch = "main"  # Remote 'develop' not found, defaulting to 'main'
+$sourceDir = "frontend"
+$tempCloneDir = "temp_frontend_clone"
 
-Write-Host "Deploying Frontend to $repoUrl..."
+Write-Host "Deploying Frontend to $repoUrl (Branch: $branch)..."
 
-# 1. Prepare temp git dir
-if (Test-Path $tempDir) {
-    Remove-Item -Path $tempDir -Recurse -Force
+# 1. Clean previous clone
+if (Test-Path $tempCloneDir) {
+    Write-Host "Cleaning previous clone..."
+    Remove-Item -Path $tempCloneDir -Recurse -Force
 }
-New-Item -ItemType Directory -Path $tempDir
 
-# 2. Copy source files to temp dir (excluding .git and build artifacts if any)
-Write-Host "Copying files..."
-Copy-Item -Path "$localDir\*" -Destination $tempDir -Recurse
+# 2. Clone Repository
+Write-Host "Cloning repository..."
+git clone -b $branch $repoUrl $tempCloneDir
 
-# 3. Git Operations
-Push-Location $tempDir
+if (-not (Test-Path $tempCloneDir)) {
+    Write-Error "Clone failed."
+    exit 1
+}
+
+# 3. Copy Frontend Files
+# Copy all content from local 'frontend' to root of cloned repo
+Write-Host "Copying frontend files to repo..."
+# Exclude .git folder to prevent overwriting the cloned repo's git config
+Get-ChildItem -Path $sourceDir -Exclude ".git" | Copy-Item -Destination $tempCloneDir -Recurse -Force
+
+# 4. Git Operations
+Push-Location $tempCloneDir
 
 try {
-    Write-Host "Initializing Git..."
-    git init -b main
-    git remote add origin $repoUrl
-    
-    Write-Host "Fetching remote history..."
-    git fetch origin main
-    
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "Remote history found. Syncing history..."
-        # 1. Point HEAD to remote main, but keep Working Directory (V3.0 files)
-        git reset --soft origin/main
-    }
-    else {
-        Write-Host "No remote history found (or fetch failed). Proceeding as new repo."
-        $global:LASTEXITCODE = 0
-    }
-
-    Write-Host "Staging files..."
     git add .
     
-    # Check if there are changes to commit
+    # Check if there are changes
     $status = git status --porcelain
     if ($status) {
-        git commit -m "Update Frontend V3.0 (Strict Role & Sync Cleanup)"
+        git commit -m "Update Frontend V3.0 (Fix Login Web & Dependencies)"
         
-        Write-Host "Pushing to main..."
-        git push -u origin main
-        
+        Write-Host "Pushing to $branch..."
+        git push origin $branch
         Write-Host "Frontend Deployment Success!"
     }
     else {
-        Write-Host "No changes detected (Repo is already up to date)."
+        Write-Host "No changes to deploy."
     }
 }
 catch {
-    Write-Host "Error during deployment: $_"
+    Write-Host "Error during git operations: $_"
     exit 1
 }
 finally {
     Pop-Location
-    # Cleanup temp dir? Maybe keep for inspection if failed.
-    # Remove-Item -Path $tempDir -Recurse -Force
+    # Remove-Item -Path $tempCloneDir -Recurse -Force
 }

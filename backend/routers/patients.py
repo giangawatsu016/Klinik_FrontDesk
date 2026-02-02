@@ -170,9 +170,11 @@ def create_patient(patient: schemas.PatientCreate, background_tasks: BackgroundT
         # Offload sync to background
         background_tasks.add_task(sync_new_patient, new_patient.id)
         
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"Patient with NIK {patient.identityCard} already exists or other constraint failed.")
+        # Extract specific error message
+        error_msg = str(e.orig) if hasattr(e, 'orig') else str(e)
+        raise HTTPException(status_code=400, detail=f"Registration Failed: {error_msg}")
     except Exception as e:
         db.rollback()
         print(f"Database Error: {e}")
