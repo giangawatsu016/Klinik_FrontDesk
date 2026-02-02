@@ -431,7 +431,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       if (!_doctorFormKey.currentState!.validate()) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Please select a Doctor or Polyclinic'),
+            content: Text('Please check the form for errors (Doctor/Payment)'),
             backgroundColor: Colors.red,
           ),
         );
@@ -1417,6 +1417,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           hintText: 'Choose a Doctor',
                           border: OutlineInputBorder(),
                         ),
+                        key: ValueKey(selectedDoctor),
                         initialValue: selectedDoctor,
                         items: doctors
                             .map(
@@ -1441,6 +1442,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           hintText: 'Choose Polyclinic',
                           border: OutlineInputBorder(),
                         ),
+                        key: ValueKey(_selectedPolyclinic),
                         initialValue: _selectedPolyclinic,
                         items: polyclinics
                             .map(
