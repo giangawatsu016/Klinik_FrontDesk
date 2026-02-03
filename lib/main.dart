@@ -1,87 +1,207 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'screens/login.dart';
-
-import 'package:google_fonts/google_fonts.dart';
-
-import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'firebase_options.dart';
+import 'core/services/notification_service.dart';
+import 'core/services/navigation_service.dart';
+import 'core/theme/app_theme.dart';
+import 'core/utils/logger.dart';
+import 'features/auth/presentation/blocs/auth_bloc.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/pages/register_page.dart';
+import 'features/profile/presentation/pages/profile_page.dart' as profile;
+import 'features/profile/presentation/blocs/profile_cubit.dart';
+import 'features/home/presentation/pages/home_page.dart';
+import 'features/home/presentation/blocs/home_cubit.dart';
+import 'features/home/presentation/blocs/search_cubit.dart';
+import 'features/appointment/presentation/blocs/appointment_bloc.dart';
+import 'features/appointment/presentation/blocs/medical_record_bloc.dart';
+import 'features/payment/presentation/pages/payment_book_page.dart';
+import 'features/payment/presentation/blocs/payment_cubit.dart';
+import 'features/notification/presentation/blocs/notification_cubit.dart';
+import 'features/front_desk/presentation/bloc/front_desk_bloc.dart';
+import 'features/front_desk/presentation/pages/registration_screen.dart';
+import 'features/front_desk/presentation/pages/queue_monitor_screen.dart';
+import 'features/front_desk/presentation/pages/appointment_list_screen.dart';
+import 'injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('id_ID', null);
-  runApp(const KlinikAdminApp());
-}
 
-class KlinikAdminApp extends StatelessWidget {
-  const KlinikAdminApp({super.key});
+  try {
+    // Run initializations in parallel to speed up startup
+    await Future.wait([
+      dotenv.load(fileName: "assets/.env"),
+      Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+    ]);
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Klinik Intimedicare',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        primaryColor: const Color(0xFF0F766E),
-        scaffoldBackgroundColor: Colors.grey.shade50,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0F766E),
-          primary: const Color(0xFF0F766E),
-          secondary: Colors.teal.shade700,
-          surface: Colors.white,
-        ),
-        textTheme: GoogleFonts.interTextTheme(),
-        cardTheme: CardThemeData(
-          elevation: 0,
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            side: BorderSide(color: Colors.grey.shade200),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          margin: EdgeInsets.zero,
-        ),
-        appBarTheme: AppBarTheme(
-          elevation: 0,
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black87,
-          scrolledUnderElevation: 0,
-          iconTheme: IconThemeData(color: const Color(0xFF0F766E)),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.all(24),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide(color: Colors.grey.shade200),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: const BorderSide(color: Color(0xFF0F766E), width: 2),
-          ),
-          hintStyle: TextStyle(color: Colors.grey.shade400),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            elevation: 0,
-            backgroundColor: const Color(0xFF0F766E),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            textStyle: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'Inter',
-            ),
+    await di.init();
+
+    // Request notification permission without blocking runApp
+    // ignore: unawaited_futures
+    NotificationService().requestPermissionOnly();
+
+    runApp(const HomecareApp());
+  } catch (e, stackTrace) {
+    AppLogger.error('CRITICAL STARTUP ERROR', e, stackTrace);
+    // Use a minimal fallback app to show error
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Text('Startup Error: $e', textDirection: TextDirection.ltr),
           ),
         ),
       ),
-      home: LoginScreen(),
+    );
+  }
+}
+
+class HomecareApp extends StatelessWidget {
+  const HomecareApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => di.sl<AuthBloc>()..add(CheckAuthStatus())),
+        BlocProvider(create: (_) => di.sl<HomeCubit>()),
+        BlocProvider(create: (_) => di.sl<SearchCubit>()),
+        BlocProvider(create: (_) => di.sl<ProfileCubit>()),
+        BlocProvider(create: (_) => di.sl<AppointmentBloc>()),
+        BlocProvider(create: (_) => di.sl<MedicalRecordBloc>()),
+        BlocProvider(create: (_) => di.sl<PaymentCubit>()),
+        BlocProvider(create: (_) => di.sl<NotificationCubit>()),
+        BlocProvider(create: (_) => di.sl<FrontDeskBloc>()),
+      ],
+      // Fallback to MaterialApp to rule out AdaptiveApp issues
+      child: MaterialApp(
+        title: 'Intimedicare Homecare',
+        theme: AppTheme.getTheme(UserTier.care), // Force default theme
+        home: const AuthWrapper(),
+        navigatorKey: NavigationService().navigatorKey,
+        navigatorObservers: [
+          FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+        ],
+        routes: {
+          '/login': (context) => const LoginPage(),
+          '/register': (context) => const RegisterPage(),
+          '/home': (context) {
+            final args = ModalRoute.of(context)?.settings.arguments;
+            bool isGuest = false;
+            if (args is Map<String, dynamic>) {
+              isGuest = args['isGuest'] ?? false;
+            }
+            return HomePage(isGuest: isGuest);
+          },
+          '/profile': (context) => const profile.ProfilePage(),
+          '/payment-book': (context) => const PaymentBookPage(),
+          '/registration': (context) => const RegistrationScreen(),
+          '/queue-monitor': (context) => const QueueMonitorScreen(),
+          '/appointments': (context) => const AppointmentListScreen(),
+        },
+      ),
+    );
+  }
+}
+// AuthWrapper remains same
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  StreamSubscription? _notificationSubscription;
+  bool _notificationInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupNotificationListener();
+  }
+
+  void _setupNotificationListener() {
+    _notificationSubscription = NotificationService().onForegroundMessage
+        .listen((message) {
+          if (!mounted) return;
+
+          final notification = message.notification;
+          if (notification != null) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(notification.title ?? 'Notification'),
+                content: Text(notification.body ?? ''),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          }
+        });
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        }
+        if (state is AuthUnauthenticated) {
+          _notificationInitialized = false; // Reset flag on logout
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/login', (route) => false);
+        }
+        if (state is AuthAuthenticated) {
+          // Sync notification token when user logs in
+          if (!_notificationInitialized) {
+            // Force sync to ensure backend gets the token after login
+            NotificationService().initialize(forceSync: true);
+            _notificationInitialized = true;
+          }
+        }
+      },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if (state is AuthAuthenticated) {
+            return const HomePage();
+          }
+          if (state is AuthGuest) {
+            return const HomePage(isGuest: true);
+          }
+          // Show LoginPage for Unauthenticated, Error, AND Loading states
+          // This allows the button's inline loading animation to be visible
+          if (state is AuthUnauthenticated ||
+              state is AuthError ||
+              state is AuthLoading) {
+            return const LoginPage();
+          }
+          // Only show full-page loading for Initial state (checking stored auth)
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        },
+      ),
     );
   }
 }

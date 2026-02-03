@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "171721344232",
+    "project_id": "homecare-eb529",
+    "storage_bucket": "homecare-eb529.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171721344232:android:a4041be815e63e54fc755d",
+        "android_client_info": {
+          "package_name": "com.intimedicare.homecare.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "171721344232-jrbeal1pousgsr8nj8n8upcr1sboph9r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.intimedicare.homecare.app",
+            "certificate_hash": "14d68b8ee5a5ea37547d9814bf88554d07c0174f"
+          }
+        },
+        {
+          "client_id": "171721344232-428lialjm0f190l413gc27cb65aprhv4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0Fk4kgvPegBNkIyCOcTYJtv9rQdISI_E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "171721344232-428lialjm0f190l413gc27cb65aprhv4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "171721344232-neetmocpg93ua7iofv7jo0s62m24098u.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.intimedicare.homecare.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
