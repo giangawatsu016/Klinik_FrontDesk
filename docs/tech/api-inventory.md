@@ -36,3 +36,11 @@ Retrieves the current queue for monitoring.
 
 - **Method**: GET
 - **Endpoint**: `/api/method/api_clinic.clinicfrontdesk.api.get_queue`
+
+### `update_queue_status`
+
+Updates the status of a specific queue entry.
+
+- **Method**: POST
+- **Endpoint**: `/api/method/api_clinic.clinicfrontdesk.api.update_queue_status`
+- **Payload**: `{"name": "...", "status": "Waiting|Called|Completed|Cancelled"}`

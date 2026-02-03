@@ -71,9 +71,10 @@ When the backend API is unavailable, the app uses mock data for demonstration:
 
 ### FrontDesk Queue Monitor
 
-| Data          | Count | Details                                      |
-|---------------|-------|----------------------------------------------|
-| Queue Entries | 2     | Doctor queue (D-001, D-002) with daily reset |
+| Data          | Count | Details                                                  |
+|---------------|-------|----------------------------------------------------------|
+| Queue Entries | 6     | Combined Doctor (3) & Polyclinic (3) with status variety |
+| Stats cards   | 3     | Real-time Waiting, In Consult, and Completed tracking    |
 
 ### Appointment (Janji Temu)
 

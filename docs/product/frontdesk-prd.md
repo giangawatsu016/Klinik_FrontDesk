@@ -87,14 +87,14 @@ For monitoring and calling patient queues.
 **Functionality:**
 
 - **Call Patient**: Changes status from "Waiting" to "Called" (shows in Currently Serving).
-- **Done (Completed)**: **Deletes** the entry from queue immediately.
+- **Done (Completed)**: Updates status to **Completed** and retains the entry for daily statistics (visible in header cards).
 - **Priority Logic**: Priority patients automatically move to the top of their respective queues.
 - **Responsive Layout**: Side-by-side on desktop (>600px), stacked on mobile.
 
 **Queue Lifecycle:**
 
 ```text
-Waiting → Called (In Consultation) → Done → DELETED
+Waiting → Called (In Consultation) → Completed → Daily Reset (Cleanup)
 ```
 
 **Daily Reset (Auto-Cleanup):**

@@ -57,11 +57,33 @@ graph TD
     K --> L[Show in Currently Serving Section]
     L --> M[Patient In Consultation]
     M --> N[Click Done Button]
-    N --> O[DELETE from Queue]
-    O --> P[End - Daily Reset]
+    N --> O[Status: Completed]
+    O --> P[Retained for Daily Stats]
+    P --> Q[End - Daily Reset]
 ```
 
-## 3. Janji Temu (3rd Party Integration) Flow
+## 3. Session Security & Logout Flow
+
+```mermaid
+graph TD
+    A[User Logged In] --> B{Inactivity?}
+    B -- Yes > 14m --> C[Show Auto-Logout Warning]
+    C --> D{User Action?}
+    D -- Yes --> E[Reset Timer & Stay Logged In]
+    D -- No > 1m --> F[Auto-Logout Triggered]
+    
+    B -- Manual --> G[User Clicks Logout]
+    G --> H{Clear All?}
+    H -- Yes --> I[Logout From All Devices]
+    H -- No --> J[Regular Logout]
+    
+    F --> K[Clear Local Token & Cache]
+    I --> K
+    J --> K
+    K --> L[Navigate to Login Screen]
+```
+
+## 4. Janji Temu (3rd Party Integration) Flow
 
 ```mermaid
 graph LR
