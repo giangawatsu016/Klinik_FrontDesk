@@ -146,6 +146,51 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _handleLogout() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Logout',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Are you sure you want to logout?',
+          style: GoogleFonts.outfit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.outfit(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<AuthBloc>().add(LogoutRequested());
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/login', (route) => false);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'Logout',
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDesktopOrTablet = context.isDesktop || context.isTablet;
@@ -347,15 +392,59 @@ class _HomePageState extends State<HomePage> {
             // Bottom section
             Container(
               padding: EdgeInsets.all(isDesktop ? 16 : 12),
-              child: isDesktop
-                  ? Text(
+              child: Column(
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => _handleLogout(),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isDesktop ? 16 : 12,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: isDesktop
+                              ? MainAxisAlignment.start
+                              : MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.logout,
+                              color: Colors.red,
+                              size: 24,
+                            ),
+                            if (isDesktop) ...[
+                              const SizedBox(width: 12),
+                              Text(
+                                'Logout',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (isDesktop)
+                    Text(
                       'v1.0.0',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         color: Colors.grey[400],
                       ),
-                    )
-                  : const SizedBox.shrink(),
+                    ),
+                ],
+              ),
             ),
           ],
         ),

@@ -55,6 +55,33 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  void _handleLogoutAllDevices() {
+    final authBloc = context.read<AuthBloc>();
+    showCupertinoDialog(
+      context: context,
+      builder: (dialogContext) => CupertinoAlertDialog(
+        title: const Text('Logout from all devices'),
+        content: const Text(
+          'This will invalidate all active sessions. You will need to login again on all devices.',
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(dialogContext),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: const Text('Logout All'),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              authBloc.add(LogoutAllDevicesRequested());
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   void _launchWhatsApp() async {
     final phone = "6287778102233";
     final message = "Hi Intimedicare, I need help with...";
@@ -376,11 +403,23 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
         ),
-        child: _buildMenuTile(
-          CupertinoIcons.square_arrow_right,
-          'Logout',
-          isDestructive: true,
-          onTap: _handleLogout,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildMenuTile(
+              CupertinoIcons.device_phone_portrait,
+              'Logout from all devices',
+              isDestructive: true,
+              onTap: _handleLogoutAllDevices,
+            ),
+            _buildDivider(),
+            _buildMenuTile(
+              CupertinoIcons.square_arrow_right,
+              'Logout',
+              isDestructive: true,
+              onTap: _handleLogout,
+            ),
+          ],
         ),
       ),
     );

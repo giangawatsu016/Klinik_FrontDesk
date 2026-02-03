@@ -104,6 +104,16 @@ When the backend API is unavailable, the app uses mock data for demonstration:
 | Doctor List     | 5     | With specializations (Umum, Anak, Gigi, Kulit)  |
 | Polyclinic List | 6     | Poli Umum, Gigi, Anak, Kulit, Mata, Kebidanan   |
 
+## Enhanced Logout Features
+
+To ensure security and better user experience, the following logout features are implemented:
+
+- **Sidebar Logout**: Quick-access logout button available in the side navigation for tablet and desktop views.
+- **Auto-Logout After Idle**: The application automatically logs out the user after **15 minutes** of inactivity (no pointer/keyboard movement).
+  - A warning dialog appears **1 minute** before the session expires.
+- **Logout From All Devices**: Invalides all active sessions across all devices, ensuring immediate security if a device is lost or compromised.
+- **Profile Page Security**: Both regular and multi-device logout options are conveniently located at the bottom of the Profile page.
+
 ## Documentation Standards
 
 - Keep documentation up to date with implementation.

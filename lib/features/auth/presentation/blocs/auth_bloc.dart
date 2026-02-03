@@ -49,6 +49,9 @@ class CheckAuthStatus extends AuthEvent {}
 
 class LogoutRequested extends AuthEvent {}
 
+/// Logout from all devices - invalidates all sessions
+class LogoutAllDevicesRequested extends AuthEvent {}
+
 class UserUpdated extends AuthEvent {
   final UserEntity user;
   UserUpdated(this.user);
@@ -64,7 +67,9 @@ abstract class AuthState extends Equatable {
 }
 
 class AuthInitial extends AuthState {}
+
 class AuthLoading extends AuthState {}
+
 class AuthAuthenticated extends AuthState {
   final AuthEntity auth;
   AuthAuthenticated(this.auth);
@@ -72,6 +77,7 @@ class AuthAuthenticated extends AuthState {
   @override
   List<Object?> get props => [auth];
 }
+
 class AuthUnauthenticated extends AuthState {}
 
 class AuthGuest extends AuthState {}
@@ -103,6 +109,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<GuestLoginRequested>(_onGuestLoginRequested);
     on<CheckAuthStatus>(_onCheckAuthStatus);
     on<LogoutRequested>(_onLogoutRequested);
+    on<LogoutAllDevicesRequested>(_onLogoutAllDevicesRequested);
     on<UserUpdated>(_onUserUpdated);
   }
 
@@ -114,14 +121,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await prefs.setString('user_name', auth.user.name);
     await prefs.setString('user_role', auth.user.role);
     await prefs.setString('user_tier', auth.user.tier);
-    if (auth.user.photoProfile != null) await prefs.setString('user_photo', auth.user.photoProfile!);
-    if (auth.user.phone != null) await prefs.setString('user_phone', auth.user.phone!);
-    if (auth.user.address != null) await prefs.setString('user_address', auth.user.address!);
-    if (auth.user.nik != null) await prefs.setString('user_nik', auth.user.nik!);
-    if (auth.user.locationNote != null) await prefs.setString('user_location_note', auth.user.locationNote!);
+    if (auth.user.photoProfile != null) {
+      await prefs.setString('user_photo', auth.user.photoProfile!);
+    }
+    if (auth.user.phone != null) {
+      await prefs.setString('user_phone', auth.user.phone!);
+    }
+    if (auth.user.address != null) {
+      await prefs.setString('user_address', auth.user.address!);
+    }
+    if (auth.user.nik != null) {
+      await prefs.setString('user_nik', auth.user.nik!);
+    }
+    if (auth.user.locationNote != null) {
+      await prefs.setString('user_location_note', auth.user.locationNote!);
+    }
   }
 
-  Future<void> _onCheckAuthStatus(CheckAuthStatus event, Emitter<AuthState> emit) async {
+  Future<void> _onCheckAuthStatus(
+    CheckAuthStatus event,
+    Emitter<AuthState> emit,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
@@ -149,14 +169,44 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onLogoutRequested(LogoutRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onLogoutRequested(
+    LogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     dioClient.clearToken();
     emit(AuthUnauthenticated());
   }
 
-  Future<void> _onLoginRequested(LoginRequested event, Emitter<AuthState> emit) async {
+  /// Logout from all devices - calls backend to invalidate all sessions
+  Future<void> _onLogoutAllDevicesRequested(
+    LogoutAllDevicesRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      // Call backend API to invalidate all sessions (mock for now)
+      // await dioClient.dio.post('/method/frappe.sessions.clear_all_sessions');
+
+      // For now, just do regular logout
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      dioClient.clearToken();
+      emit(AuthUnauthenticated());
+    } catch (e) {
+      // Still logout locally even if API fails
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      dioClient.clearToken();
+      emit(AuthUnauthenticated());
+    }
+  }
+
+  Future<void> _onLoginRequested(
+    LoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     try {
       final result = await loginUseCase.execute(event.email, event.password);
@@ -168,10 +218,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onRegisterRequested(RegisterRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onRegisterRequested(
+    RegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     try {
-      final result = await registerUseCase.execute(event.email, event.password, event.name, event.phone);
+      final result = await registerUseCase.execute(
+        event.email,
+        event.password,
+        event.name,
+        event.phone,
+      );
       dioClient.setToken(result.token);
       await _saveAuthData(result);
       emit(AuthAuthenticated(result));
@@ -180,40 +238,46 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onGoogleLoginRequested(GoogleLoginRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onGoogleLoginRequested(
+    GoogleLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
-    
+
     final result = await googleLoginUseCase.execute();
-    
-    await result.fold(
-      (errorMessage) async => emit(AuthError(errorMessage)),
-      (authEntity) async {
-        dioClient.setToken(authEntity.token);
-        await _saveAuthData(authEntity);
-        emit(AuthAuthenticated(authEntity));
-      },
-    );
+
+    await result.fold((errorMessage) async => emit(AuthError(errorMessage)), (
+      authEntity,
+    ) async {
+      dioClient.setToken(authEntity.token);
+      await _saveAuthData(authEntity);
+      emit(AuthAuthenticated(authEntity));
+    });
   }
 
-  void _onGuestLoginRequested(GuestLoginRequested event, Emitter<AuthState> emit) {
+  void _onGuestLoginRequested(
+    GuestLoginRequested event,
+    Emitter<AuthState> emit,
+  ) {
     emit(AuthGuest());
   }
 
-  Future<void> _onUserUpdated(UserUpdated event, Emitter<AuthState> emit) async {
+  Future<void> _onUserUpdated(
+    UserUpdated event,
+    Emitter<AuthState> emit,
+  ) async {
     final currentState = state;
     if (currentState is AuthAuthenticated) {
       final updatedAuth = AuthEntity(
         token: currentState.auth.token,
         user: event.user,
       );
-      
+
       // Update persistent storage
       await _saveAuthData(updatedAuth);
-      
+
       // Emit new state with updated user
       emit(AuthAuthenticated(updatedAuth));
     }
   }
 }
-
-

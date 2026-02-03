@@ -42,13 +42,14 @@ class FrontDeskRemoteDataSourceImpl implements FrontDeskRemoteDataSource {
       _queueCounter = 1;
       _lastActiveDate = currentDateWIB;
 
-      // Optional: Add some sample data for today
+      // Add rich sample data for both Doctor and Polyclinic queues
       _mockQueue.addAll([
+        // Doctor Queue
         const QueueEntryModel(
           name: 'MOCK-Q-001',
           patient: 'MOCK-PAT-001',
           patientName: 'Siti Aminah',
-          queueNumber: 'D-001',
+          queueNumber: 'DP-001',
           queueType: 'Doctor',
           status: 'Waiting',
           isPriority: 1,
@@ -63,8 +64,46 @@ class FrontDeskRemoteDataSourceImpl implements FrontDeskRemoteDataSource {
           status: 'Called',
           practitioner: 'Dr. Andi Wijaya',
         ),
+        const QueueEntryModel(
+          name: 'MOCK-Q-003',
+          patient: 'MOCK-PAT-003',
+          patientName: 'Dewi Lestari',
+          queueNumber: 'D-003',
+          queueType: 'Doctor',
+          status: 'Waiting',
+          practitioner: 'Dr. Sarah Smith',
+        ),
+
+        // Polyclinic Queue
+        const QueueEntryModel(
+          name: 'MOCK-Q-004',
+          patient: 'MOCK-PAT-004',
+          patientName: 'Haryanto',
+          queueNumber: 'P-001',
+          queueType: 'Polyclinic',
+          status: 'Waiting',
+          polyclinic: 'Gigi',
+        ),
+        const QueueEntryModel(
+          name: 'MOCK-Q-005',
+          patient: 'MOCK-PAT-005',
+          patientName: 'Eka Putri',
+          queueNumber: 'P-002',
+          queueType: 'Polyclinic',
+          status: 'Called',
+          polyclinic: 'Umum',
+        ),
+        const QueueEntryModel(
+          name: 'MOCK-Q-006',
+          patient: 'MOCK-PAT-006',
+          patientName: 'Iwan Fals',
+          queueNumber: 'P-003',
+          queueType: 'Polyclinic',
+          status: 'Completed',
+          polyclinic: 'Anak',
+        ),
       ]);
-      _queueCounter = 3;
+      _queueCounter = 7;
     }
   }
 
@@ -157,12 +196,13 @@ class FrontDeskRemoteDataSourceImpl implements FrontDeskRemoteDataSource {
       );
     }
 
-    final prefix = entry.queueType == 'Doctor' ? 'A' : 'B';
+    // Queue number format: D-xxx for regular, DP-xxx for priority
+    final prefix = entry.isPriority == 1 ? 'DP' : 'D';
     final newEntry = QueueEntryModel(
       name: 'MOCK-Q-${DateTime.now().millisecondsSinceEpoch}',
       patient: entry.patient,
       patientName: entry.patientName,
-      queueNumber: '$prefix-00$_queueCounter',
+      queueNumber: '$prefix-${_queueCounter.toString().padLeft(3, '0')}',
       isPriority: entry.isPriority,
       queueType: entry.queueType,
       status: 'Waiting',
@@ -173,7 +213,24 @@ class FrontDeskRemoteDataSourceImpl implements FrontDeskRemoteDataSource {
     );
 
     _queueCounter++;
-    _mockQueue.add(newEntry);
+
+    // Priority sorting: Insert priority patients at the front of waiting queue
+    if (entry.isPriority == 1) {
+      // Find the first non-priority waiting patient
+      final insertIndex = _mockQueue.indexWhere(
+        (q) => q.status == 'Waiting' && q.isPriority == 0,
+      );
+      if (insertIndex == -1) {
+        // No non-priority waiting patients, add at end
+        _mockQueue.add(newEntry);
+      } else {
+        // Insert before the first non-priority waiting patient
+        _mockQueue.insert(insertIndex, newEntry);
+      }
+    } else {
+      // Regular patients go at the end
+      _mockQueue.add(newEntry);
+    }
 
     return newEntry;
   }
@@ -208,25 +265,7 @@ class FrontDeskRemoteDataSourceImpl implements FrontDeskRemoteDataSource {
     if (index != -1) {
       final oldEntry = _mockQueue[index];
 
-      // If status is Completed, remove from queue (daily reset anyway)
-      if (status == 'Completed') {
-        _mockQueue.removeAt(index);
-        return QueueEntryModel(
-          name: oldEntry.name,
-          patient: oldEntry.patient,
-          patientName: oldEntry.patientName,
-          queueNumber: oldEntry.queueNumber,
-          queueType: oldEntry.queueType,
-          status: 'Completed',
-          isPriority: oldEntry.isPriority,
-          practitioner: oldEntry.practitioner,
-          polyclinic: oldEntry.polyclinic,
-          company: oldEntry.company,
-          facility: oldEntry.facility,
-        );
-      }
-
-      // Otherwise update status normally
+      // Update status normally and retain in mockup for counting purposes
       final updatedEntry = QueueEntryModel(
         name: oldEntry.name,
         patient: oldEntry.patient,

@@ -166,22 +166,87 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
     // MOCK MEDICAL RECORDS
     await Future.delayed(const Duration(milliseconds: 600));
     return {
-      'message': [
+      'data': [
         {
-          'id': 102,
+          'id': 201,
           'date': DateTime.now()
-              .subtract(const Duration(days: 2))
+              .subtract(const Duration(days: 2, hours: 4))
               .toIso8601String(),
+          'status': 'COMPLETED',
+          'serviceName': 'Pemeriksaan Anak',
+          'doctorName': 'James Carter',
+          'doctorTitlePrefix': 'dr.',
+          'doctorTitleSuffix': 'Sp.A',
+          'finalPrice': 200000,
+          'paymentStatus': 'PAID',
+          'transactionNumber': 'TRX-20240101-001',
           'doctor': {
             'name': 'James Carter',
-            'titlePrefix': 'dr.',
-            'titleSuffix': 'Sp.A',
+            'specialization': 'Pediatrician',
+            'sip': '123/SIP/2023',
           },
-          'diagnosis': 'Common Cold',
-          'patient': {'fullname': 'Anak Budi'},
+          'patientDetail': {'fullname': 'Anak Budi'},
+          'clinicalRecord': {
+            'diagnoses': [
+              {
+                'diagnosis': {'description': 'Acute Pharyngitis'},
+                'note': 'Sore throat, fever',
+              },
+            ],
+            'medicines': [
+              {
+                'item': {'name': 'Paracetamol Syrup'},
+                'qty': 1,
+                'instruction': '3x1 tsp after meal',
+              },
+            ],
+          },
+        },
+        {
+          'id': 202,
+          'date': DateTime.now()
+              .subtract(const Duration(days: 5))
+              .toIso8601String(),
+          'status': 'CANCELLED',
+          'serviceName': 'Konsultasi Umum',
+          'doctorName': 'Sarah Wilson',
+          'doctorTitlePrefix': 'dr.',
+          'finalPrice': 150000,
+          'paymentStatus': 'REFUNDED',
+          'transactionNumber': 'TRX-20231228-005',
+          'doctor': {
+            'name': 'Sarah Wilson',
+            'specialization': 'General Practitioner',
+          },
+          'patientDetail': {'fullname': 'Budi Santoso'},
+        },
+        {
+          'id': 203,
+          'date': DateTime.now()
+              .subtract(const Duration(days: 10))
+              .toIso8601String(),
+          'status': 'COMPLETED',
+          'serviceName': 'Vaksinasi Flu',
+          'doctorName': 'Emily Chen',
+          'doctorTitlePrefix': 'dr.',
+          'doctorTitleSuffix': 'Sp.KK',
+          'finalPrice': 350000,
+          'paymentStatus': 'PAID',
+          'transactionNumber': 'TRX-20231220-008',
+          'doctor': {'name': 'Emily Chen', 'specialization': 'Dermatologist'},
+          'patientDetail': {'fullname': 'Siti Aminah'},
+          'clinicalRecord': {
+            'diagnoses': [
+              {
+                'diagnosis': {'description': 'Healthy'},
+                'note': 'Routine vaccination',
+              },
+            ],
+            'medicines': [],
+          },
         },
       ],
-      'meta': {'total': 1, 'page': page, 'limit': limit},
+      'meta': {'total': 3, 'page': page, 'limit': limit},
     };
   }
 

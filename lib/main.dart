@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'firebase_options.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/idle_detector.dart';
 import 'core/services/navigation_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/logger.dart';
@@ -79,31 +80,33 @@ class HomecareApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<FrontDeskBloc>()),
       ],
       // Fallback to MaterialApp to rule out AdaptiveApp issues
-      child: MaterialApp(
-        title: 'Intimedicare Homecare',
-        theme: AppTheme.getTheme(UserTier.care), // Force default theme
-        home: const AuthWrapper(),
-        navigatorKey: NavigationService().navigatorKey,
-        navigatorObservers: [
-          FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
-        ],
-        routes: {
-          '/login': (context) => const LoginPage(),
-          '/register': (context) => const RegisterPage(),
-          '/home': (context) {
-            final args = ModalRoute.of(context)?.settings.arguments;
-            bool isGuest = false;
-            if (args is Map<String, dynamic>) {
-              isGuest = args['isGuest'] ?? false;
-            }
-            return HomePage(isGuest: isGuest);
+      child: IdleDetector(
+        child: MaterialApp(
+          title: 'Intimedicare Homecare',
+          theme: AppTheme.getTheme(UserTier.care), // Force default theme
+          home: const AuthWrapper(),
+          navigatorKey: NavigationService().navigatorKey,
+          navigatorObservers: [
+            FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+          ],
+          routes: {
+            '/login': (context) => const LoginPage(),
+            '/register': (context) => const RegisterPage(),
+            '/home': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments;
+              bool isGuest = false;
+              if (args is Map<String, dynamic>) {
+                isGuest = args['isGuest'] ?? false;
+              }
+              return HomePage(isGuest: isGuest);
+            },
+            '/profile': (context) => const profile.ProfilePage(),
+            '/payment-book': (context) => const PaymentBookPage(),
+            '/registration': (context) => const RegistrationScreen(),
+            '/queue-monitor': (context) => const QueueMonitorScreen(),
+            '/appointments': (context) => const AppointmentListScreen(),
           },
-          '/profile': (context) => const profile.ProfilePage(),
-          '/payment-book': (context) => const PaymentBookPage(),
-          '/registration': (context) => const RegistrationScreen(),
-          '/queue-monitor': (context) => const QueueMonitorScreen(),
-          '/appointments': (context) => const AppointmentListScreen(),
-        },
+        ),
       ),
     );
   }
