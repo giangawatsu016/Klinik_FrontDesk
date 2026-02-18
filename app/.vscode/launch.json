@@ -1,0 +1,43 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Flutter Web (Fast)",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "args": [
+                "-d",
+                "edge",
+                "--web-renderer",
+                "html",
+                "--no-web-resources-cdn"
+            ]
+        },
+        {
+            "name": "Flutter Web (Chrome)",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "args": [
+                "-d",
+                "chrome",
+                "--web-renderer",
+                "html",
+                "--no-web-resources-cdn"
+            ]
+        },
+        {
+            "name": "Flutter Web (CanvasKit - High Quality)",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "args": [
+                "-d",
+                "edge",
+                "--web-renderer",
+                "canvaskit"
+            ]
+        }
+    ]
+}
