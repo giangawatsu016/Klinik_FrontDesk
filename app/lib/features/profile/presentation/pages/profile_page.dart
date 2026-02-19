@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../blocs/profile_cubit.dart';
 import '../../../auth/presentation/blocs/auth_bloc.dart';
 import '../../../../core/utils/logger.dart';
-import 'edit_profile_page.dart';
 
 const Color _primaryBlue = Color(0xFF2859E2);
 
@@ -153,8 +152,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 24),
           _buildProfileInfo(user),
           const SizedBox(height: 16),
-          _buildStaffDetailsCard(user),
-          const SizedBox(height: 32),
+
           _buildLogoutButton(),
           const SizedBox(height: 120),
         ]),
@@ -170,8 +168,7 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(height: 24),
         _buildProfileInfo(user),
         const SizedBox(height: 16),
-        _buildStaffDetailsCard(user),
-        const SizedBox(height: 32),
+
         _buildLogoutButton(),
         const SizedBox(height: 100),
       ],
@@ -212,33 +209,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       )
                     : null,
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (context) => EditProfilePage(user: user),
-                    ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _primaryBlue,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: const Icon(
-                    CupertinoIcons.pencil,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
               ),
             ),
           ],
@@ -351,90 +321,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildStaffDetailsCard(dynamic user) {
-    return FadeInDown(
-      delay: const Duration(milliseconds: 150),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 24),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            _buildDetailInfoRow(CupertinoIcons.person, 'Full Name', user.name),
-            _buildDividerDetail(),
-            _buildDetailInfoRow(
-              _getRoleIcon(user.role),
-              'Role',
-              user.role.toUpperCase(),
-              valueColor: _primaryBlue,
-            ),
-            _buildDividerDetail(),
-            _buildDetailInfoRow(
-              CupertinoIcons.number,
-              'Staff ID / NIP',
-              user.staffId ?? 'STF-001',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailInfoRow(
-    IconData icon,
-    String label,
-    String value, {
-    Color? valueColor,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: _primaryBlue.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: _primaryBlue, size: 18),
-        ),
-        const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey[500]),
-            ),
-            Text(
-              value,
-              style: GoogleFonts.outfit(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: valueColor ?? Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDividerDetail() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Divider(height: 1, color: Colors.grey[100], indent: 44),
-    );
-  }
-
   String _getUserInitials(String name) {
     if (name.isEmpty) return '?';
     final parts = name.trim().split(RegExp(r'\s+'));
@@ -442,16 +328,5 @@ class _ProfilePageState extends State<ProfilePage> {
       return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
     }
     return parts.first[0].toUpperCase();
-  }
-
-  IconData _getRoleIcon(String role) {
-    switch (role.toLowerCase()) {
-      case 'admin':
-        return CupertinoIcons.shield_fill;
-      case 'doctor':
-        return CupertinoIcons.person_badge_plus;
-      default:
-        return CupertinoIcons.briefcase;
-    }
   }
 }

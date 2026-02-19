@@ -16,13 +16,10 @@ class QueueMonitorScreen extends StatefulWidget {
 }
 
 class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
-  int _historyPage = 0;
-
   @override
   void initState() {
     super.initState();
     context.read<FrontDeskBloc>().add(LoadQueueEvent());
-    context.read<FrontDeskBloc>().add(const LoadQueueHistoryEvent(page: 0));
   }
 
   @override
@@ -145,10 +142,6 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                             ),
                           ],
                         ),
-
-                      const SizedBox(height: 32),
-                      // History Section
-                      _buildHistorySection(isWide),
                     ],
                   ),
                 );
@@ -888,214 +881,6 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHistorySection(bool isWide) {
-    return BlocBuilder<FrontDeskBloc, FrontDeskState>(
-      buildWhen: (prev, curr) =>
-          curr is FrontDeskLoaded || curr is FrontDeskLoading,
-      builder: (context, state) {
-        List<QueueEntryModel> history = [];
-        int total = 0;
-        if (state is FrontDeskLoaded) {
-          history = state.historyEntries;
-          total = state.historyTotal;
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.history, color: Color(0xFF64748B), size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'History (All Time)',
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    total.toString(),
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (history.isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: Center(
-                  child: Text(
-                    'No completed entries yet.',
-                    style: GoogleFonts.outfit(color: Colors.grey),
-                  ),
-                ),
-              )
-            else
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: history.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final entry = history[index];
-                    final date = entry.creation != null
-                        ? DateFormat(
-                            'dd MMM yyyy, HH:mm',
-                          ).format(DateTime.parse(entry.creation!).toLocal())
-                        : '-';
-
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      onTap: () => _showQueueDetailDialog(entry),
-                      leading: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: Text(
-                            entry.queueNumber ?? '-',
-                            style: GoogleFonts.outfit(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        entry.patientName ?? 'Unknown',
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      subtitle: Text(
-                        '${entry.queueType} • $date',
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      trailing: const Icon(
-                        Icons.chevron_right,
-                        color: Colors.grey,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            // Pagination Controls
-            if (total > 5)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _historyPage > 0
-                          ? () {
-                              setState(() => _historyPage--);
-                              context.read<FrontDeskBloc>().add(
-                                LoadQueueHistoryEvent(page: _historyPage),
-                              );
-                            }
-                          : null,
-                      icon: const Icon(Icons.chevron_left, size: 18),
-                      label: Text(
-                        'Prev',
-                        style: GoogleFonts.outfit(fontSize: 13),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2859E2),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Page ${_historyPage + 1} of ${((total - 1) ~/ 5) + 1}',
-                        style: GoogleFonts.outfit(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: (_historyPage + 1) * 5 < total
-                          ? () {
-                              setState(() => _historyPage++);
-                              context.read<FrontDeskBloc>().add(
-                                LoadQueueHistoryEvent(page: _historyPage),
-                              );
-                            }
-                          : null,
-                      icon: const Icon(Icons.chevron_right, size: 18),
-                      label: Text(
-                        'Next',
-                        style: GoogleFonts.outfit(fontSize: 13),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2859E2),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        );
-      },
     );
   }
 

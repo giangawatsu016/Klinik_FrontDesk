@@ -78,7 +78,7 @@ For detailed field mappings, API endpoint mapping, and environment configuration
 - **Queue Management**:
   - **Queue Monitor**: The active queue list (Waiting/Called) only displays entries created on the current date (WIB). Previous days' pending entries are automatically filtered out from the monitor.
   - **Daily Statistics**: The "Completed" statistic card at the top of the Queue Monitor resets every day (WIB). Only entries completed on the current date are counted.
-  - **All-Time History**: The history section at the bottom of the screen displays the historical record of all completed queue entries, including those from previous days.
+  - **All-Time History**: Now moved to a dedicated **"History"** submenu under the Queue menu. Displays the historical record of all completed queue entries.
   - **Queue Numbering**: Reset automatically to D-001/P-001 at the start of each day by the backend.
 - **Appointment History Search**:
   - Refined search functionality specifically for past appointments (COMPLETED/CANCELLED).
@@ -92,7 +92,7 @@ For detailed field mappings, API endpoint mapping, and environment configuration
 - **Queue Duplicate Prevention**: Patients cannot register for queue if they already have an active entry today.
 - **Staff Profile Details**: View logged-in staff information including Name, Role (Admin/Staff/Doctor), and Staff ID (NIP).
 - **Detailed Appointment Views**: Complete patient information (Name, Formatted Age, Phone) and doctor license (SIP) details in the Appointment Detail page.
-- **Quick Queue Access**: Direct "Add to Queue" button from the Visit Schedule list (visible for today's appointments) for seamless patient check-in.
+- **Quick Queue Access**: Direct "Add to Queue" button from the Visit Schedule list (visible for today's appointments) for seamless patient check-in. Clicking the button automatically navigates to the Queue Monitor.
 - **Age Calculation**: Automatic formatting of patient age as `X Tahun X Bulan X Hari` for clinical precision.
 
 ## Responsive Design
@@ -227,7 +227,38 @@ If you encounter **500 Server Errors** or **DocType Missing** errors in the app,
 - **Queue Monitor**: Resolved display issues with duplicate entries.
 - **Search**: Fixed issue with existing patient searches returning incomplete data.
 
-### v2.6 - Feb 16 2026 (Current)
+### v2.7 - Feb 18 2026 (Current)
+
+- **Queue Menu Refactoring**:
+  - Split "Queue" menu into two submenus: **Queue Monitor** and **History**.
+  - **Queue Monitor**: Dedicated screen for active daily queues, removing previous days' clutter.
+  - **History**: Dedicated screen for viewing all-time queue history with pagination.
+  - Improved navigation flow to match the "Appointments" menu structure.
+
+### v2.10 - Feb 18 2026 (Current)
+
+- **Appointment Registration Enhancement**:
+  - The "Add Visit Schedule" (Registrasi) form now supports selecting **Doctor OR Polyclinic** via radio toggle buttons.
+  - When "Doctor" is selected, a Doctor dropdown is shown. When "Polyclinic" is selected, a Polyclinic dropdown is shown.
+  - Backend `Clinic Appointment` doctype updated: `practitioner` and `polyclinic` fields are now optional to support flexible scheduling.
+  - Backend API (`appointment_api.py`) updated to accept and process the `polyclinicName` field from request data.
+  - **Fixed Dropdown Loading**: Resolved issue where Doctor/Polyclinic lists showed "Loading..." due to the shared `FrontDeskBloc` overwriting the `PractitionersAndPolyclinicsLoaded` state. Switched from `BlocBuilder` to cached state variables populated via `BlocListener`.
+
+### v2.9 - Feb 18 2026
+
+- **Appointment Status Auto-Update**:
+  - Clicking "Add to Queue" on an appointment now automatically changes its status from `Pending` → `Checked In`.
+  - `Checked In` appointments are sorted to the bottom of the visit schedule list.
+  - Blue status badge for `Checked In` appointments; "Add to Queue" button hidden once checked in.
+
+### v2.8 - Feb 18 2026
+
+- **"Add to Queue" Button Fix**:
+  - Fixed date comparison using WIB timezone conversion to correctly enable the button for today's appointments.
+  - Added automatic navigation to Queue Monitor after successful check-in.
+  - Added unit tests for the `AddToQueueEvent` bloc flow (success and failure cases).
+
+### v2.6 - Feb 16 2026
 
 - **Appointment UX & Stability**:
   - Implemented **Reactive Doctor Lists** in the appointment registration form, ensuring the dropdown is always populated accurately even if master data loads late.

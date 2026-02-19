@@ -8,6 +8,7 @@ import 'package:app/features/front_desk/presentation/bloc/front_desk_state.dart'
 import 'package:app/features/front_desk/domain/repositories/front_desk_repository.dart';
 import 'package:app/features/front_desk/data/models/patient_model.dart';
 import 'package:app/features/front_desk/data/models/queue_entry_model.dart';
+import 'package:app/core/error/failures.dart';
 
 class MockFrontDeskRepository extends Mock implements FrontDeskRepository {}
 
@@ -110,6 +111,53 @@ void main() {
       verify: (_) {
         verify(() => mockRepository.registerPatient(tPatientModel)).called(1);
         verify(() => mockRepository.addToQueue(any())).called(1);
+      },
+    );
+  });
+
+  group('AddToQueueEvent', () {
+    blocTest<FrontDeskBloc, FrontDeskState>(
+      'should emit [FrontDeskLoading, FrontDeskSuccess] when adding to queue succeeds',
+      build: () {
+        when(
+          () => mockRepository.addToQueue(any()),
+        ).thenAnswer((_) async => const Right(tQueueEntry));
+        when(() => mockRepository.getQueue()).thenAnswer(
+          (_) async => const Right({
+            'active': <QueueEntryModel>[],
+            'today_completed': 0,
+          }),
+        );
+        return frontDeskBloc;
+      },
+      act: (bloc) => bloc.add(const AddToQueueEvent(tQueueEntry)),
+      wait: const Duration(milliseconds: 500),
+      expect: () => [
+        FrontDeskLoading(),
+        const FrontDeskSuccess('Added to queue successfully'),
+        FrontDeskLoading(), // triggered by LoadQueueEvent
+        const FrontDeskLoaded(activeQueue: []),
+      ],
+      verify: (_) {
+        verify(() => mockRepository.addToQueue(tQueueEntry)).called(1);
+        verify(() => mockRepository.getQueue()).called(1);
+      },
+    );
+
+    blocTest<FrontDeskBloc, FrontDeskState>(
+      'should emit [FrontDeskLoading, FrontDeskError] when adding to queue fails',
+      build: () {
+        when(
+          () => mockRepository.addToQueue(any()),
+        ).thenAnswer((_) async => const Left(ServerFailure('Queue is full')));
+        return frontDeskBloc;
+      },
+      act: (bloc) => bloc.add(const AddToQueueEvent(tQueueEntry)),
+      wait: const Duration(milliseconds: 500),
+      expect: () => [FrontDeskLoading(), const FrontDeskError('Queue is full')],
+      verify: (_) {
+        verify(() => mockRepository.addToQueue(tQueueEntry)).called(1);
+        verifyNever(() => mockRepository.getQueue());
       },
     );
   });

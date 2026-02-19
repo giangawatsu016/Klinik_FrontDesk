@@ -26,6 +26,7 @@ import '../../../../features/appointment/presentation/pages/medical_record_list_
 import '../../../../features/appointment/presentation/pages/appointment_detail_page.dart';
 import 'package:intl/intl.dart';
 import '../../../front_desk/presentation/pages/queue_monitor_screen.dart';
+import '../../../front_desk/presentation/pages/queue_history_screen.dart';
 import '../../../front_desk/presentation/pages/registration_screen.dart';
 import '../../../front_desk/presentation/bloc/front_desk_event.dart';
 import '../../../front_desk/presentation/bloc/front_desk_state.dart';
@@ -45,12 +46,15 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   int _appointmentSubIndex = 0; // 0: History/List, 1: Add Schedule
-  bool _isAppointmentsExpanded = false;
+  int _queueSubIndex = 0; // 0: Monitor, 1: History
+  bool _isAppointmentsExpanded = true;
+  bool _isQueueExpanded = true;
 
   @override
   void initState() {
     super.initState();
     _isAppointmentsExpanded = _currentIndex == 2;
+    _isQueueExpanded = _currentIndex == 0;
     context.read<HomeCubit>().getServices();
     context.read<AppointmentBloc>().add(GetAppointmentsRequested());
     context.read<ProfileCubit>().getProfile();
@@ -148,9 +152,12 @@ class _HomePageState extends State<HomePage> {
                     state.message.contains('Added to queue successfully'))) {
               setState(() {
                 _currentIndex = 0; // Switch to Queue Monitor
+                _queueSubIndex = 0; // Ensure Queue Monitor sub-tab
               });
               // Refresh queue data
               context.read<FrontDeskBloc>().add(LoadQueueEvent());
+              // Refresh appointments to reflect the Checked In status change
+              context.read<AppointmentBloc>().add(GetAppointmentsRequested());
             }
           },
         ),
@@ -223,7 +230,12 @@ class _HomePageState extends State<HomePage> {
   Widget _buildSideNavigation(BuildContext context) {
     final isDesktop = context.isDesktop;
     final navItems = [
-      _NavItem(Icons.layers_outlined, Icons.layers, 'Queue'),
+      _NavItem(
+        Icons.layers_outlined,
+        Icons.layers,
+        'Queue',
+        subItems: [_SubNavItem('Queue Monitor', 0), _SubNavItem('History', 1)],
+      ),
       _NavItem(Icons.person_add_outlined, Icons.person_add, 'Registration'),
       _NavItem(
         Icons.calendar_today_outlined,
@@ -315,6 +327,10 @@ class _HomePageState extends State<HomePage> {
                   final item = navItems[index];
                   final isSelected = _currentIndex == index;
 
+                  bool isExpanded = false;
+                  if (index == 0) isExpanded = _isQueueExpanded;
+                  if (index == 2) isExpanded = _isAppointmentsExpanded;
+
                   return Column(
                     children: [
                       Padding(
@@ -326,11 +342,17 @@ class _HomePageState extends State<HomePage> {
                             onTap: () {
                               if (item.subItems != null && isDesktop) {
                                 setState(() {
-                                  _isAppointmentsExpanded =
-                                      !_isAppointmentsExpanded;
+                                  if (index == 0) {
+                                    _isQueueExpanded = !_isQueueExpanded;
+                                  } else if (index == 2) {
+                                    _isAppointmentsExpanded =
+                                        !_isAppointmentsExpanded;
+                                  }
+
                                   if (_currentIndex != index) {
                                     _currentIndex = index;
-                                    _appointmentSubIndex = 0;
+                                    if (index == 0) _queueSubIndex = 0;
+                                    if (index == 2) _appointmentSubIndex = 0;
                                   }
                                 });
                               } else {
@@ -398,15 +420,14 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       // Sub-items
-                      if (_isAppointmentsExpanded &&
-                          item.subItems != null &&
-                          isDesktop)
+                      if (isExpanded && item.subItems != null && isDesktop)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Column(
                             children: item.subItems!.map((subItem) {
-                              final isSubSelected =
-                                  _appointmentSubIndex == subItem.subIndex;
+                              final isSubSelected = index == 0
+                                  ? _queueSubIndex == subItem.subIndex
+                                  : _appointmentSubIndex == subItem.subIndex;
                               return Padding(
                                 padding: const EdgeInsets.only(
                                   left: 36,
@@ -417,7 +438,12 @@ class _HomePageState extends State<HomePage> {
                                 child: InkWell(
                                   onTap: () {
                                     setState(() {
-                                      _appointmentSubIndex = subItem.subIndex;
+                                      _currentIndex = index;
+                                      if (index == 0) {
+                                        _queueSubIndex = subItem.subIndex;
+                                      } else if (index == 2) {
+                                        _appointmentSubIndex = subItem.subIndex;
+                                      }
                                     });
                                   },
                                   borderRadius: BorderRadius.circular(8),
@@ -542,7 +568,9 @@ class _HomePageState extends State<HomePage> {
     switch (_currentIndex) {
       case 0:
         // Queue Monitoring
-        return const QueueMonitorScreen();
+        return _queueSubIndex == 0
+            ? const QueueMonitorScreen()
+            : const QueueHistoryScreen();
       case 1:
         // Registration
         return const RegistrationScreen();
@@ -583,10 +611,26 @@ class _HomePageState extends State<HomePage> {
                               tier: widget.tier,
                               showBackButton: false,
                               sliverMode: true,
+                              onNavigateToQueue: () {
+                                setState(() {
+                                  _currentIndex = 0;
+                                  _queueSubIndex = 0;
+                                });
+                                context.read<FrontDeskBloc>().add(
+                                  LoadQueueEvent(),
+                                );
+                              },
                             ),
                           ],
                         )
-                      : const AddAppointmentScreen(),
+                      : AddAppointmentScreen(
+                          onSuccess: () {
+                            setState(() {
+                              _appointmentSubIndex =
+                                  0; // Switch to Jadwal Kunjungan
+                            });
+                          },
+                        ),
                 ),
               ],
             );

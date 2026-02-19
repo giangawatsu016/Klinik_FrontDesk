@@ -74,14 +74,28 @@ Managed through a hierarchical sidebar navigation that provides direct access to
 - **Appointments** (Main Menu): Expands to show sub-menus on Desktop/Tablet.
   - **Jadwal Kunjungan**: Displays the historical list of past appointments.
   - **Registrasi**: Opens the appointment registration form for new schedules.
-  - **Reactive Doctor List**: The form dynamically fetches and displays the latest practitioners, ensuring selections are always available and up-to-date.
-  - **Auto-Navigation**: Completing a registration automatically redirects the user to the "Jadwal Kunjungan" list, providing immediate confirmation.
+    - **Visit Type Selection**: Radio toggle to choose between scheduling by **Doctor** or by **Polyclinic**.
+      - **Doctor**: Shows a dropdown of available practitioners.
+      - **Polyclinic**: Shows a dropdown of available polyclinics.
+    - **Reactive Data Lists**: The form dynamically fetches and displays the latest practitioners and polyclinics, ensuring selections are always available and up-to-date.
+    - **Auto-Navigation**: Completing a registration automatically redirects the user to the "Jadwal Kunjungan" list, providing immediate confirmation.
 
 **Appointment History Search:**
 
 - **Refined Search**: The search functionality specifically targets historical records.
 - **Status Filter**: Automatically filters for `COMPLETED` or `CANCELLED` statuses.
 - **Manual Search Support**: When the search box is empty, it automatically displays the full list of past appointments (History List) for manual browsing without typing.
+
+**Appointment Lifecycle:**
+
+```text
+Pending → Checked In (via Add to Queue) → Attended (via Payment) | Cancelled
+```
+
+- **Pending**: Newly created appointment, "Add to Queue" button is visible for today's appointments.
+- **Checked In**: Patient has been added to the queue. Status badge turns blue, button is hidden, and the card sorts to the bottom of the list.
+- **Attended**: Payment has been completed.
+- **Cancelled**: Appointment was cancelled.
 
 **Details Displayed:**
 

@@ -22,6 +22,9 @@ This document tracks the **High-Level Epics** of the Klinik FrontDesk product. D
 - As a **Receptionist**, I want to view a list of scheduled appointments from 3rd party integrations so I can prepare for arriving patients.
 - As a **Receptionist**, I want to view the medical history and clinical records of patients so I can provide relevant information if requested.
 - As a **Receptionist**, I want to see detailed prescription and vital sign data for completed appointments to verify treatment plans.
+- As a **Receptionist**, I want the appointment status to change to "Checked In" when I add a patient to the queue so I can see which appointments have been processed.
+- As a **Receptionist**, I want checked-in appointments to appear at the bottom of the list so I can focus on patients who still need to be processed.
+- As a **Receptionist**, I want to schedule a new appointment by selecting either a **Doctor** or a **Polyclinic** so I can accommodate different patient needs and clinic workflows.
 
 ### 4. Authentication & Security
 

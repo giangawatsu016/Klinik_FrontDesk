@@ -55,6 +55,8 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
         doctorId: appointment.doctorId,
         patientDetail: appointment.patientDetail,
         discountName: appointment.discountName,
+        polyclinicId: appointment.polyclinicId,
+        polyclinicName: appointment.polyclinicName,
       );
 
       final createdAppointment = await remoteDataSource.createAppointment(

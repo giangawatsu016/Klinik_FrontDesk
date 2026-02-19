@@ -27,6 +27,8 @@ class AppointmentEntity extends Equatable {
   final String? doctorSip;
   final List<Map<String, dynamic>>? items;
   final Map<String, dynamic>? patientSnapshot;
+  final String? polyclinicId;
+  final String? polyclinicName;
 
   String? get medicalRecordNumber =>
       patientDetail?['medicalRecordNumber']?.toString();
@@ -57,6 +59,8 @@ class AppointmentEntity extends Equatable {
     this.clinicalRecord,
     this.doctorSip,
     this.patientSnapshot,
+    this.polyclinicId,
+    this.polyclinicName,
   });
 
   @override
@@ -86,5 +90,7 @@ class AppointmentEntity extends Equatable {
     transportFee,
     items,
     patientSnapshot,
+    polyclinicId,
+    polyclinicName,
   ];
 }

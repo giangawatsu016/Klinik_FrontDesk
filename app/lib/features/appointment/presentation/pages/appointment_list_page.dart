@@ -22,6 +22,7 @@ class AppointmentListPage extends StatefulWidget {
   final String title;
   final bool showBackButton;
   final bool sliverMode;
+  final VoidCallback? onNavigateToQueue;
 
   const AppointmentListPage({
     super.key,
@@ -32,6 +33,7 @@ class AppointmentListPage extends StatefulWidget {
     this.title = 'My Appointments',
     this.showBackButton = true,
     this.sliverMode = false,
+    this.onNavigateToQueue,
   });
 
   @override
@@ -132,6 +134,11 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
     }
 
     appointments.sort((a, b) {
+      // Checked In appointments go to the bottom of the list
+      final aCheckedIn = a.status.toUpperCase() == 'CHECKED IN' ? 1 : 0;
+      final bCheckedIn = b.status.toUpperCase() == 'CHECKED IN' ? 1 : 0;
+      if (aCheckedIn != bCheckedIn) return aCheckedIn.compareTo(bCheckedIn);
+      // Then sort by date
       return widget.sortAscending
           ? a.date.compareTo(b.date)
           : b.date.compareTo(a.date);
@@ -424,9 +431,12 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
 
   Widget _buildStatusBadge(String status) {
     Color color;
-    switch (status) {
+    switch (status.toUpperCase()) {
       case 'COMPLETED':
         color = Colors.green;
+        break;
+      case 'CHECKED IN':
+        color = const Color(0xFF2859E2);
         break;
       case 'PENDING':
         color = Colors.orange;
@@ -455,33 +465,12 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
     );
   }
 
-  Widget _getTimeIcon(DateTime date) {
-    final hour = date.hour;
-    IconData icon;
-    Color color;
-
-    if (hour >= 5 && hour < 11) {
-      icon = Icons.wb_sunny_outlined; // Pagi
-      color = Colors.orange;
-    } else if (hour >= 11 && hour <= 15) {
-      icon = Icons.wb_sunny_rounded; // Siang
-      color = Colors.amber;
-    } else if (hour > 15 && hour <= 18) {
-      icon = Icons.wb_twilight_rounded; // Sore
-      color = Colors.deepOrange;
-    } else {
-      icon = Icons.nights_stay_rounded; // Malam
-      color = Colors.indigo;
-    }
-
-    return Icon(icon, size: 16, color: color);
-  }
-
   bool _isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day;
+    final wibDate = date.toWib();
+    return wibDate.year == now.year &&
+        wibDate.month == now.month &&
+        wibDate.day == now.day;
   }
 
   void _handleCheckIn(AppointmentEntity appt) {
@@ -526,5 +515,8 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
         duration: const Duration(seconds: 3),
       ),
     );
+
+    // Navigate to Queue Monitor after successful check-in
+    widget.onNavigateToQueue?.call();
   }
 }

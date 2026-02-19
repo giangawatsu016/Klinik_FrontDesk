@@ -58,6 +58,8 @@ class AppointmentModel extends AppointmentEntity {
     super.clinicalRecord,
     super.doctorSip,
     super.patientSnapshot,
+    super.polyclinicId,
+    super.polyclinicName,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
@@ -155,6 +157,9 @@ class AppointmentModel extends AppointmentEntity {
           : null,
       doctorSip:
           json['doctorSip']?.toString() ?? json['doctor']?['sip']?.toString(),
+      polyclinicId: json['polyclinic']?.toString(),
+      polyclinicName:
+          json['polyclinic_name']?.toString() ?? json['polyclinic']?.toString(),
     );
   }
 
@@ -166,7 +171,9 @@ class AppointmentModel extends AppointmentEntity {
       'serviceName': serviceName,
       'date': date.toUtc().toIso8601String(),
       'patientDetail': patientDetail,
-      'finalPrice': finalPrice, // Added to send price to backend
+      'finalPrice': finalPrice,
+      if (polyclinicId != null) 'polyclinicId': polyclinicId,
+      if (polyclinicName != null) 'polyclinicName': polyclinicName,
     };
   }
 }

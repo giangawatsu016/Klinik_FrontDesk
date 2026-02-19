@@ -84,7 +84,7 @@ graph TD
     K --> L[Navigate to Login Screen]
 ```
 
-## 4. Janji Temu (3rd Party Integration) & History Search
+## 4. Janji Temu History Search
 
 ```mermaid
 graph TD
@@ -95,4 +95,38 @@ graph TD
     D -- Typed --> F[Filter History by Patient/Doctor]
     E --> G[View Past Record Details]
     F --> G
+```
+
+## 5. Appointment Registration Flow (Doctor or Polyclinic)
+
+```mermaid
+graph TD
+    A[Open Registrasi Form] --> B[Enter Patient Name]
+    B --> C{Select Visit Type}
+    C -- Doctor --> D[Show Doctor Dropdown]
+    C -- Polyclinic --> E[Show Polyclinic Dropdown]
+    D --> F[Select a Doctor]
+    E --> G[Select a Polyclinic]
+    F --> H[Pick Visit Date]
+    G --> H
+    H --> I[Click Save Schedule]
+    I --> J[Appointment Created]
+    J --> K[Navigate to Jadwal Kunjungan]
+```
+
+## 6. Add to Queue from Appointment Flow
+
+```mermaid
+graph TD
+    A[Jadwal Kunjungan List] --> B{Appointment Status?}
+    B -- Pending --> C{Is Today?}
+    C -- Yes --> D[Show Add to Queue Button]
+    C -- No --> E[Button Disabled]
+    D --> F[Click Add to Queue]
+    F --> G[Create Queue Entry]
+    G --> H[Update Appointment Status: Checked In]
+    H --> I[Refresh List - Checked In Sorted to Bottom]
+    I --> J[Navigate to Queue Monitor]
+    B -- Checked In --> K[No Button - Blue Badge Shown]
+    B -- Attended --> L[No Button - Green Badge Shown]
 ```
