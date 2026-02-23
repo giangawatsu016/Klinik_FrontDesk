@@ -16,7 +16,7 @@ import '../../../front_desk/data/models/queue_entry_model.dart';
 import '../../../../core/utils/age_utils.dart';
 import '../../../../core/constants/config_constants.dart';
 
-enum AppointmentDateFilter { all, today, upcoming, past }
+enum AppointmentDateFilter { all, today, upcoming, past, history }
 
 class AppointmentListPage extends StatefulWidget {
   final UserTier tier;
@@ -172,23 +172,32 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
         final wibDate = a.date.toWib();
         final aDate = DateTime(wibDate.year, wibDate.month, wibDate.day);
 
+        final isFinalized = [
+          'COMPLETED',
+          'CANCELLED',
+          'PAID',
+        ].contains(a.status.toUpperCase());
+
         if (widget.dateFilter == AppointmentDateFilter.today) {
           return aDate.isAtSameMomentAs(today);
         } else if (widget.dateFilter == AppointmentDateFilter.upcoming) {
+          // Strictly show only Today and Future dates
           return aDate.isAtSameMomentAs(today) || aDate.isAfter(today);
         } else if (widget.dateFilter == AppointmentDateFilter.past) {
           return aDate.isBefore(today);
+        } else if (widget.dateFilter == AppointmentDateFilter.history) {
+          // History shows:
+          // 1. Past appointments that are already finalized
+          // 2. OR any finalized appointment from today/future
+          // However, to avoid confusion, let's keep it simple:
+          // Show anything that is either Past OR Finalized
+          return aDate.isBefore(today) || isFinalized;
         }
         return true;
       }).toList();
     }
 
     appointments.sort((a, b) {
-      // Checked In appointments go to the bottom of the list
-      final aCheckedIn = a.status.toUpperCase() == 'CHECKED IN' ? 1 : 0;
-      final bCheckedIn = b.status.toUpperCase() == 'CHECKED IN' ? 1 : 0;
-      if (aCheckedIn != bCheckedIn) return aCheckedIn.compareTo(bCheckedIn);
-      // Then sort by date
       return widget.sortAscending
           ? a.date.compareTo(b.date)
           : b.date.compareTo(a.date);
