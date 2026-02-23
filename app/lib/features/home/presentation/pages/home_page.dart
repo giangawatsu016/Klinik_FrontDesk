@@ -145,18 +145,17 @@ class _HomePageState extends State<HomePage> {
       listeners: [
         BlocListener<FrontDeskBloc, FrontDeskState>(
           listener: (context, state) {
-            if (state is FrontDeskSuccess &&
-                (state.message.contains(
-                      'Registered and added to queue successfully',
-                    ) ||
-                    state.message.contains('Added to queue successfully'))) {
-              setState(() {
-                _currentIndex = 0; // Switch to Queue Monitor
-                _queueSubIndex = 0; // Ensure Queue Monitor sub-tab
-              });
-              // Refresh queue data
+            if (state is FrontDeskSuccess) {
+              if (state.message.contains(
+                'Registered and added to queue successfully',
+              )) {
+                setState(() {
+                  _currentIndex = 2; // Switch to Appointments
+                  _appointmentSubIndex = 0; // Show Jadwal Kunjungan
+                });
+              }
+              // Refresh data for any success
               context.read<FrontDeskBloc>().add(LoadQueueEvent());
-              // Refresh appointments to reflect the Checked In status change
               context.read<AppointmentBloc>().add(GetAppointmentsRequested());
             }
           },
@@ -244,6 +243,7 @@ class _HomePageState extends State<HomePage> {
         subItems: [
           _SubNavItem('Jadwal Kunjungan', 0),
           _SubNavItem('Registrasi', 1),
+          _SubNavItem('History', 2),
         ],
       ),
       _NavItem(Icons.folder_outlined, Icons.folder, 'Records'),
@@ -592,7 +592,7 @@ class _HomePageState extends State<HomePage> {
                               onSearchTap: _handleSearchTap,
                               hasNotification: false,
                               unreadNotificationCount: unreadCount,
-                              showSearchIcon: true,
+                              showSearchIcon: false, // Moved to History
                             ),
                             AppointmentListPage(
                               filterStatus: const [
@@ -600,13 +600,11 @@ class _HomePageState extends State<HomePage> {
                                 'CONFIRMED',
                                 'SCHEDULED',
                                 'ARRIVED',
-                                'COMPLETED',
-                                'PAID',
                                 'IN_PROGRESS',
                               ],
-                              filterPaymentStatus:
-                                  const [], // Allow all payment statuses
+                              filterPaymentStatus: const [],
                               sortAscending: true,
+                              dateFilter: AppointmentDateFilter.today,
                               title: 'Jadwal Kunjungan',
                               tier: widget.tier,
                               showBackButton: false,
@@ -623,13 +621,39 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ],
                         )
-                      : AddAppointmentScreen(
+                      : _appointmentSubIndex == 1
+                      ? AddAppointmentScreen(
                           onSuccess: () {
                             setState(() {
-                              _appointmentSubIndex =
-                                  0; // Switch to Jadwal Kunjungan
+                              _appointmentSubIndex = 0;
                             });
                           },
+                        )
+                      : CustomScrollView(
+                          slivers: [
+                            TabHeader(
+                              subtitle: 'Riwayat Appointment',
+                              onSearchTap: _handleSearchTap,
+                              hasNotification: false,
+                              unreadNotificationCount: unreadCount,
+                              showSearchIcon: true,
+                            ),
+                            AppointmentListPage(
+                              filterStatus: const [
+                                'COMPLETED',
+                                'CANCELLED',
+                                'PAID',
+                                'CHECKED IN',
+                              ],
+                              filterPaymentStatus: const [],
+                              sortAscending: false,
+                              dateFilter: AppointmentDateFilter.notToday,
+                              title: 'History Appointment',
+                              tier: widget.tier,
+                              showBackButton: false,
+                              sliverMode: true,
+                            ),
+                          ],
                         ),
                 ),
               ],

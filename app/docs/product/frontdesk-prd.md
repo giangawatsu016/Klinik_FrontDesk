@@ -72,7 +72,8 @@ Managed through a hierarchical sidebar navigation that provides direct access to
 **Navigation Structure (Sidebar):**
 
 - **Appointments** (Main Menu): Expands to show sub-menus on Desktop/Tablet.
-  - **Jadwal Kunjungan**: Displays the historical list of past appointments.
+  - **Jadwal Kunjungan**: Displays the strictly **Today's and Future** active appointments.
+  - **History**: Displays all **Past** appointments and **Finalized** records (Completed, Cancelled, Checked In).
   - **Registrasi**: Opens the appointment registration form for new schedules.
     - **Visit Type Selection**: Radio toggle to choose between scheduling by **Doctor** or by **Polyclinic**.
       - **Doctor**: Shows a dropdown of available practitioners.

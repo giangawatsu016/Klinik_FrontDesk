@@ -50,7 +50,7 @@ class _SearchPopupState extends State<SearchPopup>
       _focusNode.requestFocus();
     });
 
-    if (widget.tabIndex == 2) {
+    if (widget.tabIndex == 3) {
       final state = context.read<MedicalRecordBloc>().state;
       if (state is MedicalRecordLoaded) {
         _searchController.text = state.search;
@@ -261,11 +261,15 @@ class _SearchPopupState extends State<SearchPopup>
     }
 
     if (state.results.isEmpty && state.query.isNotEmpty) {
-      return _buildEmptyState('No results found');
+      return _buildEmptyState(
+        'No results found (Total loaded: ${state.totalCount})',
+      );
     }
 
     if (state.results.isEmpty && state.query.isEmpty) {
-      return _buildEmptyState('No history found');
+      return _buildEmptyState(
+        'No history found (Total loaded: ${state.totalCount})',
+      );
     }
 
     return Column(

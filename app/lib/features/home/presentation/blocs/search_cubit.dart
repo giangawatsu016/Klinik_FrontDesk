@@ -17,28 +17,32 @@ class SearchActive extends SearchState {
   final String query;
   final List<dynamic> results;
   final bool isLoading;
+  final int totalCount;
 
   const SearchActive({
     required this.tabIndex,
     this.query = '',
     this.results = const [],
     this.isLoading = false,
+    this.totalCount = 0,
   });
 
   @override
-  List<Object?> get props => [tabIndex, query, results, isLoading];
+  List<Object?> get props => [tabIndex, query, results, isLoading, totalCount];
 
   SearchActive copyWith({
     int? tabIndex,
     String? query,
     List<dynamic>? results,
     bool? isLoading,
+    int? totalCount,
   }) {
     return SearchActive(
       tabIndex: tabIndex ?? this.tabIndex,
       query: query ?? this.query,
       results: results ?? this.results,
       isLoading: isLoading ?? this.isLoading,
+      totalCount: totalCount ?? this.totalCount,
     );
   }
 }
@@ -62,7 +66,10 @@ class SearchCubit extends Cubit<SearchState> {
 
   /// Open search for a specific tab
   void openSearch(int tabIndex) {
-    emit(SearchActive(tabIndex: tabIndex));
+    int count = 0;
+    if (tabIndex == 0) count = _services.length;
+    if (tabIndex == 2) count = _appointments.length;
+    emit(SearchActive(tabIndex: tabIndex, totalCount: count));
   }
 
   /// Perform search based on current tab context
@@ -81,6 +88,8 @@ class SearchCubit extends Cubit<SearchState> {
             return [
               'COMPLETED',
               'CANCELLED',
+              'PAID',
+              'CHECKED IN',
             ].contains(appt.status.toUpperCase());
           }).toList();
           break;
@@ -92,7 +101,12 @@ class SearchCubit extends Cubit<SearchState> {
           break;
       }
       emit(
-        currentState.copyWith(query: '', results: history, isLoading: false),
+        currentState.copyWith(
+          query: '',
+          results: history,
+          isLoading: false,
+          totalCount: currentState.totalCount,
+        ),
       );
       return;
     }
@@ -110,17 +124,19 @@ class SearchCubit extends Cubit<SearchState> {
         }).toList();
         break;
 
-      case 2: // Appointments - Search History ONLY (as requested)
+      case 2: // Appointments - Search History
         results = _appointments.where((appt) {
-          final isPast = [
-            'COMPLETED',
-            'CANCELLED',
-          ].contains(appt.status.toUpperCase());
-          if (!isPast) return false;
-
+          // Allow searching ALL appointments (Pending, Scheduled, Completed, Cancelled)
+          // to ensure users find what they are looking for.
           return appt.serviceName.toLowerCase().contains(trimmedQuery) ||
               appt.doctorName.toLowerCase().contains(trimmedQuery) ||
               (appt.transactionNumber?.toLowerCase().contains(trimmedQuery) ??
+                  false) ||
+              (appt.patientDetail?['name']?.toString().toLowerCase().contains(
+                    trimmedQuery,
+                  ) ??
+                  false) ||
+              (appt.paymentStatus?.toLowerCase().contains(trimmedQuery) ??
                   false);
         }).toList();
         break;
@@ -136,7 +152,12 @@ class SearchCubit extends Cubit<SearchState> {
     }
 
     emit(
-      currentState.copyWith(query: query, results: results, isLoading: false),
+      currentState.copyWith(
+        query: query,
+        results: results,
+        isLoading: false,
+        totalCount: currentState.totalCount,
+      ),
     );
   }
 

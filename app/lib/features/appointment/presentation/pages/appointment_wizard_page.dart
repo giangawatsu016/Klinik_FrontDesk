@@ -1816,6 +1816,8 @@ class _AppointmentWizardPageState extends State<AppointmentWizardPage> {
                         finalPrice: widget.service.finalPrice ?? 0.0,
                         serviceId: widget.service.id,
                         doctorId: _selectedDoctor?.id ?? 0,
+                        polyclinicId: _selectedDoctor?.polyclinicId,
+                        polyclinicName: _selectedDoctor?.polyclinicName,
                         patientDetail: {
                           'name': _nameController.text,
                           'phone': _phoneController.text,

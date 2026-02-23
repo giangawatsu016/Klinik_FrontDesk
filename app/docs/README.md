@@ -80,18 +80,22 @@ For detailed field mappings, API endpoint mapping, and environment configuration
   - **Daily Statistics**: The "Completed" statistic card at the top of the Queue Monitor resets every day (WIB). Only entries completed on the current date are counted.
   - **All-Time History**: Now moved to a dedicated **"History"** submenu under the Queue menu. Displays the historical record of all completed queue entries.
   - **Queue Numbering**: Reset automatically to D-001/P-001 at the start of each day by the backend.
-- **Appointment History Search**:
-  - Refined search functionality specifically for past appointments (COMPLETED/CANCELLED).
-  - **Manual Search**: If the search query is empty, a full list of history records is displayed for manual browsing.
+  - **Appointment History Search**:
+    - Refined search functionality specifically for past appointments (COMPLETED/CANCELLED).
+    - **Manual Search**: If the search query is empty, a full list of history records is displayed for manual browsing.
+    - **Backend Limit**: API updated to fetch up to 1000 recent records (default 20) to ensure historical context is available.
 - **Payment Integration**: Supports Cash, BPJS, Insurance, and Credit Card payments.
 - **Responsive UI**: Adaptive layout for mobile, tablet, and desktop devices.
 - **Unified Detail Views**: Clean, professional detail pages for Appointments and Medical Records with solid brand colors.
-- **Real-time Master Data**: Fetches Practitioners and Polyclinics directly from Frappe backend.
+- **Real-time Master Data**: Fetches Practitioners and Polyclinic directly from Frappe backend.
 - **External MySQL Sync**: All patient registrations and queue entries are synced in real-time to `klinik_db` MySQL database via `db_external.py`.
 - **Cross-Database Search**: Patient search automatically falls back to MySQL `patientcore` if not found in Frappe.
 - **Queue Duplicate Prevention**: Patients cannot register for queue if they already have an active entry today.
 - **Staff Profile Details**: View logged-in staff information including Name, Role (Admin/Staff/Doctor), and Staff ID (NIP).
 - **Detailed Appointment Views**: Complete patient information (Name, Formatted Age, Phone) and doctor license (SIP) details in the Appointment Detail page.
+- **Strict Appointment Reorganization**:
+  - **Jadwal Kunjungan**: Now strictly displays **Today's and Future** active appointments (`PENDING`, `SCHEDULED`, `CONFIRMED`, `ARRIVED`). This ensures the front desk focuses only on upcoming patient arrivals.
+  - **History Submenu**: Now displays all **Past** appointments and **Finalized** appointments from any date (including `COMPLETED`, `CANCELLED`, `PAID`, `CHECKED IN`).
 - **Quick Queue Access**: Direct "Add to Queue" button from the Visit Schedule list (visible for today's appointments) for seamless patient check-in. Clicking the button automatically navigates to the Queue Monitor.
 - **Age Calculation**: Automatic formatting of patient age as `X Tahun X Bulan X Hari` for clinical precision.
 

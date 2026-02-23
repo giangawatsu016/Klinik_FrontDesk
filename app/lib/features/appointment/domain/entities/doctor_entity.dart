@@ -9,6 +9,8 @@ class DoctorEntity extends Equatable {
   final String? titleSuffix;
   final double? latitude;
   final double? longitude;
+  final String? polyclinicId;
+  final String? polyclinicName;
 
   const DoctorEntity({
     required this.id,
@@ -19,8 +21,21 @@ class DoctorEntity extends Equatable {
     this.titleSuffix,
     this.latitude,
     this.longitude,
+    this.polyclinicId,
+    this.polyclinicName,
   });
 
   @override
-  List<Object?> get props => [id, name, specialization, photoProfile, titlePrefix, titleSuffix, latitude, longitude];
+  List<Object?> get props => [
+    id,
+    name,
+    specialization,
+    photoProfile,
+    titlePrefix,
+    titleSuffix,
+    latitude,
+    longitude,
+    polyclinicId,
+    polyclinicName,
+  ];
 }

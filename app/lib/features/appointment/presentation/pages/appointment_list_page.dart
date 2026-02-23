@@ -10,9 +10,13 @@ import '../../../../core/utils/date_utils.dart'; // Ext
 import 'appointment_detail_page.dart';
 import '../../../../core/presentation/components/empty_state_widget.dart';
 import '../../../front_desk/presentation/bloc/front_desk_bloc.dart';
+import '../../../front_desk/presentation/bloc/front_desk_state.dart';
 import '../../../front_desk/presentation/bloc/front_desk_event.dart';
 import '../../../front_desk/data/models/queue_entry_model.dart';
 import '../../../../core/utils/age_utils.dart';
+import '../../../../core/constants/config_constants.dart';
+
+enum AppointmentDateFilter { all, today, upcoming, past }
 
 class AppointmentListPage extends StatefulWidget {
   final UserTier tier;
@@ -23,6 +27,7 @@ class AppointmentListPage extends StatefulWidget {
   final bool showBackButton;
   final bool sliverMode;
   final VoidCallback? onNavigateToQueue;
+  final AppointmentDateFilter dateFilter;
 
   const AppointmentListPage({
     super.key,
@@ -34,6 +39,7 @@ class AppointmentListPage extends StatefulWidget {
     this.showBackButton = true,
     this.sliverMode = false,
     this.onNavigateToQueue,
+    this.dateFilter = AppointmentDateFilter.all,
   });
 
   @override
@@ -94,18 +100,42 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
 
     return Theme(
       data: theme,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-          automaticallyImplyLeading: false,
-          leading: widget.showBackButton
-              ? IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                  onPressed: () => Navigator.pop(context),
-                )
-              : null,
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<FrontDeskBloc, FrontDeskState>(
+            listener: (context, state) {
+              if (state is FrontDeskSuccess) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                // Refresh list if needed (though it should already be handled by Bloc)
+              } else if (state is FrontDeskError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+          ),
+        ],
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+            automaticallyImplyLeading: false,
+            leading: widget.showBackButton
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                : null,
+          ),
+          body: content,
         ),
-        body: content,
       ),
     );
   }
@@ -131,6 +161,26 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
             ),
           )
           .toList();
+    }
+
+    // Date Filter logic
+    if (widget.dateFilter != AppointmentDateFilter.all) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      appointments = appointments.where((a) {
+        final wibDate = a.date.toWib();
+        final aDate = DateTime(wibDate.year, wibDate.month, wibDate.day);
+
+        if (widget.dateFilter == AppointmentDateFilter.today) {
+          return aDate.isAtSameMomentAs(today);
+        } else if (widget.dateFilter == AppointmentDateFilter.upcoming) {
+          return aDate.isAtSameMomentAs(today) || aDate.isAfter(today);
+        } else if (widget.dateFilter == AppointmentDateFilter.past) {
+          return aDate.isBefore(today);
+        }
+        return true;
+      }).toList();
     }
 
     appointments.sort((a, b) {
@@ -352,7 +402,12 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Add to Queue Button (only for today's pending appointments)
-                if (appt.status.toUpperCase() == 'PENDING')
+                if ([
+                  'PENDING',
+                  'SCHEDULED',
+                  'CONFIRMED',
+                  'ARRIVED',
+                ].contains(appt.status.toUpperCase()))
                   ElevatedButton.icon(
                     onPressed: _isToday(appt.date)
                         ? () => _handleCheckIn(appt)
@@ -444,6 +499,13 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
       case 'CANCELLED':
         color = Colors.red;
         break;
+      case 'SCHEDULED':
+      case 'CONFIRMED':
+        color = Colors.blue;
+        break;
+      case 'ARRIVED':
+        color = Colors.teal;
+        break;
       default:
         color = Colors.grey;
     }
@@ -502,6 +564,10 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
           queueType: 'Doctor',
           practitioner: appt.doctorId?.toString(),
           practitionerName: appt.doctorName,
+          polyclinic: appt.polyclinicId, // Pass polyclinic ID
+          facility:
+              appt.facilityId ??
+              ConfigConstants.defaultFacility, // Pass facility ID
           appointment: appt.id,
           status: 'Waiting',
         ),

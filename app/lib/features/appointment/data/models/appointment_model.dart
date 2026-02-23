@@ -11,6 +11,8 @@ class DoctorModel extends DoctorEntity {
     super.titleSuffix,
     super.latitude,
     super.longitude,
+    super.polyclinicId,
+    super.polyclinicName,
   });
 
   factory DoctorModel.fromJson(Map<String, dynamic> json) {
@@ -27,6 +29,9 @@ class DoctorModel extends DoctorEntity {
       longitude: json['longitude'] != null
           ? double.tryParse(json['longitude'].toString())
           : null,
+      polyclinicId: json['polyclinic']?.toString(),
+      polyclinicName:
+          json['polyclinic_name']?.toString() ?? json['polyclinic']?.toString(),
     );
   }
 }
@@ -60,6 +65,7 @@ class AppointmentModel extends AppointmentEntity {
     super.patientSnapshot,
     super.polyclinicId,
     super.polyclinicName,
+    super.facilityId,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
@@ -160,6 +166,7 @@ class AppointmentModel extends AppointmentEntity {
       polyclinicId: json['polyclinic']?.toString(),
       polyclinicName:
           json['polyclinic_name']?.toString() ?? json['polyclinic']?.toString(),
+      facilityId: json['facility']?.toString(),
     );
   }
 
@@ -172,8 +179,9 @@ class AppointmentModel extends AppointmentEntity {
       'date': date.toUtc().toIso8601String(),
       'patientDetail': patientDetail,
       'finalPrice': finalPrice,
-      if (polyclinicId != null) 'polyclinicId': polyclinicId,
-      if (polyclinicName != null) 'polyclinicName': polyclinicName,
+      if (polyclinicId != null) 'polyclinic': polyclinicId,
+      if (polyclinicName != null) 'polyclinic_name': polyclinicName,
+      if (facilityId != null) 'facility': facilityId,
     };
   }
 }

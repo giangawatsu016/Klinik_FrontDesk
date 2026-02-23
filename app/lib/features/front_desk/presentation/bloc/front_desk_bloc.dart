@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/front_desk_repository.dart';
 import '../../data/models/queue_entry_model.dart';
+import '../../data/models/practitioner_model.dart';
+import '../../data/models/polyclinic_model.dart';
 import 'front_desk_event.dart';
 import 'front_desk_state.dart';
 
@@ -162,21 +164,24 @@ class FrontDeskBloc extends Bloc<FrontDeskEvent, FrontDeskState> {
     final practitionersResult = await repository.getPractitioners();
     final polyclinicsResult = await repository.getPolyclinics();
 
+    List<PractitionerModel> practitioners = [];
+    List<PolyclinicModel> polyclinics = [];
+
     practitionersResult.fold(
-      (failure) => emit(FrontDeskError(failure.message)),
-      (practitioners) {
-        polyclinicsResult.fold(
-          (failure) => emit(FrontDeskError(failure.message)),
-          (polyclinics) {
-            emit(
-              PractitionersAndPolyclinicsLoaded(
-                practitioners: practitioners,
-                polyclinics: polyclinics,
-              ),
-            );
-          },
-        );
-      },
+      (failure) => null, // Ignore failure to allow partial loading
+      (list) => practitioners = list,
+    );
+
+    polyclinicsResult.fold(
+      (failure) => null, // Ignore failure to allow partial loading
+      (list) => polyclinics = list,
+    );
+
+    emit(
+      PractitionersAndPolyclinicsLoaded(
+        practitioners: practitioners,
+        polyclinics: polyclinics,
+      ),
     );
   }
 
