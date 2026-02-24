@@ -35,6 +35,8 @@ class ApiEndpoints {
   static String get getQueue => '$baseUrl/method/api_clinic.api.get_queue';
   static String get updateQueueStatus =>
       '$baseUrl/method/api_clinic.api.update_queue_status';
+  static String get advanceQueueStatus =>
+      '$baseUrl/method/api_clinic.api.advance_queue_status';
   static String get getQueueHistory =>
       '$baseUrl/method/api_clinic.api.get_queue_history';
 
@@ -47,7 +49,8 @@ class ApiEndpoints {
       '$baseUrl/method/api_clinic.api.get_default_facility';
   static String get getNotifications =>
       '$baseUrl/method/api_clinic.api.get_notifications';
-  static String get getIssuers => '$baseUrl/method/api_clinic.api.get_issuers';
+  static String get getIssuers =>
+      '$baseUrl/method/api_clinic.api.get_payment_issuers';
   static String get googleLogin => '$baseUrl/auth/google';
 
   static String get profile => '$baseUrl/method/api_clinic.api.get_profile';

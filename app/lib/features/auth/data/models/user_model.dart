@@ -31,6 +31,8 @@ class UserModel extends UserEntity {
     super.staffId,
     super.company,
     super.facility,
+    super.specialization,
+    super.registrationNumber,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -75,6 +77,8 @@ class UserModel extends UserEntity {
                 : null),
       satuSehatId: patient != null ? patient['satusehatId']?.toString() : null,
       staffId: json['staff_id']?.toString(),
+      specialization: json['specialization']?.toString(),
+      registrationNumber: json['registration_number']?.toString(),
     );
   }
 }

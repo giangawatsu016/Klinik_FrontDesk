@@ -29,6 +29,8 @@ class UserEntity extends Equatable {
   final String? staffId;
   final String? company;
   final String? facility;
+  final String? specialization;
+  final String? registrationNumber;
 
   const UserEntity({
     required this.id,
@@ -49,6 +51,8 @@ class UserEntity extends Equatable {
     this.staffId,
     this.company,
     this.facility,
+    this.specialization,
+    this.registrationNumber,
   });
 
   UserEntity copyWith({
@@ -66,6 +70,8 @@ class UserEntity extends Equatable {
     String? staffId,
     String? company,
     String? facility,
+    String? specialization,
+    String? registrationNumber,
   }) {
     return UserEntity(
       id: id,
@@ -86,6 +92,8 @@ class UserEntity extends Equatable {
       staffId: staffId ?? this.staffId,
       company: company ?? this.company,
       facility: facility ?? this.facility,
+      specialization: specialization ?? this.specialization,
+      registrationNumber: registrationNumber ?? this.registrationNumber,
     );
   }
 
@@ -109,5 +117,7 @@ class UserEntity extends Equatable {
     staffId,
     company,
     facility,
+    specialization,
+    registrationNumber,
   ];
 }

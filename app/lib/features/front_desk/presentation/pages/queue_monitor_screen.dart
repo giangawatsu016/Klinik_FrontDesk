@@ -53,15 +53,25 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
           } else if (state is FrontDeskLoaded) {
             final allQueue = state.activeQueue;
 
-            // Separate active queues by type
+            // Separate active queues by type (exclude Completed)
+            final activeStatuses = [
+              'Waiting',
+              'Consultation',
+              'Pharmacy',
+              'Payment',
+            ];
             final doctorQueue = allQueue
                 .where(
-                  (e) => e.queueType == 'Doctor' && e.status != 'Completed',
+                  (e) =>
+                      e.queueType == 'Doctor' &&
+                      activeStatuses.contains(e.status),
                 )
                 .toList();
             final polyclinicQueue = allQueue
                 .where(
-                  (e) => e.queueType == 'Polyclinic' && e.status != 'Completed',
+                  (e) =>
+                      e.queueType == 'Polyclinic' &&
+                      activeStatuses.contains(e.status),
                 )
                 .toList();
 
@@ -70,8 +80,14 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
             final waitingCount = combinedQueue
                 .where((e) => e.status == 'Waiting')
                 .length;
-            final inConsultationCount = combinedQueue
-                .where((e) => e.status == 'Called')
+            final consultationCount = combinedQueue
+                .where((e) => e.status == 'Consultation')
+                .length;
+            final pharmacyCount = combinedQueue
+                .where((e) => e.status == 'Pharmacy')
+                .length;
+            final paymentCount = combinedQueue
+                .where((e) => e.status == 'Payment')
                 .length;
 
             // Daily Completed Count from today's queue data
@@ -88,7 +104,9 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                       // Statistics Row
                       _buildQueueStats(
                         waiting: waitingCount,
-                        inConsultation: inConsultationCount,
+                        consultation: consultationCount,
+                        pharmacy: pharmacyCount,
+                        payment: paymentCount,
                         completed: dailyCompletedCount,
                         isCompact: !isWide,
                       ),
@@ -158,37 +176,61 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
 
   Widget _buildQueueStats({
     required int waiting,
-    required int inConsultation,
+    required int consultation,
+    required int pharmacy,
+    required int payment,
     required int completed,
     bool isCompact = false,
   }) {
+    const Color statColor = Color(0xFF2859E2);
+    final gap = SizedBox(width: isCompact ? 3 : 6);
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
             'Waiting',
             waiting.toString(),
-            const Color.fromARGB(255, 40, 89, 255),
+            statColor,
             Icons.access_time,
             isCompact: isCompact,
           ),
         ),
-        SizedBox(width: isCompact ? 6 : 12),
+        gap,
         Expanded(
           child: _buildStatCard(
-            'In Consult',
-            inConsultation.toString(),
-            const Color(0xFF2859E2),
+            'Consultation',
+            consultation.toString(),
+            statColor,
             Icons.medical_services,
             isCompact: isCompact,
           ),
         ),
-        SizedBox(width: isCompact ? 6 : 12),
+        gap,
+        Expanded(
+          child: _buildStatCard(
+            'Pharmacy',
+            pharmacy.toString(),
+            statColor,
+            Icons.local_pharmacy,
+            isCompact: isCompact,
+          ),
+        ),
+        gap,
+        Expanded(
+          child: _buildStatCard(
+            'Payment',
+            payment.toString(),
+            statColor,
+            Icons.payment,
+            isCompact: isCompact,
+          ),
+        ),
+        gap,
         Expanded(
           child: _buildStatCard(
             'Completed',
             completed.toString(),
-            const Color.fromARGB(255, 40, 89, 255),
+            statColor,
             Icons.check_circle,
             isCompact: isCompact,
           ),
@@ -205,17 +247,20 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
     bool isCompact = false,
   }) {
     return Container(
-      padding: EdgeInsets.all(isCompact ? 10 : 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompact ? 6 : 8,
+        vertical: isCompact ? 5 : 7,
+      ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(isCompact ? 12 : 16),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(isCompact ? 8 : 10),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: isCompact ? 16 : 20),
-          SizedBox(width: isCompact ? 4 : 8),
+          Icon(icon, color: color, size: isCompact ? 10 : 12),
+          SizedBox(width: isCompact ? 3 : 5),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,7 +269,7 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                 Text(
                   label,
                   style: GoogleFonts.outfit(
-                    fontSize: isCompact ? 8 : 10,
+                    fontSize: isCompact ? 6 : 7,
                     color: color,
                     fontWeight: FontWeight.w500,
                   ),
@@ -233,7 +278,7 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                 Text(
                   value,
                   style: GoogleFonts.outfit(
-                    fontSize: isCompact ? 16 : 20,
+                    fontSize: isCompact ? 10 : 12,
                     fontWeight: FontWeight.bold,
                     color: color,
                   ),
@@ -253,11 +298,18 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
     Color accentColor, {
     bool isCompact = false,
   }) {
-    // Get currently serving patient
-    final servingPatient = queue.where((e) => e.status == 'Called').toList();
-    final hasInConsultation = servingPatient.isNotEmpty;
+    // Get patients in active statuses (Consultation, Pharmacy, Payment)
+    final servingPatient = queue
+        .where(
+          (e) =>
+              e.status == 'Consultation' ||
+              e.status == 'Pharmacy' ||
+              e.status == 'Payment',
+        )
+        .toList();
+    final hasActivePatient = servingPatient.isNotEmpty;
 
-    // Filter queue: Waiting only (Completed entries are deleted, Called shown in center)
+    // Filter queue: Waiting only (active statuses shown in serving section)
     final waitingQueue = queue.where((e) => e.status == 'Waiting').toList();
 
     return Column(
@@ -269,7 +321,7 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
           servingPatient.isNotEmpty ? servingPatient.first : null,
           accentColor,
           waitingQueue.length,
-          hasInConsultation ? 1 : 0,
+          servingPatient.length,
           isCompact: isCompact,
         ),
         const SizedBox(height: 16),
@@ -278,7 +330,7 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
         _buildQueueList(
           'Waiting',
           waitingQueue,
-          hasInConsultation,
+          hasActivePatient,
           accentColor,
           isCompact: isCompact,
         ),
@@ -427,31 +479,28 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          // Complete button - OUTSIDE GestureDetector
-                          ElevatedButton(
-                            onPressed: () {
-                              context.read<FrontDeskBloc>().add(
-                                UpdateQueueStatusEvent(
-                                  serving.name!,
-                                  'Completed',
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isCompact ? 6 : 10,
-                                vertical: isCompact ? 2 : 4,
-                              ),
-                              minimumSize: Size.zero,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  isCompact ? 6 : 8,
-                                ),
+                          // Status badge - shows current status
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isCompact ? 6 : 10,
+                              vertical: isCompact ? 2 : 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getStatusInfo(
+                                serving.status,
+                              ).color.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(
+                                isCompact ? 6 : 8,
                               ),
                             ),
-                            child: Icon(Icons.check, size: isCompact ? 14 : 16),
+                            child: Text(
+                              _getStatusInfo(serving.status).label,
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: isCompact ? 8 : 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ],
                       )
@@ -677,6 +726,28 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
       return Icon(Icons.check_circle, color: Colors.green.shade300, size: 22);
     }
 
+    // Show status chip for active statuses (Consultation/Pharmacy/Payment)
+    if (entry.status == 'Consultation' ||
+        entry.status == 'Pharmacy' ||
+        entry.status == 'Payment') {
+      final statusInfo = _getStatusInfo(entry.status);
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: statusInfo.color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          statusInfo.label,
+          style: GoogleFonts.outfit(
+            color: statusInfo.color,
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+    }
+
     if (entry.status == 'Waiting') {
       return IconButton(
         icon: Container(
@@ -697,7 +768,7 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
         onPressed: canCall
             ? () {
                 context.read<FrontDeskBloc>().add(
-                  UpdateQueueStatusEvent(entry.name!, 'Called'),
+                  UpdateQueueStatusEvent(entry.name!, 'Consultation'),
                 );
               }
             : null,
@@ -824,7 +895,10 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                         child: ElevatedButton.icon(
                           onPressed: () {
                             context.read<FrontDeskBloc>().add(
-                              UpdateQueueStatusEvent(entry.name!, 'Called'),
+                              UpdateQueueStatusEvent(
+                                entry.name!,
+                                'Consultation',
+                              ),
                             );
                             Navigator.pop(context);
                           },
@@ -837,34 +911,6 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF2859E2),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    if (entry.status == 'Called') ...[
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            context.read<FrontDeskBloc>().add(
-                              UpdateQueueStatusEvent(entry.name!, 'Completed'),
-                            );
-                            Navigator.pop(context);
-                          },
-                          icon: const Icon(Icons.check_circle, size: 18),
-                          label: Text(
-                            'Complete',
-                            style: GoogleFonts.outfit(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
@@ -951,14 +997,20 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
   ({String label, Color color}) _getStatusInfo(String status) {
     switch (status) {
       case 'Waiting':
-        return (
-          label: 'Waiting',
-          color: const Color.fromARGB(255, 40, 89, 255),
-        );
-      case 'Called':
-        return (label: 'In Consultation', color: const Color(0xFF2859E2));
+        return (label: 'Waiting', color: const Color(0xFFF59E0B));
+      case 'Consultation':
+        return (label: 'Consultation', color: const Color(0xFF2859E2));
+      case 'Pharmacy':
+        return (label: 'Pharmacy', color: const Color(0xFF7C3AED));
+      case 'Payment':
+        return (label: 'Payment', color: const Color(0xFF0D9488));
       case 'Completed':
-        return (label: 'Completed', color: Colors.green);
+        return (label: 'Completed', color: const Color(0xFF22C55E));
+      case 'Skipped':
+        return (label: 'Skipped', color: Colors.grey);
+      // Legacy support
+      case 'Called':
+        return (label: 'Consultation', color: const Color(0xFF2859E2));
       default:
         return (label: status, color: Colors.grey);
     }

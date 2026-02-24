@@ -957,6 +957,14 @@ class _PaymentDialogState extends State<PaymentDialog> {
             );
           }
           if (state is IssuersLoaded) {
+            if (state.issuers.isEmpty) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Text('No payment methods found in the system.'),
+                ),
+              );
+            }
             final Map<String, List<IssuerModel>> groups = {};
             for (var issuer in state.issuers) {
               final cat = issuer.category ?? 'Other';
@@ -1015,7 +1023,19 @@ class _PaymentDialogState extends State<PaymentDialog> {
               ),
             );
           }
-          return const Text('Loading issuers...');
+          if (state is FrontDeskError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  'Error: ${state.message}',
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+          return const Center(child: Text('Loading issuers...'));
         },
       ),
       actions: [

@@ -220,26 +220,134 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildProfileInfo(dynamic user) {
     return FadeInDown(
       delay: const Duration(milliseconds: 100),
-      child: Center(
-        child: Column(
-          children: [
-            Text(
-              user.name,
-              style: GoogleFonts.outfit(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
+      child: Column(
+        children: [
+          // Name and Role header
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  user.name,
+                  style: GoogleFonts.outfit(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _primaryBlue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    user.role ?? 'Staff',
+                    style: GoogleFonts.outfit(
+                      color: _primaryBlue,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              user.email,
-              style: GoogleFonts.outfit(color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 20),
+
+          // Detail card
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
+            child: Column(
+              children: [
+                _buildInfoTile(
+                  Icons.email_outlined,
+                  'Email',
+                  user.email ?? '-',
+                ),
+                _buildInfoDivider(),
+                if (user.company != null) ...[
+                  _buildInfoTile(Icons.business, 'Company', user.company!),
+                  _buildInfoDivider(),
+                ],
+                if (user.facility != null) ...[
+                  _buildInfoTile(
+                    Icons.local_hospital,
+                    'Facility',
+                    user.facility!,
+                  ),
+                  _buildInfoDivider(),
+                ],
+                if (user.specialization != null &&
+                    user.specialization!.isNotEmpty) ...[
+                  _buildInfoTile(
+                    Icons.medical_services,
+                    'Specialization',
+                    user.specialization!,
+                  ),
+                  _buildInfoDivider(),
+                ],
+                if (user.registrationNumber != null &&
+                    user.registrationNumber!.isNotEmpty) ...[
+                  _buildInfoTile(
+                    Icons.badge,
+                    'STR Number',
+                    user.registrationNumber!,
+                  ),
+                  _buildInfoDivider(),
+                ],
+                if (user.staffId != null) ...[
+                  _buildInfoTile(Icons.tag, 'Staff ID', user.staffId!),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoTile(IconData icon, String label, String value) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: _primaryBlue.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: _primaryBlue, size: 20),
+      ),
+      title: Text(
+        label,
+        style: GoogleFonts.outfit(fontSize: 11, color: Colors.grey[500]),
+      ),
+      subtitle: Text(
+        value,
+        style: GoogleFonts.outfit(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          color: Colors.black87,
         ),
       ),
     );
+  }
+
+  Widget _buildInfoDivider() {
+    return Divider(height: 1, color: Colors.grey[200], indent: 72);
   }
 
   Widget _buildLogoutButton() {

@@ -17,16 +17,19 @@ Handles patient registration through a unified **Smart Registration Form** that 
 3. **Draft Mode**: Selecting a patient automatically populates all form fields (Smart Auto-fill), allowing staff to verify or update data before proceeding.
 4. **Data Entry**: If it's a new patient, staff manually fills the multi-session form:
    - **Personal Info**: First Name (Mandatory), Last Name, Email, ID / NIK (16 digits), Phone, Birthday.
-   - **Medical & Profiling**: Height, Weight, Gender, Religion, Marital Status.
+   - **Medical & Profiling**: Height, Weight, Gender, Blood Type, Religion, Marital Status.
    - **Background**: Profession, Education.
-   - **Address**: Province, City, Kabupaten, Kecamatan, RT/RW, Postal Code, Full Address.
+   - **Address**: Province, City, Kabupaten, Kecamatan, Kelurahan, RT/RW, Postal Code, Full Address.
 
 **Post-Registration Flow:**
 
 1. Click **"Register"** or **"Add to Queue"**.
 2. **Visit Options Dialog**: Select Doctor or Polyclinic, and Priority checkbox.
-3. **Payment Dialog**: Select payment method (Cash, BPJS, Insurance, Credit Card).
+3. **Payment Dialog**: Select payment method (Cash, QRIS, Debit Card, Credit Card, Insurance).
 4. Entry added to **Queue Monitor** with format `D-XXX` or `P-XXX`.
+
+> [!NOTE]
+> Patient data is stored in the `Clinic Patient` DocType and a `Clinic Encounter` is created on registration.
 
 ---
 
@@ -39,29 +42,50 @@ For monitoring and calling patient queues.
 - **Doctor Queue**: Format `D-xxx` (Regular), `DP-xxx` (Priority).
 - **Polyclinic Queue**: Format `P-xxx` (Regular), `PP-xxx` (Priority).
 
-**Queue Display:**
+**Queue Status Cards (5 cards):**
 
-- **Currently Serving Section**: Shows patient currently "Called" (In Consultation).
-- **Waiting List**: Shows all patients with status "Waiting".
+| Card | Statuses Counted | Color |
+|---|---|---|
+| Waiting | `Waiting` | Orange |
+| Consultation | `Consultation` | Blue |
+| Pharmacy | `Pharmacy` | Purple |
+| Payment | `Payment` | Teal |
+| Completed | `Completed` | Green |
+
+**Status Placement:**
+
+| Status | UI Location |
+|---|---|
+| `Waiting` | **Waiting Card** |
+| `Consultation`, `Pharmacy`, `Payment` | **Antrian Dokter** & **Antrian Polyclinic** columns |
+| `Completed` | **Queue → History** submenu |
 
 **Functionality:**
 
-- **Call Patient**: Changes status from "Waiting" to "Called" (shows in Currently Serving).
-- **Done (Completed)**: Updates status to **Completed**.
-- **Queue History Section**: A dedicated list at the bottom showing **all** patients with "Completed" status across all dates.
+- **Call Patient**: Changes status from `Waiting` to `Consultation`.
+- **Advance Status**: External apps (Doctor/Pharmacy/Payment) advance the status to the next stage.
+- **Queue History Section**: Dedicated History submenu showing all `Completed` patients.
 - **Priority Logic**: Priority patients automatically move to the top of their respective active queues.
 - **Responsive Layout**: Side-by-side on desktop (>600px), stacked on mobile.
 
 **Queue Lifecycle:**
 
 ```text
-Waiting → Called (In Consultation) → Completed (Moves to History)
+Waiting → Consultation → Pharmacy → Payment → Completed
 ```
+
+| Trigger | Status Change |
+|---|---|
+| Frontdesk registers patient | → **Waiting** |
+| Frontdesk clicks "Call Patient" | → **Consultation** |
+| Doctor submits consultation (external app) | → **Pharmacy** |
+| Pharmacy submits complete (external app) | → **Payment** |
+| Payment team submits complete (external app) | → **Completed** |
 
 **Daily Persistence:**
 
-- **Active Queue**: Resets every day at **00:00 WIB (UTC+7)** to ensure focus on today's patients.
-- **Completed History**: Persistent across all days, allowing staff to review past patient visits directly on the monitor screen.
+- **Active Queue**: Resets every day at **00:00 WIB (UTC+7)**.
+- **Completed History**: Persistent across all days.
 
 ---
 
@@ -117,13 +141,33 @@ The detail pages for Appointments and Medical Records follow a unified design st
 
 ### 4. Profile Page Details
 
-Displays the currently logged-in user's information for identity verification.
+Displays the currently logged-in user's information from `Clinic Staff Profile` DocType.
 
 **Information Displayed:**
 
-- **Name**: Full name from the user profile.
-- **Role**: Designated role (e.g., Admin, Staff, Doctor).
-- **Staff ID / NIP**: Unique staff identifier for internal clinic reference.
+| Field | Source (DocType Field) | Description |
+|---|---|---|
+| **Full Name** | `full_name` | Staff member's name |
+| **Staff Role** | `staff_role` | Clinic Admin / Facility Admin / Doctor / Nurse / Pharmacist / Cashier |
+| **Company** | `company` | Linked Clinic Company |
+| **Default Facility** | `default_facility` | Assigned facility |
+| **Specialization** | `specialization` | Medical specialization (if applicable) |
+| **Registration Number** | `registration_number` | STR number |
+
+---
+
+## Data Integration (DocType APIs)
+
+| Function | DocType | Key Fields Used |
+|---|---|---|
+| Patient Registration | `Clinic Patient` | full_name, nik, gender, birth_date, phone, address, blood_type, religion, etc. |
+| Clinical Encounter | `Clinic Encounter` | patient, practitioner, polyclinic, encounter_date, SOAP, diagnosis |
+| Queue Management | `Clinic Queue` | patient, practitioner, polyclinic, status, queue_number, vitals |
+| Polyclinic List | `Clinic Polyclinic` | polyclinic_name |
+| Doctor/Practitioner | `Clinic Practitioner` | full_name, specialization, polyclinic, practitioner_role |
+| Payment Methods | `Clinic Payment` | payment_method (Cash/QRIS/Debit Card/Credit Card/Insurance) |
+| Appointments | `Clinic Appointment` | patient, practitioner, polyclinic, appointment_date/time, status |
+| Staff Profile | `Clinic Staff Profile` | user, full_name, staff_role, company, specialization, registration_number |
 
 ---
 

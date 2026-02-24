@@ -39,28 +39,30 @@ graph TD
 ```mermaid
 graph TD
     A[Queue Monitor Dashboard] --> B{Queue Type?}
-    B -- Doctor --> C[Format: D-xxx]
-    B -- Polyclinic --> D[Format: P-xxx]
-    
-    C --> E[Display in Waiting List]
+    B -- Doctor --> C["Format: D-xxx"]
+    B -- Polyclinic --> D["Format: P-xxx"]
+
+    C --> E[Display in Waiting Card]
     D --> E
-    
+
     E --> F{Priority Patient?}
     F -- Yes --> G[Move to Top of List]
     F -- No --> H[Add to Bottom of List]
-    
+
     G --> I[Receptionist View]
     H --> I
-    
-    I --> J[Click Call Button]
-    J --> K[Status: Called]
-    K --> L[Show in Currently Serving Section]
-    L --> M[Patient In Consultation]
-    M --> N[Click Done Button]
-    N --> O[Status: Completed]
-    O --> P[Move to History List]
-    P --> Q[Visible in Monitor History]
-    Q --> S[End]
+
+    I --> J[Click Call Patient]
+    J --> K["Status: Consultation"]
+    K --> L[Show in Antrian Dokter/Polyclinic]
+    L --> M["Doctor Submits (External App)"]
+    M --> N["Status: Pharmacy"]
+    N --> O["Pharmacy Submits (External App)"]
+    O --> P["Status: Payment"]
+    P --> Q["Payment Submits (External App)"]
+    Q --> R["Status: Completed"]
+    R --> S[Move to History Submenu]
+    S --> T[End]
 ```
 
 ## 3. Session Security & Logout Flow
