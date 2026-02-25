@@ -408,10 +408,13 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
             serviceName: 'Consultation',
             doctorName: isDoctor ? (_selectedDoctorName ?? '') : '',
             finalPrice: 0,
-            doctorId: isDoctor ? int.tryParse(_selectedDoctorId ?? '') : null,
             polyclinicId: !isDoctor ? _selectedPolyclinicId : null,
             polyclinicName: !isDoctor ? _selectedPolyclinicName : null,
-            patientDetail: {'name': _patientNameController.text},
+            patientDetail: {
+              'name': _patientNameController.text,
+              if (isDoctor && _selectedDoctorId != null)
+                'practitioner_id': _selectedDoctorId,
+            },
           ),
         ),
       );

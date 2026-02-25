@@ -171,14 +171,18 @@ class AppointmentModel extends AppointmentEntity {
   }
 
   Map<String, dynamic> toJson() {
+    // Resolve practitioner: prefer string ID from patientDetail, fallback to doctorId
+    final practitionerId =
+        patientDetail?['practitioner_id']?.toString() ?? (doctorId?.toString());
+
     return {
-      'serviceId': serviceId,
-      'doctorId': doctorId,
-      'doctorName': doctorName,
-      'serviceName': serviceName,
-      'date': date.toUtc().toIso8601String(),
-      'patientDetail': patientDetail,
-      'finalPrice': finalPrice,
+      'status': status,
+      'appointment_date':
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+      'service_type': serviceName,
+      if (practitionerId != null) 'practitioner': practitionerId,
+      if (doctorName.isNotEmpty) 'doctor_name': doctorName,
+      'patient': patientDetail?['name']?.toString() ?? '',
       if (polyclinicId != null) 'polyclinic': polyclinicId,
       if (polyclinicName != null) 'polyclinic_name': polyclinicName,
       if (facilityId != null) 'facility': facilityId,

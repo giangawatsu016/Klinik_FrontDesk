@@ -628,6 +628,10 @@ class _HomePageState extends State<HomePage> {
                             setState(() {
                               _appointmentSubIndex = 0;
                             });
+                            // Ensure appointment list refreshes
+                            context.read<AppointmentBloc>().add(
+                              GetAppointmentsRequested(),
+                            );
                           },
                         )
                       : CustomScrollView(
@@ -640,11 +644,11 @@ class _HomePageState extends State<HomePage> {
                               showSearchIcon: true,
                             ),
                             AppointmentListPage(
-                            filterStatus: const [],
-                            filterPaymentStatus: const [],
-                            sortAscending: false,
-                            dateFilter: AppointmentDateFilter.history,
-                            title: 'History Appointment',
+                              filterStatus: const [],
+                              filterPaymentStatus: const [],
+                              sortAscending: false,
+                              dateFilter: AppointmentDateFilter.history,
+                              title: 'History Appointment',
                               tier: widget.tier,
                               showBackButton: false,
                               sliverMode: true,

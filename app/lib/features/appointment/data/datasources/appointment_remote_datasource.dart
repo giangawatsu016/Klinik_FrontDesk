@@ -82,8 +82,15 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       data: {'data': appointment.toJson()},
     );
 
-    if (response.data['message'] != null) {
-      return AppointmentModel.fromJson(response.data['message']);
+    final message = response.data['message'];
+    if (message != null) {
+      // Handle both direct dict and nested {"message": dict} formats
+      final data = message is Map && message.containsKey('message')
+          ? message['message']
+          : message;
+      if (data is Map) {
+        return AppointmentModel.fromJson(Map<String, dynamic>.from(data));
+      }
     }
     throw Exception('Failed to create appointment');
   }
