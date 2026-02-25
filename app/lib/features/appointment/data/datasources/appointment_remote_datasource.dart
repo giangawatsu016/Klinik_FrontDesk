@@ -4,6 +4,16 @@ import 'package:flutter/foundation.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 
+/// Thrown when the API cannot find a patient during appointment creation.
+/// The UI should catch this and redirect the user to patient registration.
+class PatientNotFoundException implements Exception {
+  final String message;
+  final String searchQuery;
+  PatientNotFoundException(this.message, {this.searchQuery = ''});
+  @override
+  String toString() => message;
+}
+
 abstract class AppointmentRemoteDataSource {
   Future<List<DoctorModel>> getDoctors();
   Future<List<BusyRangeModel>> getAvailability(int doctorId, String date);
@@ -89,6 +99,14 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
           ? message['message']
           : message;
       if (data is Map) {
+        // Check if patient was not found — redirect to registration
+        if (data['patient_not_found'] == true) {
+          throw PatientNotFoundException(
+            data['message']?.toString() ??
+                'Pasien tidak ditemukan. Silakan registrasi terlebih dahulu.',
+            searchQuery: data['search_query']?.toString() ?? '',
+          );
+        }
         return AppointmentModel.fromJson(Map<String, dynamic>.from(data));
       }
     }

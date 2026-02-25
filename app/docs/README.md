@@ -67,7 +67,7 @@ The primary backend is the `api_clinic` Frappe app running on WSL.
 
 - **Queue Management**:
   - **Automated Integration**: `Add to Queue` automatically creates a `Clinic Encounter` record with status `Arrived`.
-  - **Queue Lifecycle**: `Waiting → Consultation → Pharmacy → Payment → Completed`
+  - **Queue Lifecycle**: `Waiting → Done → Consultation → Pharmacy → Payment → Completed`
   - **Status Cards**: 5 stat cards at the top of Queue Monitor
   - **Status Placement**:
     - `Waiting` → Waiting Card
@@ -78,9 +78,7 @@ The primary backend is the `api_clinic` Frappe app running on WSL.
   - **External App Integration**: Doctor/Pharmacy/Payment apps advance queue status via `advance_queue_status` API
 - **Payment Integration**: Payment methods fetched from `Clinic Payment` DocType options
 - **Responsive UI**: Adaptive layout for mobile, tablet, and desktop
-- **External MySQL Sync**: Patient registrations and queue entries synced to `klinik_db`
-- **Cross-Database Search**: Patient search falls back to MySQL if not found in Frappe
-- **Staff Profile**: Shows Role, Company, Facility, Specialization, and STR Number from `Clinic Staff Profile`
+- **Patient Lookup**: Appointment search supports Name, Phone (HP), and NIK. If patient not found, redirects to Registration.
 - **Age Calculation**: Automatic formatting as `X Tahun X Bulan X Hari`
 - **Auto-Logout**: Session expires after 15 minutes of inactivity
 
@@ -117,9 +115,24 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 > [!IMPORTANT]
 > After adding new fields to a DocType JSON, you **MUST** run `bench migrate` to update database tables.
 
-## Recent Updates
+### v3.2 - Feb 25 2026 (Current)
 
-### v3.1 - Feb 25 2026 (Current)
+- **Patient Lookup Enhancement**:
+  - `create_appointment` API now searches by: Frappe ID, full_name, first_name, NIK, and Phone.
+  - If patient not found, returns structured `patient_not_found` response instead of error.
+  - Flutter UI shows a dialog offering to redirect to Registration page.
+  - Appointment form label changed to 'Nama Pasien / No. HP / NIK'.
+- **Queue Status Alignment**:
+  - `Clinic FrontDesk Queue` statuses aligned with `Clinic Queue` DocType.
+  - Status options: `Waiting | Done | Consultation | Pharmacy | Payment | Completed | Skipped`.
+- **Queue Naming Fix**:
+  - Implemented Python-level `autoname()` for `FDQ-YYYY-#####` format.
+  - Fixed `DuplicateEntryError` by using `naming_rule: By script`.
+- **External DB Removal**:
+  - Removed all `db_external` calls (sync_patient, search_patient_external, sync_queue_status).
+  - Added field normalization layer (`FIELD_MAP_EN_TO_ID`) for Flutter→Frappe field mapping.
+
+### v3.1 - Feb 25 2026
 
 - **Patient-Encounter Integration**:
   - `add_to_queue` API now automatically creates a `Clinic Encounter` record.
@@ -137,5 +150,4 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 - Appointment Registration with Doctor/Polyclinic toggle
 - Appointment Status Auto-Update (Pending → Checked In)
 - Smart Registration System with auto-fill
-- External MySQL Sync for Patient/Queue data
 - Responsive UI with adaptive layouts

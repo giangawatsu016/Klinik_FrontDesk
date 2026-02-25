@@ -11,7 +11,12 @@ import '../../../appointment/domain/entities/appointment_entity.dart';
 
 class AddAppointmentScreen extends StatefulWidget {
   final VoidCallback? onSuccess;
-  const AddAppointmentScreen({super.key, this.onSuccess});
+  final VoidCallback? onNavigateToRegistration;
+  const AddAppointmentScreen({
+    super.key,
+    this.onSuccess,
+    this.onNavigateToRegistration,
+  });
 
   @override
   State<AddAppointmentScreen> createState() => _AddAppointmentScreenState();
@@ -81,9 +86,50 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
           // Navigate to Jadwal Kunjungan
           widget.onSuccess?.call();
         } else if (state is AppointmentError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-          );
+          // Check if the error is a patient-not-found situation
+          if (state.message.contains('tidak ditemukan') ||
+              state.message.contains('not found')) {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Pasien Tidak Ditemukan'),
+                content: Text(
+                  '${state.message}\n\nApakah Anda ingin mendaftarkan pasien baru?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('Batal'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      // Navigate to Registration page
+                      if (widget.onNavigateToRegistration != null) {
+                        widget.onNavigateToRegistration!();
+                      } else {
+                        widget.onSuccess?.call();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2859E2),
+                    ),
+                    child: const Text(
+                      'Registrasi Pasien',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       },
       child: BlocListener<FrontDeskBloc, FrontDeskState>(
@@ -120,8 +166,8 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                 _buildCard([
                   _buildTextField(
                     _patientNameController,
-                    'Patient Name',
-                    Icons.person,
+                    'Nama Pasien / No. HP / NIK',
+                    Icons.person_search,
                     true,
                   ),
 

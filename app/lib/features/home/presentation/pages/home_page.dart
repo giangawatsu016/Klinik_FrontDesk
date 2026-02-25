@@ -633,6 +633,11 @@ class _HomePageState extends State<HomePage> {
                               GetAppointmentsRequested(),
                             );
                           },
+                          onNavigateToRegistration: () {
+                            setState(() {
+                              _currentIndex = 1; // Registration page
+                            });
+                          },
                         )
                       : CustomScrollView(
                           slivers: [
