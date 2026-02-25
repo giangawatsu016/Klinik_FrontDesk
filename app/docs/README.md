@@ -23,7 +23,7 @@ The FrontDesk module handles patient registration, queue management, and appoint
 
 ### Documentation Structure
 
-```
+```text
 docs/
 ├── README.md                      # This file
 ├── product/
@@ -53,7 +53,7 @@ The primary backend is the `api_clinic` Frappe app running on WSL.
 - **DocType APIs**:
 
 | DocType | Purpose |
-|---|---|
+| --- | --- |
 | `Clinic Patient` | Patient registration and search |
 | `Clinic FrontDesk Queue` | Queue management |
 | `Clinic Polyclinic` | Polyclinic names |
@@ -66,6 +66,7 @@ The primary backend is the `api_clinic` Frappe app running on WSL.
 ## Key Features
 
 - **Queue Management**:
+  - **Automated Integration**: `Add to Queue` automatically creates a `Clinic Encounter` record with status `Arrived`.
   - **Queue Lifecycle**: `Waiting → Consultation → Pharmacy → Payment → Completed`
   - **Status Cards**: 5 stat cards at the top of Queue Monitor
   - **Status Placement**:
@@ -118,17 +119,17 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 
 ## Recent Updates
 
-### v3.0 - Feb 24 2026 (Current)
+### v3.1 - Feb 25 2026 (Current)
 
-- **Queue Status Flow Overhaul**:
-  - New lifecycle: `Waiting → Consultation → Pharmacy → Payment → Completed`
-  - 5 stat cards in Queue Monitor
-  - External apps (Doctor/Pharmacy/Payment) advance status via API
-- **DocType API Integration**:
-  - Payment methods from `Clinic Payment` DocType
-  - Profile from `Clinic Staff Profile` DocType
-  - All endpoints use real Frappe DocType APIs
-- **Codebase Cleanup**: Removed debug scripts, unused templates, and test artifacts
+- **Patient-Encounter Integration**:
+  - `add_to_queue` API now automatically creates a `Clinic Encounter` record.
+  - Ensures clinical staff see patients in their active consultation queue immediately after FrontDesk check-in.
+  - Inherits priority levels from appointments.
+- **Architecture Documentation**:
+  - Clarified separation between `Clinic FrontDesk Queue` (Operational) and `Clinic Queue` (Clinical).
+  - Explicit dependency on `Clinic Facility` for multi-site data scoping.
+
+### v3.0 - Feb 24 2026
 
 ### v2.0 - v2.10 (Feb 2026)
 

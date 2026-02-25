@@ -29,7 +29,7 @@ Handles patient registration through a unified **Smart Registration Form** that 
 4. Entry added to **Queue Monitor** with format `D-XXX` or `P-XXX`.
 
 > [!NOTE]
-> Patient data is stored in the `Clinic Patient` DocType and a `Clinic Encounter` is created on registration.
+> Patient data is stored in the `Clinic Patient` DocType and a **`Clinic Encounter`** is automatically created when the patient is added to the queue (`add_to_queue`). This ensures the Doctor sees the patient in their clinical consultation list immediately.
 
 ---
 
@@ -45,7 +45,7 @@ For monitoring and calling patient queues.
 **Queue Status Cards (5 cards):**
 
 | Card | Statuses Counted | Color |
-|---|---|---|
+| --- | --- | --- |
 | Waiting | `Waiting` | Orange |
 | Consultation | `Consultation` | Blue |
 | Pharmacy | `Pharmacy` | Purple |
@@ -55,7 +55,7 @@ For monitoring and calling patient queues.
 **Status Placement:**
 
 | Status | UI Location |
-|---|---|
+| --- | --- |
 | `Waiting` | **Waiting Card** |
 | `Consultation`, `Pharmacy`, `Payment` | **Antrian Dokter** & **Antrian Polyclinic** columns |
 | `Completed` | **Queue → History** submenu |
@@ -75,7 +75,7 @@ Waiting → Consultation → Pharmacy → Payment → Completed
 ```
 
 | Trigger | Status Change |
-|---|---|
+| --- | --- |
 | Frontdesk registers patient | → **Waiting** |
 | Frontdesk clicks "Call Patient" | → **Consultation** |
 | Doctor submits consultation (external app) | → **Pharmacy** |
@@ -146,7 +146,7 @@ Displays the currently logged-in user's information from `Clinic Staff Profile` 
 **Information Displayed:**
 
 | Field | Source (DocType Field) | Description |
-|---|---|---|
+| --- | --- | --- |
 | **Full Name** | `full_name` | Staff member's name |
 | **Staff Role** | `staff_role` | Clinic Admin / Facility Admin / Doctor / Nurse / Pharmacist / Cashier |
 | **Company** | `company` | Linked Clinic Company |
@@ -158,16 +158,17 @@ Displays the currently logged-in user's information from `Clinic Staff Profile` 
 
 ## Data Integration (DocType APIs)
 
-| Function | DocType | Key Fields Used |
-|---|---|---|
-| Patient Registration | `Clinic Patient` | full_name, nik, gender, birth_date, phone, address, blood_type, religion, etc. |
-| Clinical Encounter | `Clinic Encounter` | patient, practitioner, polyclinic, encounter_date, SOAP, diagnosis |
-| Queue Management | `Clinic Queue` | patient, practitioner, polyclinic, status, queue_number, vitals |
-| Polyclinic List | `Clinic Polyclinic` | polyclinic_name |
-| Doctor/Practitioner | `Clinic Practitioner` | full_name, specialization, polyclinic, practitioner_role |
-| Payment Methods | `Clinic Payment` | payment_method (Cash/QRIS/Debit Card/Credit Card/Insurance) |
-| Appointments | `Clinic Appointment` | patient, practitioner, polyclinic, appointment_date/time, status |
-| Staff Profile | `Clinic Staff Profile` | user, full_name, staff_role, company, specialization, registration_number |
+| Function | DocType | Key Fields Used | Description |
+|---|---|---|---|
+| Patient Registration | `Clinic Patient` | full_name, nik, gender, birth_date, phone, address, etc. | Core patient demographic data. |
+| Clinical Encounter | `Clinic Encounter` | patient, practitioner, polyclinic, status, priority | **Auto-created on check-in.** Used by Doctors for rekam medis. |
+| Operational Queue | `Clinic FrontDesk Queue` | patient, practitioner, polyclinic, status, queue_number | Used by FrontDesk to manage daily flow. |
+| Clinical Queue | `Clinic Queue` | patient, status, queue_number, vitals | Used by Nurses/Doctors for clinical workflow. |
+| Polyclinic List | `Clinic Polyclinic` | polyclinic_name | List of available clinics. |
+| Doctor/Practitioner | `Clinic Practitioner` | full_name, specialization, polyclinic, practitioner_role | List of active doctors. |
+| Payment Methods | `Clinic Payment` | payment_method | Supported payment options. |
+| Appointments | `Clinic Appointment` | patient, practitioner, polyclinic, status | Appointment scheduling data. |
+| Staff Profile | `Clinic Staff Profile` | user, full_name, staff_role, company | Logged-in staff details. |
 
 ---
 

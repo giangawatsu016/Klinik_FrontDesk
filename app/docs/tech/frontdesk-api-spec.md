@@ -75,6 +75,12 @@ The FrontDesk Service manages patient lifecycle at the clinic reception, includi
 
 **Description**: Adds a registered patient to the daily visitation queue.
 
+**Side Effects**:
+
+- Automatically creates a **`Clinic Encounter`** record with status **`Arrived`**.
+- Updates linked `Clinic Appointment` status to **`CHECKED IN`**.
+- Inherits `priority` from appointment if applicable.
+
 **Request Body (Schema)**:
 
 ```json
@@ -118,6 +124,28 @@ The FrontDesk Service manages patient lifecycle at the clinic reception, includi
       "patient_name": "John Doe",
       "queue_number": "D-001",
       "status": "Waiting"
+    }
+  ]
+}
+```
+
+---
+
+### [GET] /get_queue_history
+
+**Description**: Retrieves historical queue entries.
+
+**Response (Success - 200)**:
+
+```json
+{
+  "message": [
+    {
+      "name": "QUE-2024-0001",
+      "patient_name": "John Doe",
+      "queue_number": "D-001",
+      "status": "Completed",
+      "date": "YYYY-MM-DD"
     }
   ]
 }

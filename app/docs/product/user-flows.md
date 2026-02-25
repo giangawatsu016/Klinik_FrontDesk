@@ -31,7 +31,8 @@ graph TD
     O --> P[Cash / BPJS / Insurance / Credit Card]
     P --> Q[Confirm Payment]
     Q --> R[Added to Queue Monitor]
-    R --> S[End]
+    R --> R1[Auto-Create Clinic Encounter]
+    R1 --> S[End]
 ```
 
 ## 2. Queue Monitoring Flow

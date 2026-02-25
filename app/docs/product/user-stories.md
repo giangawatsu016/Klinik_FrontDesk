@@ -8,7 +8,7 @@ This document tracks the **High-Level Epics** of the Klinik FrontDesk product. D
 
 - As a **Receptionist**, I want to register new patients with their personal and medical details so they can be added to the clinic system.
 - As a **Receptionist**, I want to quickly find and register existing patients using their NIK or phone number to minimize registration time.
-- As a **Receptionist**, I want to select visit options (Doctor/Polyclinic) and payment methods during registration so the patient is correctly queued and billed.
+- As a **Receptionist**, I want to select visit options (Doctor/Polyclinic) and payment methods during registration so the patient is correctly queued, billed, and **automatically added to the Doctor's clinical consultation list.**
 
 ### 2. Queue Management & Monitoring
 

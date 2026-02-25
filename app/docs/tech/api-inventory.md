@@ -16,7 +16,7 @@ This file lists all available services and their base URLs. For detailed Request
 
 - `POST /register_patient`
 - `GET /search_patient`
-- `POST /add_to_queue`
+- `POST /add_to_queue` (Updated Feb 25 2026: now automatically creates `Clinic Encounter`)
 - `GET /get_queue`
 - `GET /get_queue_history`
 - `POST /update_queue_status`
