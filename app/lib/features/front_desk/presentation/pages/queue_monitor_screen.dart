@@ -309,7 +309,9 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
         .toList();
 
     // Filter queue: Waiting only (active statuses shown in serving section)
-    final waitingQueue = queue.where((e) => e.status == 'Waiting').toList();
+    // Sort: priority patients first, then by queue order
+    final waitingQueue = queue.where((e) => e.status == 'Waiting').toList()
+      ..sort((a, b) => b.isPriority.compareTo(a.isPriority));
 
     return Column(
       children: [
