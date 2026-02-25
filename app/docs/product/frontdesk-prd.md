@@ -62,7 +62,8 @@ For monitoring and calling patient queues.
 
 **Functionality:**
 
-- **Call Patient**: Changes status from `Waiting` to `Consultation`.
+- **Call Patient**: Changes status from `Waiting` to `Consultation`. Always available for the top waiting patient, even when other patients are already active.
+- **Multi-Patient Active Queue**: The Antrian Dokter/Polyclinic card displays **all** patients currently in Consultation, Pharmacy, or Payment stages simultaneously, each with their own status badge.
 - **Advance Status**: External apps (Doctor/Pharmacy/Payment) advance the status to the next stage.
 - **Queue History Section**: Dedicated History submenu showing all `Completed` patients.
 - **Priority Logic**: Priority patients automatically move to the top of their respective active queues.

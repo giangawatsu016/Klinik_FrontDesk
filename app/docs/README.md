@@ -67,7 +67,9 @@ The primary backend is the `api_clinic` Frappe app running on WSL.
 
 - **Queue Management**:
   - **Automated Integration**: `Add to Queue` automatically creates a `Clinic Encounter` record with status `Arrived`.
-  - **Queue Lifecycle**: `Waiting → Done → Consultation → Pharmacy → Payment → Completed`
+  - **Queue Lifecycle**: `Waiting → Consultation → Pharmacy → Payment → Completed`
+  - **Multi-Patient Active Queue**: Antrian Dokter/Polyclinic card holds multiple patients simultaneously
+  - **Unrestricted Call**: Top waiting patient can always be called, even with active patients
   - **Status Cards**: 5 stat cards at the top of Queue Monitor
   - **Status Placement**:
     - `Waiting` → Waiting Card
@@ -115,7 +117,17 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 > [!IMPORTANT]
 > After adding new fields to a DocType JSON, you **MUST** run `bench migrate` to update database tables.
 
-### v3.2 - Feb 25 2026 (Current)
+### v3.3 - Feb 25 2026 (Current)
+
+- **Multi-Patient Active Queue**:
+  - Antrian Dokter/Polyclinic card now displays all active patients (Consultation, Pharmacy, Payment) simultaneously.
+  - Card dynamically resizes based on number of active patients.
+  - Each patient shows queue number, name, practitioner, and individual status badge.
+- **Unrestricted Call Patient**:
+  - Top waiting patient can always be called, regardless of how many patients are already active.
+  - Removed `!hasInConsultation` guard that previously blocked calling.
+
+### v3.2 - Feb 25 2026
 
 - **Patient Lookup Enhancement**:
   - `create_appointment` API now searches by: Frappe ID, full_name, first_name, NIK, and Phone.

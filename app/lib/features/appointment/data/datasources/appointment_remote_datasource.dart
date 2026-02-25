@@ -94,19 +94,20 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
 
     final message = response.data['message'];
     if (message != null) {
+      // Check for patient_not_found FIRST (before nested extraction)
+      if (message is Map && message['patient_not_found'] == true) {
+        throw PatientNotFoundException(
+          message['error_message']?.toString() ??
+              'Pasien tidak ditemukan. Silakan registrasi terlebih dahulu.',
+          searchQuery: message['search_query']?.toString() ?? '',
+        );
+      }
+
       // Handle both direct dict and nested {"message": dict} formats
       final data = message is Map && message.containsKey('message')
           ? message['message']
           : message;
       if (data is Map) {
-        // Check if patient was not found — redirect to registration
-        if (data['patient_not_found'] == true) {
-          throw PatientNotFoundException(
-            data['message']?.toString() ??
-                'Pasien tidak ditemukan. Silakan registrasi terlebih dahulu.',
-            searchQuery: data['search_query']?.toString() ?? '',
-          );
-        }
         return AppointmentModel.fromJson(Map<String, dynamic>.from(data));
       }
     }

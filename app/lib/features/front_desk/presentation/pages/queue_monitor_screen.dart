@@ -299,7 +299,7 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
     bool isCompact = false,
   }) {
     // Get patients in active statuses (Consultation, Pharmacy, Payment)
-    final servingPatient = queue
+    final servingPatients = queue
         .where(
           (e) =>
               e.status == 'Consultation' ||
@@ -307,35 +307,31 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
               e.status == 'Payment',
         )
         .toList();
-    final hasActivePatient = servingPatient.isNotEmpty;
 
     // Filter queue: Waiting only (active statuses shown in serving section)
     final waitingQueue = queue.where((e) => e.status == 'Waiting').toList();
 
     return Column(
       children: [
-        // Currently Serving Section for this queue
+        // Currently Serving Section — shows ALL active patients
         _buildServingSection(
           title,
           icon,
-          servingPatient.isNotEmpty ? servingPatient.first : null,
+          servingPatients,
           accentColor,
           waitingQueue.length,
-          servingPatient.length,
           isCompact: isCompact,
         ),
         const SizedBox(height: 16),
 
-        // Queue List
+        // Queue List — call patient always allowed for top entry
         _buildQueueList(
           'Waiting',
           waitingQueue,
-          hasActivePatient,
+          false, // no longer blocks calling
           accentColor,
           isCompact: isCompact,
         ),
-
-        // Completed entries are deleted (queue resets daily)
       ],
     );
   }
@@ -343,14 +339,20 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
   Widget _buildServingSection(
     String title,
     IconData icon,
-    QueueEntryModel? serving,
+    List<QueueEntryModel> servingPatients,
     Color accentColor,
-    int waitingCount,
-    int activeCount, {
+    int waitingCount, {
     bool isCompact = false,
   }) {
+    final activeCount = servingPatients.length;
+    // Dynamic height: header (~36px) + each patient row (~44px) or empty state
+    final contentHeight = activeCount > 0
+        ? (isCompact ? 36.0 : 40.0) + (activeCount * (isCompact ? 44.0 : 50.0))
+        : (isCompact ? 80.0 : 100.0);
+
     final container = Container(
-      height: isCompact ? 80 : 100,
+      constraints: BoxConstraints(minHeight: isCompact ? 80 : 100),
+      height: contentHeight,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -413,114 +415,51 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
               ),
             ),
 
-            // Currently Serving
+            // Active Patients List
             Expanded(
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.symmetric(
-                  horizontal: isCompact ? 8 : 12,
-                  vertical: isCompact ? 4 : 6,
-                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
                 ),
-                child: serving != null
-                    ? Row(
-                        children: [
-                          // Tappable patient info area
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => _showQueueDetailDialog(serving),
-                              behavior: HitTestBehavior.opaque,
-                              child: Row(
-                                children: [
-                                  // Queue number
-                                  Text(
-                                    serving.queueNumber ?? '-',
-                                    style: GoogleFonts.outfit(
-                                      color: Colors.white,
-                                      fontSize: isCompact ? 18 : 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: isCompact ? 8 : 12),
-                                  // Patient info
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          serving.patientName ?? 'Unknown',
-                                          style: GoogleFonts.outfit(
-                                            color: Colors.white,
-                                            fontSize: isCompact ? 9 : 11,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        Text(
-                                          '${serving.practitioner ?? serving.polyclinic ?? ''} • ${serving.paymentMethod ?? 'N/A'}',
-                                          style: GoogleFonts.outfit(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.7,
-                                            ),
-                                            fontSize: isCompact ? 7 : 9,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Status badge - shows current status
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isCompact ? 6 : 10,
-                              vertical: isCompact ? 2 : 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getStatusInfo(
-                                serving.status,
-                              ).color.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(
-                                isCompact ? 6 : 8,
-                              ),
-                            ),
-                            child: Text(
-                              _getStatusInfo(serving.status).label,
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: isCompact ? 8 : 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
+                child: servingPatients.isNotEmpty
+                    ? ListView.separated(
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isCompact ? 8 : 12,
+                          vertical: isCompact ? 4 : 6,
+                        ),
+                        itemCount: servingPatients.length,
+                        separatorBuilder: (_, __) => Divider(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          height: 1,
+                        ),
+                        itemBuilder: (context, index) {
+                          return _buildServingPatientRow(
+                            servingPatients[index],
+                            isCompact: isCompact,
+                          );
+                        },
                       )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.hourglass_empty,
-                            color: Colors.white.withValues(alpha: 0.5),
-                            size: isCompact ? 14 : 18,
-                          ),
-                          SizedBox(width: isCompact ? 4 : 8),
-                          Text(
-                            'No patient',
-                            style: GoogleFonts.outfit(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: isCompact ? 9 : 10,
+                    : Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.hourglass_empty,
+                              color: Colors.white.withValues(alpha: 0.5),
+                              size: isCompact ? 14 : 18,
                             ),
-                          ),
-                        ],
+                            SizedBox(width: isCompact ? 4 : 8),
+                            Text(
+                              'No patient',
+                              style: GoogleFonts.outfit(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: isCompact ? 9 : 10,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
               ),
             ),
@@ -535,6 +474,82 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
     }
     return Center(
       child: FractionallySizedBox(widthFactor: 0.7, child: container),
+    );
+  }
+
+  /// Renders a single patient row inside the serving card
+  Widget _buildServingPatientRow(
+    QueueEntryModel patient, {
+    bool isCompact = false,
+  }) {
+    return GestureDetector(
+      onTap: () => _showQueueDetailDialog(patient),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: isCompact ? 4 : 6),
+        child: Row(
+          children: [
+            // Queue number
+            Text(
+              patient.queueNumber ?? '-',
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontSize: isCompact ? 16 : 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(width: isCompact ? 8 : 12),
+            // Patient info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    patient.patientName ?? 'Unknown',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: isCompact ? 9 : 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '${patient.practitioner ?? patient.polyclinic ?? ''} • ${patient.paymentMethod ?? 'N/A'}',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: isCompact ? 7 : 9,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Status badge
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 6 : 10,
+                vertical: isCompact ? 2 : 4,
+              ),
+              decoration: BoxDecoration(
+                color: _getStatusInfo(
+                  patient.status,
+                ).color.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(isCompact ? 6 : 8),
+              ),
+              child: Text(
+                _getStatusInfo(patient.status).label,
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontSize: isCompact ? 8 : 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -624,9 +639,8 @@ class _QueueMonitorScreenState extends State<QueueMonitorScreen> {
     final isPriority = entry.isPriority == 1;
     final statusInfo = _getStatusInfo(entry.status);
 
-    // Disable call button if someone else is in consultation OR not the first in line
-    final canCall =
-        entry.status == 'Waiting' && !hasInConsultation && isFirstInWaiting;
+    // Allow calling the first waiting patient regardless of active patients
+    final canCall = entry.status == 'Waiting' && isFirstInWaiting;
 
     return GestureDetector(
       onTap: () => _showQueueDetailDialog(entry),
