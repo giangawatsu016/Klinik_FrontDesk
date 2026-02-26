@@ -198,7 +198,7 @@ class _QueueHistoryScreenState extends State<QueueHistoryScreen> {
                                 entry.queueType,
                                 style: GoogleFonts.outfit(
                                   fontSize: 10,
-                                  color: Colors.grey[500],
+                                  color: Colors.black,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -208,7 +208,7 @@ class _QueueHistoryScreenState extends State<QueueHistoryScreen> {
                                 date,
                                 style: GoogleFonts.outfit(
                                   fontSize: 9,
-                                  color: Colors.grey[400],
+                                  color: Colors.black,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
