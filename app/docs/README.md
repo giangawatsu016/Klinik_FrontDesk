@@ -117,7 +117,19 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 > [!IMPORTANT]
 > After adding new fields to a DocType JSON, you **MUST** run `bench migrate` to update database tables.
 
-### v3.4 - Feb 26 2026 (Current)
+### v3.5 - Feb 26 2026 (Current)
+
+- **Patient Lookup Fix**:
+  - `create_appointment` now uses LIKE-based search (`or_filters`) instead of exact-match `get_value`.
+  - Matches by partial `full_name`, `first_name`, `nik`, or `phone` — same strategy as `search_patient`.
+  - Fixes: registered patients (e.g., "Postman 3") were not being found when creating appointments.
+- **Frappe Healthcare Integration**:
+  - New patients registered via `register_patient` are automatically synced to Frappe Healthcare `Patient` DocType.
+  - Bidirectional linking: `healthcare_patient_id` on `Clinic Patient` ↔ `custom_clinic_patient_id` on Healthcare `Patient`.
+  - Graceful fallback: sync silently skips if Healthcare module is not installed.
+  - Hook-based: `after_insert` on `Clinic Patient` triggers sync even from Frappe desk.
+
+### v3.4 - Feb 26 2026
 
 - **Queue History Persistence Fix**:
   - `get_queue_history` rewritten to use raw SQL with OR condition (Frappe `get_all` does not support OR filters).
