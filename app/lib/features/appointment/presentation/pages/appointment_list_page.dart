@@ -11,10 +11,6 @@ import 'appointment_detail_page.dart';
 import '../../../../core/presentation/components/empty_state_widget.dart';
 import '../../../front_desk/presentation/bloc/front_desk_bloc.dart';
 import '../../../front_desk/presentation/bloc/front_desk_state.dart';
-import '../../../front_desk/presentation/bloc/front_desk_event.dart';
-import '../../../front_desk/data/models/queue_entry_model.dart';
-import '../../../../core/utils/age_utils.dart';
-import '../../../../core/constants/config_constants.dart';
 
 enum AppointmentDateFilter { all, today, upcoming, past, history }
 
@@ -222,7 +218,13 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
           top: 20,
           bottom: 120,
         ),
-        sliver: SliverList(
+        sliver: SliverGrid(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 5,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 0.85,
+          ),
           delegate: SliverChildBuilderDelegate((context, index) {
             final appt = appointments[index];
             return _buildAppointmentCard(appt, index);
@@ -231,8 +233,14 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
       );
     }
 
-    return ListView.builder(
+    return GridView.builder(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 100),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 5,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.85,
+      ),
       itemCount: appointments.length,
       itemBuilder: (context, index) {
         final appt = appointments[index];
@@ -242,8 +250,11 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
   }
 
   Widget _buildAppointmentCard(AppointmentEntity appt, int index) {
-    // Keep it simple for appointments - Service Name is title
-    String displayTitle = appt.serviceName;
+    final wibDate = appt.date.toWib();
+    final patientName =
+        appt.patientDetail?['patient_name']?.toString() ??
+        appt.patientDetail?['name']?.toString() ??
+        '-';
 
     final cardWidget = GestureDetector(
       onTap: () {
@@ -255,224 +266,73 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE8F1FF)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
-          border: Border.all(color: const Color(0xFFE8F1FF)),
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Date Box (Clinical Style)
-                Container(
-                  width: 70,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF2F6FF),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color(0xFF2859E2).withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        DateFormat('dd').format(appt.date.toWib()),
-                        style: const TextStyle(
-                          color: Color(0xFF2859E2),
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        DateFormat('MMM').format(appt.date.toWib()),
-                        style: const TextStyle(
-                          color: Color(0xFF2859E2),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+            // Date badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF2F6FF),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${DateFormat('dd').format(wibDate)} ${DateFormat('MMM').format(wibDate)}',
+                style: const TextStyle(
+                  color: Color(0xFF2859E2),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(width: 16),
-                // Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Tag
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE8F1FF),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              'SERVICE',
-                              style: TextStyle(
-                                color: Color(0xFF2859E2),
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          _buildStatusBadge(appt.status),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        displayTitle,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Color(0xFF1A1D1E),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.person_outline_rounded,
-                            size: 14,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              '${appt.doctorTitlePrefix ?? ''} ${appt.doctorName} ${appt.doctorTitleSuffix ?? ''}'
-                                  .trim(),
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 13,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      // Patient Info (Phase 2)
-                      if (appt.patientDetail != null) ...[
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.face_rounded,
-                              size: 14,
-                              color: Color(0xFF2859E2),
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                '${appt.patientDetail!['patient_name'] ?? appt.patientDetail!['name'] ?? '-'} ${AgeUtils.formatAge(appt.patientDetail!['dob']?.toString())}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                  color: Color(0xFF2859E2),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 16),
-
-            // Footer
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Add to Queue Button (only for today's pending appointments)
-                if ([
-                  'PENDING',
-                  'SCHEDULED',
-                  'CONFIRMED',
-                  'ARRIVED',
-                ].contains(appt.status.toUpperCase()))
-                  ElevatedButton.icon(
-                    onPressed: _isToday(appt.date)
-                        ? () => _handleCheckIn(appt)
-                        : null,
-                    icon: const Icon(Icons.login_rounded, size: 14),
-                    label: const Text(
-                      'Add to Queue',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2859E2),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 0,
-                    ),
-                  ),
-
-                // Link
-                Row(
-                  children: const [
-                    Text(
-                      'View Detail',
-                      style: TextStyle(
-                        color: Color(0xFF2859E2),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 14,
-                      color: Color(0xFF2859E2),
-                    ),
-                  ],
-                ),
-              ],
+            const SizedBox(height: 8),
+            // Service type
+            Text(
+              appt.serviceName,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                color: Color(0xFF1A1D1E),
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
+            const SizedBox(height: 4),
+            // Patient name
+            Text(
+              patientName,
+              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 6),
+            // Status badge
+            _buildStatusBadge(appt.status),
           ],
         ),
       ),
     );
 
-    // Animate only first 5 items for better performance
-    if (index < 5) {
+    // Animate only first 10 items
+    if (index < 10) {
       return FadeInUp(
-        delay: Duration(milliseconds: index * 100),
+        delay: Duration(milliseconds: index * 50),
         child: cardWidget,
       );
     }
@@ -534,64 +394,5 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
         ),
       ),
     );
-  }
-
-  bool _isToday(DateTime date) {
-    final now = DateTime.now();
-    final wibDate = date.toWib();
-    return wibDate.year == now.year &&
-        wibDate.month == now.month &&
-        wibDate.day == now.day;
-  }
-
-  void _handleCheckIn(AppointmentEntity appt) {
-    // Determine the patient name from available data
-    final patientName =
-        appt.patientSnapshot?['fullName']?.toString() ??
-        appt.patientDetail?['patient_name']?.toString() ??
-        appt.doctorName; // Fallback
-
-    final patientId = appt.patientDetail?['name']?.toString() ?? '';
-
-    if (patientId.isEmpty) {
-      // If no patient ID, we might need to register them first or use guest mode.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cannot check-in: Patient ID missing in appointment'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Add to queue using FrontDeskBloc
-    context.read<FrontDeskBloc>().add(
-      AddToQueueEvent(
-        QueueEntryModel(
-          patient: patientId,
-          patientName: patientName,
-          queueType: 'Doctor',
-          practitioner: appt.doctorId?.toString(),
-          practitionerName: appt.doctorName,
-          polyclinic: appt.polyclinicId, // Pass polyclinic ID
-          facility:
-              appt.facilityId ??
-              ConfigConstants.defaultFacility, // Pass facility ID
-          appointment: appt.id,
-          status: 'Waiting',
-        ),
-      ),
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Checking in $patientName for ${appt.serviceName}...'),
-        backgroundColor: const Color(0xFF2859E2),
-        duration: const Duration(seconds: 3),
-      ),
-    );
-
-    // Navigate to Queue Monitor after successful check-in
-    widget.onNavigateToQueue?.call();
   }
 }

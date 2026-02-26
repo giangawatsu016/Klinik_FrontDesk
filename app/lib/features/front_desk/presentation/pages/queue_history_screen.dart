@@ -122,79 +122,104 @@ class _QueueHistoryScreenState extends State<QueueHistoryScreen> {
                     ),
                   )
                 else
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 5,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 1.1,
                         ),
-                      ],
-                    ),
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: history.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final entry = history[index];
-                        final date = entry.creation != null
-                            ? DateFormat('dd MMM yyyy, HH:mm').format(
-                                DateTime.parse(entry.creation!).toLocal(),
-                              )
-                            : '-';
+                    itemCount: history.length,
+                    itemBuilder: (context, index) {
+                      final entry = history[index];
+                      final date = entry.creation != null
+                          ? DateFormat(
+                              'dd MMM yyyy\nHH:mm',
+                            ).format(DateTime.parse(entry.creation!).toLocal())
+                          : '-';
 
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
+                      return GestureDetector(
+                        onTap: () => _showQueueDetailDialog(entry),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.grey[200]!),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          onTap: () => _showQueueDetailDialog(entry),
-                          leading: Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: Colors.green.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Center(
-                              child: Text(
-                                entry.queueNumber ?? '-',
-                                style: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                  fontSize: 12,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Queue Number Badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  entry.queueNumber ?? '-',
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green[700],
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ),
-                            ),
+                              const SizedBox(height: 8),
+                              // Patient Name
+                              Text(
+                                entry.patientName ?? 'Unknown',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              // Type
+                              Text(
+                                entry.queueType,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  color: Colors.grey[500],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 4),
+                              // Date
+                              Text(
+                                date,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 9,
+                                  color: Colors.grey[400],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
-                          title: Text(
-                            entry.patientName ?? 'Unknown',
-                            style: GoogleFonts.outfit(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          subtitle: Text(
-                            '${entry.queueType} • $date',
-                            style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          trailing: const Icon(
-                            Icons.chevron_right,
-                            color: Colors.grey,
-                          ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 // Pagination Controls
-                if (total > 5)
+                if (total > 20)
                   Padding(
                     padding: const EdgeInsets.only(top: 16),
                     child: Row(
@@ -225,7 +250,7 @@ class _QueueHistoryScreenState extends State<QueueHistoryScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'Page ${_historyPage + 1} of ${((total - 1) ~/ 5) + 1}',
+                            'Page ${_historyPage + 1} of ${((total - 1) ~/ 20) + 1}',
                             style: GoogleFonts.outfit(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -234,7 +259,7 @@ class _QueueHistoryScreenState extends State<QueueHistoryScreen> {
                           ),
                         ),
                         ElevatedButton.icon(
-                          onPressed: (_historyPage + 1) * 5 < total
+                          onPressed: (_historyPage + 1) * 20 < total
                               ? () {
                                   setState(() => _historyPage++);
                                   context.read<FrontDeskBloc>().add(

@@ -202,7 +202,7 @@ class FrontDeskBloc extends Bloc<FrontDeskEvent, FrontDeskState> {
 
     final result = await repository.getQueueHistory(
       page: event.page,
-      pageSize: 5,
+      pageSize: 20,
     );
     result.fold((failure) => emit(FrontDeskError(failure.message)), (data) {
       final entries = data['entries'] as List<QueueEntryModel>;

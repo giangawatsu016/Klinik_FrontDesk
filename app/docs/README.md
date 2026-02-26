@@ -117,7 +117,15 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 > [!IMPORTANT]
 > After adding new fields to a DocType JSON, you **MUST** run `bench migrate` to update database tables.
 
-### v3.5 - Feb 26 2026 (Current)
+### v3.6 - Feb 26 2026 (Current)
+
+- **UI Improvements & Fixes**:
+  - **Cancel Appointment**: The cancel button is now hidden for past-date appointments regardless of `Pending` status.
+  - **Profile Display**: Corrected profile display to prioritize `full_name` from Clinic Staff Profile, and removed the "PATIENT" badge from the frontdesk interface.
+  - **Queue History Layout**: Refactored `queue_history_screen.dart` from a vertical list to a 5-column grid layout with 20 items per page (4 rows).
+  - **Appointment History Layout**: Refactored `appointment_list_page.dart` from a vertical list to a 5-column grid layout with 20 items per page.
+
+### v3.5 - Feb 26 2026
 
 - **Save Schedule Fix (Polyclinic Mode)**:
   - `practitioner` and `appointment_time` are now optional in `Clinic Appointment` DocType.

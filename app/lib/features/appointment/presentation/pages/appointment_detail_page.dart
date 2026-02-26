@@ -96,8 +96,19 @@ class AppointmentDetailPage extends StatelessWidget {
                   ]),
                 ],
                 const SizedBox(height: 30),
-                // Cancel Appointment Button (Phase 2)
-                if (appointment.status.toUpperCase() == 'PENDING')
+                // Cancel Appointment Button — only for today or future dates
+                if (appointment.status.toUpperCase() == 'PENDING' &&
+                    !DateTime(
+                      appointmentDate.year,
+                      appointmentDate.month,
+                      appointmentDate.day,
+                    ).isBefore(
+                      DateTime(
+                        DateTime.now().year,
+                        DateTime.now().month,
+                        DateTime.now().day,
+                      ),
+                    ))
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(

@@ -234,25 +234,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     color: Colors.black,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _primaryBlue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    user.role ?? 'Staff',
-                    style: GoogleFonts.outfit(
-                      color: _primaryBlue,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
