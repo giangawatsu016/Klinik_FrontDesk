@@ -119,6 +119,11 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 
 ### v3.5 - Feb 26 2026 (Current)
 
+- **Save Schedule Fix (Polyclinic Mode)**:
+  - `practitioner` and `appointment_time` are now optional in `Clinic Appointment` DocType.
+  - Backend normalizes `service_type` ('Consultation' → 'On-site (DO)') and `status` ('PENDING' → 'Pending').
+  - Removes non-DocType field `polyclinic_name` before insert.
+  - Fixes: creating appointments via Polyclinic selection was failing with validation errors.
 - **Patient Lookup Fix**:
   - `create_appointment` now uses LIKE-based search (`or_filters`) instead of exact-match `get_value`.
   - Matches by partial `full_name`, `first_name`, `nik`, or `phone` — same strategy as `search_patient`.
