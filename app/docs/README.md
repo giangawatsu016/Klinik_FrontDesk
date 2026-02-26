@@ -117,17 +117,15 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 > [!IMPORTANT]
 > After adding new fields to a DocType JSON, you **MUST** run `bench migrate` to update database tables.
 
-### v3.3 - Feb 25 2026 (Current)
+### v3.4 - Feb 26 2026 (Current)
 
-- **Multi-Patient Active Queue**:
-  - Antrian Dokter/Polyclinic card now displays all active patients (Consultation, Pharmacy, Payment) simultaneously.
-  - Card dynamically resizes based on number of active patients.
-  - Each patient shows queue number, name, practitioner, and individual status badge.
-- **Unrestricted Call Patient**:
-  - Top waiting patient can always be called, regardless of how many patients are already active.
-  - Removed `!hasInConsultation` guard that previously blocked calling.
+- **Queue History Persistence Fix**:
+  - `get_queue_history` rewritten to use raw SQL with OR condition (Frappe `get_all` does not support OR filters).
+  - History now shows: all entries from previous days (any status) + `Completed`/`Skipped`/`Cancelled` from today.
+  - Enriched history entries with patient DOB and polyclinic names.
+  - Consolidated duplicate API endpoints to prevent filtering conflicts.
 
-### v3.2 - Feb 25 2026
+### v3.3 - Feb 25 2026
 
 - **Patient Lookup Enhancement**:
   - `create_appointment` API now searches by: Frappe ID, full_name, first_name, NIK, and Phone.

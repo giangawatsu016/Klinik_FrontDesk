@@ -58,7 +58,8 @@ For monitoring and calling patient queues.
 | --- | --- |
 | `Waiting` | **Waiting Card** |
 | `Consultation`, `Pharmacy`, `Payment` | **Antrian Dokter** & **Antrian Polyclinic** columns |
-| `Completed` | **Queue → History** submenu |
+| `Completed`, `Skipped`, `Cancelled` | **Queue → History** submenu |
+| **All Previous Days** (any status) | **Queue → History** submenu |
 
 **Functionality:**
 
