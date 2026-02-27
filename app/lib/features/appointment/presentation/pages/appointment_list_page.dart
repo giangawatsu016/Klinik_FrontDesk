@@ -353,6 +353,16 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
     }
   }
 
+  String _formatStatus(String status) {
+    if (status.isEmpty) return status;
+    final words = status.toLowerCase().split(' ');
+    final capitalized = words.map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1);
+    });
+    return capitalized.join(' ');
+  }
+
   Widget _buildStatusBadge(String status) {
     Color color;
     switch (status.toUpperCase()) {
@@ -386,7 +396,7 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        status,
+        _formatStatus(status),
         style: TextStyle(
           color: color,
           fontSize: 12,
