@@ -7,10 +7,10 @@ import '../../../../core/utils/age_utils.dart';
 import '../../../../core/utils/date_utils.dart'; // Ext
 import '../../domain/entities/appointment_entity.dart';
 import '../blocs/appointment_bloc.dart';
-import '../../front_desk/presentation/bloc/front_desk_bloc.dart';
-import '../../front_desk/presentation/bloc/front_desk_event.dart';
-import '../../front_desk/presentation/bloc/front_desk_state.dart';
-import '../../front_desk/data/models/queue_entry_model.dart';
+import '../../../front_desk/presentation/bloc/front_desk_bloc.dart';
+import '../../../front_desk/presentation/bloc/front_desk_event.dart';
+import '../../../front_desk/presentation/bloc/front_desk_state.dart';
+import '../../../front_desk/data/models/queue_entry_model.dart';
 
 class AppointmentDetailPage extends StatelessWidget {
   final AppointmentEntity appointment;
