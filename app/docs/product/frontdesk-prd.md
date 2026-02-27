@@ -138,6 +138,7 @@ The detail pages for Appointments and Medical Records follow a unified design st
 
 - **Clean Interface**: Removal of dynamic time-based greetings and gradients for a more professional look.
 - **Brand Consistency**: Solid primary blue (`#2859E2`) AppBar background.
+- **Grid Layout**: List views for history features (Queue History, Appointment History, Medical Records) use a **5-column grid layout** displaying up to 20 items per page for better data density on larger screens.
 - **Focus on Content**: Content is organized in clear, animated sections (e.g., Patient Snapshot, Vital Signs, etc.).
 
 ---

@@ -39,6 +39,8 @@ class ApiEndpoints {
       '$baseUrl/method/api_clinic.api.advance_queue_status';
   static String get getQueueHistory =>
       '$baseUrl/method/api_clinic.api.get_queue_history';
+  static String get getMedicalRecords =>
+      '$baseUrl/method/api_clinic.api.get_medical_records';
 
   // Master Data
   static String get getPractitioners =>

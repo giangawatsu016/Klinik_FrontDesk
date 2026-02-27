@@ -139,91 +139,31 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
     int limit,
     String? search,
   ) async {
-    // MOCK MEDICAL RECORDS
-    await Future.delayed(const Duration(milliseconds: 600));
-    return {
-      'data': [
-        {
-          'id': 201,
-          'date': DateTime.now()
-              .subtract(const Duration(days: 2, hours: 4))
-              .toIso8601String(),
-          'status': 'COMPLETED',
-          'serviceName': 'Pemeriksaan Anak',
-          'doctorName': 'James Carter',
-          'doctorTitlePrefix': 'dr.',
-          'doctorTitleSuffix': 'Sp.A',
-          'finalPrice': 200000,
-          'paymentStatus': 'PAID',
-          'transactionNumber': 'TRX-20240101-001',
-          'doctor': {
-            'name': 'James Carter',
-            'specialization': 'Pediatrician',
-            'sip': '123/SIP/2023',
-          },
-          'patientDetail': {'fullname': 'Anak Budi'},
-          'clinicalRecord': {
-            'diagnoses': [
-              {
-                'diagnosis': {'description': 'Acute Pharyngitis'},
-                'note': 'Sore throat, fever',
-              },
-            ],
-            'medicines': [
-              {
-                'item': {'name': 'Paracetamol Syrup'},
-                'qty': 1,
-                'instruction': '3x1 tsp after meal',
-              },
-            ],
-          },
-        },
-        {
-          'id': 202,
-          'date': DateTime.now()
-              .subtract(const Duration(days: 5))
-              .toIso8601String(),
-          'status': 'CANCELLED',
-          'serviceName': 'Konsultasi Umum',
-          'doctorName': 'Sarah Wilson',
-          'doctorTitlePrefix': 'dr.',
-          'finalPrice': 150000,
-          'paymentStatus': 'REFUNDED',
-          'transactionNumber': 'TRX-20231228-005',
-          'doctor': {
-            'name': 'Sarah Wilson',
-            'specialization': 'General Practitioner',
-          },
-          'patientDetail': {'fullname': 'Budi Santoso'},
-        },
-        {
-          'id': 203,
-          'date': DateTime.now()
-              .subtract(const Duration(days: 10))
-              .toIso8601String(),
-          'status': 'COMPLETED',
-          'serviceName': 'Vaksinasi Flu',
-          'doctorName': 'Emily Chen',
-          'doctorTitlePrefix': 'dr.',
-          'doctorTitleSuffix': 'Sp.KK',
-          'finalPrice': 350000,
-          'paymentStatus': 'PAID',
-          'transactionNumber': 'TRX-20231220-008',
-          'doctor': {'name': 'Emily Chen', 'specialization': 'Dermatologist'},
-          'patientDetail': {'fullname': 'Siti Aminah'},
-          'clinicalRecord': {
-            'diagnoses': [
-              {
-                'diagnosis': {'description': 'Healthy'},
-                'note': 'Routine vaccination',
-              },
-            ],
-            'medicines': [],
-          },
-        },
-      ],
-      'meta': {'total': 3, 'page': page, 'limit': limit},
-    };
+    try {
+      final Map<String, dynamic> queryParams = {
+        'limit': limit,
+        'offset': (page - 1) * limit,
+      };
+
+      if (search != null && search.isNotEmpty) {
+        queryParams['patient'] = search; // Search by exact patient ID for now
+      }
+
+      final response = await client.dio.get(
+        ApiEndpoints.getMedicalRecords,
+        queryParameters: queryParams,
+      );
+
+      final List dataList = response.data['data'] ?? [];
+      final List<Map<String, dynamic>> finalData = dataList.map((item) {
+        return Map<String, dynamic>.from(item);
+      }).toList();
+
+      return {'data': finalData};
+    } catch (e) {
+      debugPrint('Error fetching medical records: $e');
+      rethrow;
+    }
   }
 
   @override

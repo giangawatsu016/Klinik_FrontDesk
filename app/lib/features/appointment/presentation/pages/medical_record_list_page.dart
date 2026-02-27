@@ -139,7 +139,13 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
           top: 20,
           bottom: 120,
         ),
-        sliver: SliverList(
+        sliver: SliverGrid(
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 300,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: 0.82,
+          ),
           delegate: SliverChildBuilderDelegate((context, index) {
             if (index >= appointments.length) {
               return const Center(
@@ -156,11 +162,14 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
       );
     }
 
-    // Note: Non-sliver mode in this specific page implementation also needs scroll listener,
-    // but the task focuses on Home Tab 2 which is sliver mode.
-    // For completeness, if standalone, we would add ScrollController here.
-    return ListView.builder(
+    return GridView.builder(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 100),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 300,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        childAspectRatio: 0.82,
+      ),
       itemCount: itemCount,
       itemBuilder: (context, index) {
         if (index >= appointments.length) {
@@ -188,7 +197,6 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -202,17 +210,20 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
           border: Border.all(color: const Color(0xFFE8F1FF)),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Head: Date and Status
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Date Box (Clinical Style)
+                // Date Box
                 Container(
-                  width: 70,
-                  height: 80,
+                  width: 50,
+                  height: 55,
                   decoration: BoxDecoration(
                     color: const Color(0xFFF2F6FF),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: const Color(0xFF2859E2).withValues(alpha: 0.1),
                     ),
@@ -224,132 +235,65 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
                         DateFormat('dd').format(appt.date.toWib()),
                         style: const TextStyle(
                           color: Color(0xFF2859E2),
-                          fontSize: 24,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
                       Text(
                         DateFormat('MMM').format(appt.date.toWib()),
                         style: const TextStyle(
                           color: Color(0xFF2859E2),
-                          fontSize: 12,
+                          fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                // Details
+                // Status Badge
+                _buildStatusBadge(appt.status),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Service Name
+            Text(
+              appt.serviceName,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: Color(0xFF1A1D1E),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 6),
+
+            // Doctor Info
+            Row(
+              children: [
+                const Icon(
+                  Icons.person_outline_rounded,
+                  size: 14,
+                  color: Colors.grey,
+                ),
+                const SizedBox(width: 4),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Tag & Transaction Number
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE8F1FF),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              'SERVICE',
-                              style: TextStyle(
-                                color: Color(0xFF2859E2),
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          if (appt.transactionNumber != null)
-                            Expanded(
-                              child: Text(
-                                appt.transactionNumber!,
-                                style: TextStyle(
-                                  color: Colors.grey[400],
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          if (appt.transactionNumber == null) const Spacer(),
-                          if (appt.status == 'COMPLETED')
-                            const Icon(
-                              Icons.check_circle_rounded,
-                              color: Colors.green,
-                              size: 20,
-                            )
-                          else
-                            _buildStatusBadge(appt.status),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        appt.serviceName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Color(0xFF1A1D1E),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.person_outline_rounded,
-                            size: 14,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${appt.doctorTitlePrefix ?? ''} ${appt.doctorName} ${appt.doctorTitleSuffix ?? ''}'
-                                      .trim(),
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 13,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (appt.doctorSpecialization != null &&
-                                    appt.doctorSpecialization!.isNotEmpty)
-                                  Text(
-                                    appt.doctorSpecialization!,
-                                    style: TextStyle(
-                                      color: Colors.grey[500],
-                                      fontSize: 11,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                  child: Text(
+                    '${appt.doctorTitlePrefix ?? ''} ${appt.doctorName} ${appt.doctorTitleSuffix ?? ''}'
+                        .trim(),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
 
-            // Footer
+            const Spacer(),
+            const Divider(height: 16),
+
+            // Footer: Time & Action Link
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -357,37 +301,32 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
                 Row(
                   children: [
                     _getTimeIcon(appt.date.toWib()),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     Text(
                       DateFormat('HH:mm').format(appt.date.toWib()),
                       style: const TextStyle(
                         color: Color(0xFF2859E2),
                         fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const Text(
-                      ' WIB',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
-                  ],
-                ),
-
-                // Link
-                Row(
-                  children: const [
-                    Text(
-                      'View Medical Record',
-                      style: TextStyle(
-                        color: Color(0xFF2859E2),
-                        fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
                     ),
-                    SizedBox(width: 4),
+                  ],
+                ),
+                // Action
+                Row(
+                  children: const [
+                    Text(
+                      'Details',
+                      style: TextStyle(
+                        color: Color(0xFF2859E2),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                    SizedBox(width: 2),
                     Icon(
                       Icons.arrow_forward_rounded,
-                      size: 14,
+                      size: 12,
                       color: Color(0xFF2859E2),
                     ),
                   ],
