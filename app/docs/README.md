@@ -117,7 +117,16 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 > [!IMPORTANT]
 > After adding new fields to a DocType JSON, you **MUST** run `bench migrate` to update database tables.
 
-### v3.6 - Feb 26 2026 (Current)
+### v3.7 - Feb 27 2026 (Current)
+
+- **Queue & Encounter Integration**:
+  - `Clinic FrontDesk Queue` and `Clinic Encounter` are now bidirectionally linked.
+  - Calling `advance_queue_status` automatically syncs the Queue status with the Encounter equivalent (e.g., `Consultation` → `In-Progress`).
+  - **New API `get_encounter_by_queue`**: For external apps to fetch medical record data based on the active queue.
+  - **New API `submit_encounter`**: Designed for Doctor/Pharmacy/Payment apps to submit their data, automatically save to the Encounter, and auto-advance the queue to the next stage.
+  - Documentation available in `docs/product/queue-encounter-integration.md`.
+
+### v3.6 - Feb 26 2026
 
 - **UI Improvements & Fixes**:
   - **Cancel Appointment**: The cancel button is now hidden for past-date appointments regardless of `Pending` status.

@@ -29,7 +29,8 @@ Handles patient registration through a unified **Smart Registration Form** that 
 4. Entry added to **Queue Monitor** with format `D-XXX` or `P-XXX`.
 
 > [!NOTE]
-> Patient data is stored in the `Clinic Patient` DocType and a **`Clinic Encounter`** is automatically created when the patient is added to the queue (`add_to_queue`). This ensures the Doctor sees the patient in their clinical consultation list immediately.
+> Patient data is stored in the `Clinic Patient` DocType and a **`Clinic Encounter`** is automatically created when the patient is added to the queue (`add_to_queue`).
+> **NEW in v3.7**: The Queue and Encounter DocTypes are bidirectionally linked. External apps (Doctor, Pharmacy, Payment) can use the `/api/method/api_clinic.api.submit_encounter` endpoint to auto-advance the queue workflow while saving medical record data simultaneously. See [queue-encounter-integration.md](./queue-encounter-integration.md) for API docs.
 
 ---
 
