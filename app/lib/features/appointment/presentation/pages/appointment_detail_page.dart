@@ -7,6 +7,10 @@ import '../../../../core/utils/age_utils.dart';
 import '../../../../core/utils/date_utils.dart'; // Ext
 import '../../domain/entities/appointment_entity.dart';
 import '../blocs/appointment_bloc.dart';
+import '../../front_desk/presentation/bloc/front_desk_bloc.dart';
+import '../../front_desk/presentation/bloc/front_desk_event.dart';
+import '../../front_desk/presentation/bloc/front_desk_state.dart';
+import '../../front_desk/data/models/queue_entry_model.dart';
 
 class AppointmentDetailPage extends StatelessWidget {
   final AppointmentEntity appointment;
@@ -96,6 +100,102 @@ class AppointmentDetailPage extends StatelessWidget {
                   ]),
                 ],
                 const SizedBox(height: 30),
+                // Add to Queue Button
+                if (appointment.status.toUpperCase() == 'PENDING' &&
+                    appointmentDate.year == DateTime.now().year &&
+                    appointmentDate.month == DateTime.now().month &&
+                    appointmentDate.day == DateTime.now().day)
+                  BlocConsumer<FrontDeskBloc, FrontDeskState>(
+                    listener: (context, state) {
+                      if (state is FrontDeskSuccess) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Berhasil menambahkan ke antrean'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        // Optional: Navigate back to list
+                        Navigator.pop(context);
+                      } else if (state is FrontDeskError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.message),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: state is FrontDeskLoading
+                                ? null
+                                : () {
+                                    final patientId =
+                                        appointment.patientDetail?['name']
+                                            ?.toString() ??
+                                        '';
+                                    final isDoctor =
+                                        appointment.doctorName.isNotEmpty;
+                                    final doctorId =
+                                        appointment
+                                            .patientDetail?['practitioner_id']
+                                            ?.toString() ??
+                                        appointment.doctorId?.toString();
+
+                                    final queueEntry = QueueEntryModel(
+                                      patient: patientId,
+                                      queueType: isDoctor
+                                          ? 'Doctor'
+                                          : 'Polyclinic',
+                                      practitioner: isDoctor ? doctorId : null,
+                                      polyclinic: (!isDoctor)
+                                          ? appointment.polyclinicId
+                                          : null,
+                                      appointment: appointment.id,
+                                    );
+
+                                    context.read<FrontDeskBloc>().add(
+                                      AddToQueueEvent(queueEntry),
+                                    );
+                                  },
+                            icon: state is FrontDeskLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.how_to_reg,
+                                    color: Colors.white,
+                                  ),
+                            label: Text(
+                              state is FrontDeskLoading
+                                  ? 'Memproses...'
+                                  : 'Masukkan ke Antrean',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2859E2),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 // Cancel Appointment Button — only for today or future dates
                 if (appointment.status.toUpperCase() == 'PENDING' &&
                     !DateTime(
