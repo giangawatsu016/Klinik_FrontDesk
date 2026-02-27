@@ -119,6 +119,10 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 
 ### v3.7 - Feb 27 2026 (Current)
 
+- **Medical Records Integration & UI Redesign**:
+  - The "Records" menu now fetches historical medical records directly from `Clinic Encounter` using the newly built `get_medical_records` API.
+  - Automatically maps Frappe DocType data (Vitals, SOAP notes, Diagnoses, Treatments) into the frontend's nested `ClinicalRecord` structure.
+  - Standardized the history list layouts! Medical Records, Queue History, and Appointment History now all utilize a **5-column grid layout** (displaying up to 20 items per page) for desktop/tablet responsiveness.
 - **Queue & Encounter Integration**:
   - `Clinic FrontDesk Queue` and `Clinic Encounter` are now bidirectionally linked.
   - Calling `advance_queue_status` automatically syncs the Queue status with the Encounter equivalent (e.g., `Consultation` → `In-Progress`).

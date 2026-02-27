@@ -204,3 +204,59 @@ The FrontDesk Service manages patient lifecycle at the clinic reception, includi
   ]
 }
 ```
+
+---
+
+### [GET] /get_medical_records
+
+**Description**: Fetches historical medical records (`Clinic Encounter` records with `status` set to `Finished` or `Completed`) for formatting in the frontend Records menu.
+
+**Params**:
+
+- `limit` (int): Number of records per page.
+- `offset` (int): Pagination offset.
+- `patient` (string, optional): Specific `Clinic Patient` ID to filter by.
+
+**Response (Success - 200)**:
+
+```json
+{
+  "message": {
+    "data": [
+      {
+        "id": "ENC-2024-00101",
+        "date": "2024-12-01T10:00:00.000Z",
+        "status": "COMPLETED",
+        "serviceName": "Konsultasi Umum",
+        "doctorName": "John Doe",
+        "doctorTitlePrefix": "dr.",
+        "patientDetail": {
+          "fullname": "Jane Doe"
+        },
+        "clinicalRecord": {
+          "systolicBP": 120,
+          "diastolicBP": 80,
+          "heartRate": 75,
+          "respiratoryRate": 18,
+          "temperature": 36.5,
+          "anamnesis": "Patient complains of mild headache",
+          "objective": "No fever, clear lungs",
+          "diagnoses": [
+            {
+              "diagnosis": { "description": "Tension-type headache" },
+              "note": "Mild"
+            }
+          ],
+          "medicines": [
+            {
+              "medicine": { "description": "Paracetamol 500mg" },
+              "qty": 10,
+              "instruction": "3x sehari"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
