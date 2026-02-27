@@ -120,8 +120,8 @@ Managed through a hierarchical sidebar navigation that provides direct access to
 Pending → Checked In (via Add to Queue) → Attended (via Payment) | Cancelled
 ```
 
-- **Pending**: Newly created appointment, "Add to Queue" button is visible for today's appointments.
-- **Checked In**: Patient has been added to the queue. Status badge turns blue, button is hidden, and the card sorts to the bottom of the list.
+- **Pending**: Newly created appointment. The **"Masukkan ke Antrean" (Add to Queue)** button is visible exclusively if the appointment is scheduled for **Today**.
+- **Checked In**: Patient has been added to the queue securely via `FrontDeskBloc`. Status badge turns blue, button is hidden, and the card sorts to the bottom of the list.
 - **Attended**: Payment has been completed.
 - **Cancelled**: Appointment was cancelled.
 

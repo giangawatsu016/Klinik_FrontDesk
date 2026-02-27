@@ -117,6 +117,13 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 > [!IMPORTANT]
 > After adding new fields to a DocType JSON, you **MUST** run `bench migrate` to update database tables.
 
+### v3.8 - Feb 27 2026
+
+- **Appointment Bug Fixes & UX Optimization**:
+  - **Add to Queue Button**: Re-integrated the `Masukkan ke Antrean` (Add to Queue) button into the `AppointmentDetailPage`. The button strictly appears only for `PENDING` appointments scheduled for the current day.
+  - **Doctor Name Display**: Fixed an issue where Doctor Names were appearing as raw IDs (e.g., `DOC-2026-0017`). The backend `get_appointments` API was updated to exclusively fetch and map readable names (`full_name`, `specialization`, `license_number`) to the Flutter `AppointmentModel`.
+  - **Dart Analyzer Enhancements**: Resolved relative path anomalies `Target of URI doesn't exist` for `FrontDeskBloc` across appointment pages.
+
 ### v3.7 - Feb 27 2026 (Current)
 
 - **Medical Records Integration & UI Redesign**:
