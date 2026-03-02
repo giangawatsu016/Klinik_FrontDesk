@@ -177,8 +177,10 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
         if (widget.dateFilter == AppointmentDateFilter.today) {
           return aDate.isAtSameMomentAs(today);
         } else if (widget.dateFilter == AppointmentDateFilter.upcoming) {
-          // Strictly show only Today and Future dates
-          return aDate.isAtSameMomentAs(today) || aDate.isAfter(today);
+          // Show Today, Future dates, AND any past dates that are not yet finalized
+          return aDate.isAtSameMomentAs(today) ||
+              aDate.isAfter(today) ||
+              (aDate.isBefore(today) && !isFinalized);
         } else if (widget.dateFilter == AppointmentDateFilter.past) {
           return aDate.isBefore(today);
         } else if (widget.dateFilter == AppointmentDateFilter.history) {
