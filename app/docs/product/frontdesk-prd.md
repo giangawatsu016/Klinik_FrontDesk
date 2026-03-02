@@ -185,7 +185,7 @@ Displays the currently logged-in user's information from `Clinic Staff Profile` 
 | Healthcare Sync | `Patient` (Frappe Healthcare) | first_name, sex, dob, mobile, blood_group | **Auto-synced from Clinic Patient on registration.** |
 | Clinical Encounter | `Clinic Encounter` | patient, practitioner, polyclinic, status, blood_pressure | **Auto-created on check-in.** Used by Doctors for rekam medis. |
 | Operational Queue | `Clinic FrontDesk Queue` | patient, practitioner, polyclinic, status, queue_number | Used by FrontDesk to manage daily flow. |
-| Clinical Queue | `Clinic Queue` | patient, status, queue_number, vitals | Used by Nurses/Doctors for clinical workflow. |
+| Clinical Queue | `Clinic Queue` | patient, status, queue_number, vitals | Used by Nurses/Doctors for clinical workflow. *Note: `get_queue` merges FrontDesk & Clinic Queue via SQL LEFT JOIN to display complete data (including walk-ins), substituting "-" for missing fields.* |
 | Polyclinic List | `Clinic Polyclinic` | polyclinic_name | List of available clinics. |
 | Doctor/Practitioner | `Clinic Practitioner` | full_name, specialization, polyclinic, practitioner_role | List of active doctors. |
 | Payment Methods | `Clinic Payment` | payment_method | Supported payment options. |

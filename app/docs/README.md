@@ -125,6 +125,10 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 - **Medical Records Rules**:
   - Transferred the same empty state messaging pattern to Medical Records, updating the fallback to `"Belum ada Rekam Medis"`.
   - **API Stability Fix**: Resolved a 500 Internal Server error in `get_medical_records` caused by deprecated SQL columns. The API now safely queries the correct unified `blood_pressure` string from Frappe and parses the systolic/diastolic components dynamically for the Flutter frontend.
+- **Queue Monitor Integration**:
+  - Rewrote the `get_queue` backend Frappe API to use an **SQL LEFT JOIN** (FrontDesk Queue as base), ensuring the Queue menu reliably fetches walk-in patients even if they lack an appointment entry.
+  - **Localized Duplicate Warning**: Implemented Indonesian warning `"Patient Sudah Berada di Antrian"` when registering a patient already in an active queue, displayed via a clean SnackBar in the Flutter app.
+  - Added programmatic fallback logic where any of the 9 strict data fields (`patient, appointment, queue_number, practitioner, polyclinic, status, facility, company, is_priority`) that arrive empty will gracefully render as `"-"` to prevent Flutter nullable crashes.
 
 ### v3.9 - Mar 02 2026
 
