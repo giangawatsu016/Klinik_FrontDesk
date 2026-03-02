@@ -117,6 +117,13 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 > [!IMPORTANT]
 > After adding new fields to a DocType JSON, you **MUST** run `bench migrate` to update database tables.
 
+### v3.9 - Mar 02 2026
+
+- **Profile Menu Identity Render**:
+  - The Profile menu now rigorously renders all identity data retrieved from `Clinic Staff Profile`: `Role`, `Staff ID`, `Company`, `Facility`, `Specialization`, and `STR Number`.
+  - Empty or missing data now gracefully renders as `-` without hiding the UI section.
+  - The redundant Notification bell on the Profile menu's static `TabHeader` has been removed.
+
 ### v3.8 - Feb 27 2026
 
 - **Appointment Bug Fixes & UX Optimization**:

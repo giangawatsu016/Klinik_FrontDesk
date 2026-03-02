@@ -14,6 +14,7 @@ class TabHeader extends StatelessWidget {
   final VoidCallback? onNotificationTap;
   final bool hasNotification;
   final bool showSearchIcon;
+  final bool showNotificationIcon;
   final int unreadNotificationCount;
 
   const TabHeader({
@@ -23,6 +24,7 @@ class TabHeader extends StatelessWidget {
     this.onNotificationTap,
     this.hasNotification = true,
     this.showSearchIcon = true,
+    this.showNotificationIcon = true,
     this.unreadNotificationCount = 0,
   });
 
@@ -99,54 +101,56 @@ class TabHeader extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                 ],
-                Stack(
-                  children: [
-                    _buildHeaderIconButton(
-                      FontAwesomeIcons.bell,
-                      onTap: onNotificationTap,
-                    ),
-                    if (hasNotification || unreadNotificationCount > 0)
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: unreadNotificationCount > 0
-                            ? Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 2,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 16,
-                                  minHeight: 16,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  unreadNotificationCount > 99
-                                      ? '99+'
-                                      : '$unreadNotificationCount',
-                                  style: GoogleFonts.outfit(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              )
-                            : Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
+                if (showNotificationIcon) ...[
+                  Stack(
+                    children: [
+                      _buildHeaderIconButton(
+                        FontAwesomeIcons.bell,
+                        onTap: onNotificationTap,
                       ),
-                  ],
-                ),
-                const SizedBox(width: 12),
+                      if (hasNotification || unreadNotificationCount > 0)
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: unreadNotificationCount > 0
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 2,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    unreadNotificationCount > 99
+                                        ? '99+'
+                                        : '$unreadNotificationCount',
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              : Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                ],
                 // Use ProfileCubit for reactive avatar updates
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, authState) {

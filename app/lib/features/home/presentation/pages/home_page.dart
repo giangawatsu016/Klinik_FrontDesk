@@ -720,6 +720,7 @@ class _HomePageState extends State<HomePage> {
                   hasNotification: false,
                   unreadNotificationCount: unreadCount,
                   showSearchIcon: false,
+                  showNotificationIcon: false,
                 ),
                 profile.ProfilePage(sliverMode: true),
               ],

@@ -158,6 +158,8 @@ Displays the currently logged-in user's information from `Clinic Staff Profile` 
 | **Specialization** | `specialization` | Medical specialization (if applicable) |
 | **Registration Number** | `registration_number` | STR number |
 
+*Note: In the Profile UI, any missing identity fields will be substituted with a `-` to maintain table layout consistency. The global Notification Bell component is also intentionally hidden on the Profile menu to conserve space.*
+
 ---
 
 ## Data Integration (DocType APIs)

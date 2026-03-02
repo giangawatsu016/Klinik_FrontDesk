@@ -49,7 +49,8 @@ class UserModel extends UserEntity {
       role: json['role']?.toString() ?? 'PATIENT',
       tier: json['tier']?.toString() ?? 'BASIC',
       company: json['company']?.toString(),
-      facility: json['facility']?.toString(),
+      facility:
+          json['default_facility']?.toString() ?? json['facility']?.toString(),
       photoProfile: patient != null
           ? patient['photoProfile']?.toString()
           : json['photoProfile']?.toString() ?? json['user_image']?.toString(),

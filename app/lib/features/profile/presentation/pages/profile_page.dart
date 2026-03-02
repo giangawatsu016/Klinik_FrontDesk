@@ -257,42 +257,48 @@ class _ProfilePageState extends State<ProfilePage> {
                 _buildInfoTile(
                   Icons.email_outlined,
                   'Email',
-                  user.email ?? '-',
+                  user.email?.isNotEmpty == true ? user.email! : '-',
                 ),
                 _buildInfoDivider(),
-                if (user.company != null) ...[
-                  _buildInfoTile(Icons.business, 'Company', user.company!),
-                  _buildInfoDivider(),
-                ],
-                if (user.facility != null) ...[
-                  _buildInfoTile(
-                    Icons.local_hospital,
-                    'Facility',
-                    user.facility!,
-                  ),
-                  _buildInfoDivider(),
-                ],
-                if (user.specialization != null &&
-                    user.specialization!.isNotEmpty) ...[
-                  _buildInfoTile(
-                    Icons.medical_services,
-                    'Specialization',
-                    user.specialization!,
-                  ),
-                  _buildInfoDivider(),
-                ],
-                if (user.registrationNumber != null &&
-                    user.registrationNumber!.isNotEmpty) ...[
-                  _buildInfoTile(
-                    Icons.badge,
-                    'STR Number',
-                    user.registrationNumber!,
-                  ),
-                  _buildInfoDivider(),
-                ],
-                if (user.staffId != null) ...[
-                  _buildInfoTile(Icons.tag, 'Staff ID', user.staffId!),
-                ],
+                _buildInfoTile(
+                  Icons.assignment_ind_outlined,
+                  'Role',
+                  user.role?.isNotEmpty == true ? user.role! : '-',
+                ),
+                _buildInfoDivider(),
+                _buildInfoTile(
+                  Icons.tag,
+                  'Staff ID',
+                  user.staffId?.isNotEmpty == true ? user.staffId! : '-',
+                ),
+                _buildInfoDivider(),
+                _buildInfoTile(
+                  Icons.business,
+                  'Company',
+                  user.company?.isNotEmpty == true ? user.company! : '-',
+                ),
+                _buildInfoDivider(),
+                _buildInfoTile(
+                  Icons.local_hospital,
+                  'Facility',
+                  user.facility?.isNotEmpty == true ? user.facility! : '-',
+                ),
+                _buildInfoDivider(),
+                _buildInfoTile(
+                  Icons.medical_services,
+                  'Specialization',
+                  user.specialization?.isNotEmpty == true
+                      ? user.specialization!
+                      : '-',
+                ),
+                _buildInfoDivider(),
+                _buildInfoTile(
+                  Icons.badge,
+                  'STR Number',
+                  user.registrationNumber?.isNotEmpty == true
+                      ? user.registrationNumber!
+                      : '-',
+                ),
               ],
             ),
           ),
