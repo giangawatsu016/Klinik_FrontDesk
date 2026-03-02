@@ -60,7 +60,22 @@ For monitoring and calling patient queues.
 | `Waiting` | **Waiting Card** |
 | `Consultation`, `Pharmacy`, `Payment` | **Antrian Dokter** & **Antrian Polyclinic** columns |
 | `Completed`, `Skipped`, `Cancelled` | **Queue → History** submenu |
-| **All Previous Days** (any status) | **Queue → History** submenu |
+| **All Previous Days** (any status) | **Queue → History** submenu
+
+### Daily Operational Screens
+
+**1. Queue (Antrean)**
+
+- Live tracking of today's patients.
+- Stages: `Waiting` -> `Consultation` -> `Pharmacy` -> `Payment` -> `Completed`.
+- **Add to Queue**: Button available on `Pending` appointments from the current day.
+
+**2. Appointments (Jadwal Kunjungan)**
+
+- A centralized list of all registered appointments.
+- **Active Filter**: Strictly displays `Today` and `Future` dates. Past appointments are dropped from this view.
+- Provides an empty state "Belum ada Jadwal Kunjungan" when no schedule is found.
+- Supports marking patients as "Arrived" or "Cancelled".
 
 **Functionality:**
 

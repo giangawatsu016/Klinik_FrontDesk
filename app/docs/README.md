@@ -117,6 +117,12 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 > [!IMPORTANT]
 > After adding new fields to a DocType JSON, you **MUST** run `bench migrate` to update database tables.
 
+### v3.10 - Mar 02 2026
+
+- **Jadwal Kunjungan Rules**:
+  - The "Cek Appointment" (Jadwal Kunjungan) upcoming filter has been reverted to strictly display `Today` and `Future` appointments (hiding unfinalized appointments from past dates).
+  - Designed the Empty State default message to gracefully display `"Belum ada Jadwal Kunjungan"` instead of raw filtered counts when there are 0 active future appointments.
+
 ### v3.9 - Mar 02 2026
 
 - **Profile Menu Identity Render**:

@@ -177,10 +177,8 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
         if (widget.dateFilter == AppointmentDateFilter.today) {
           return aDate.isAtSameMomentAs(today);
         } else if (widget.dateFilter == AppointmentDateFilter.upcoming) {
-          // Show Today, Future dates, AND any past dates that are not yet finalized
-          return aDate.isAtSameMomentAs(today) ||
-              aDate.isAfter(today) ||
-              (aDate.isBefore(today) && !isFinalized);
+          // Strictly show only Today and Future dates
+          return aDate.isAtSameMomentAs(today) || aDate.isAfter(today);
         } else if (widget.dateFilter == AppointmentDateFilter.past) {
           return aDate.isBefore(today);
         } else if (widget.dateFilter == AppointmentDateFilter.history) {
@@ -203,8 +201,7 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
 
     if (appointments.isEmpty) {
       final emptyWidget = EmptyStateWidget(
-        message:
-            'No appointments found (Total: ${allAppointments.length}, Filtered: ${appointments.length})',
+        message: 'Belum ada Jadwal Kunjungan',
         lottieAsset: 'assets/animations/empty_box.json',
       );
       return widget.sliverMode
