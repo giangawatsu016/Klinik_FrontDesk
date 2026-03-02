@@ -183,7 +183,7 @@ Displays the currently logged-in user's information from `Clinic Staff Profile` 
 |---|---|---|---|
 | Patient Registration | `Clinic Patient` | full_name, nik, gender, birth_date, phone, address, etc. | Core patient demographic data. |
 | Healthcare Sync | `Patient` (Frappe Healthcare) | first_name, sex, dob, mobile, blood_group | **Auto-synced from Clinic Patient on registration.** |
-| Clinical Encounter | `Clinic Encounter` | patient, practitioner, polyclinic, status, priority | **Auto-created on check-in.** Used by Doctors for rekam medis. |
+| Clinical Encounter | `Clinic Encounter` | patient, practitioner, polyclinic, status, blood_pressure | **Auto-created on check-in.** Used by Doctors for rekam medis. |
 | Operational Queue | `Clinic FrontDesk Queue` | patient, practitioner, polyclinic, status, queue_number | Used by FrontDesk to manage daily flow. |
 | Clinical Queue | `Clinic Queue` | patient, status, queue_number, vitals | Used by Nurses/Doctors for clinical workflow. |
 | Polyclinic List | `Clinic Polyclinic` | polyclinic_name | List of available clinics. |

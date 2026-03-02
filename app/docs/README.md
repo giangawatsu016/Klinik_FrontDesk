@@ -124,6 +124,7 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
   - Designed the Empty State default message to gracefully display `"Belum ada Jadwal Kunjungan"` instead of raw filtered counts when there are 0 active future appointments.
 - **Medical Records Rules**:
   - Transferred the same empty state messaging pattern to Medical Records, updating the fallback to `"Belum ada Rekam Medis"`.
+  - **API Stability Fix**: Resolved a 500 Internal Server error in `get_medical_records` caused by deprecated SQL columns. The API now safely queries the correct unified `blood_pressure` string from Frappe and parses the systolic/diastolic components dynamically for the Flutter frontend.
 
 ### v3.9 - Mar 02 2026
 
