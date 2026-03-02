@@ -122,6 +122,8 @@ cd /home/frappe/frappe-bench && bench --site clinic.localhost migrate
 - **Jadwal Kunjungan Rules**:
   - The "Cek Appointment" (Jadwal Kunjungan) upcoming filter has been reverted to strictly display `Today` and `Future` appointments (hiding unfinalized appointments from past dates).
   - Designed the Empty State default message to gracefully display `"Belum ada Jadwal Kunjungan"` instead of raw filtered counts when there are 0 active future appointments.
+- **Medical Records Rules**:
+  - Transferred the same empty state messaging pattern to Medical Records, updating the fallback to `"Belum ada Rekam Medis"`.
 
 ### v3.9 - Mar 02 2026
 

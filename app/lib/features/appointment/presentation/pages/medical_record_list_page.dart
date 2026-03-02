@@ -119,7 +119,7 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
   ) {
     if (appointments.isEmpty) {
       final emptyWidget = EmptyStateWidget(
-        message: 'No medical records found',
+        message: 'Belum ada Rekam Medis',
         lottieAsset: 'assets/animations/empty_box.json',
       );
       return widget.sliverMode
